@@ -1256,3 +1256,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T133940-filetypes-plist` — 2026-10-30T13:39:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8fb85aa490b8ff20` | inherit_from_filetypes_chm_b86f0748 | ok | 0.0143 | 0.3909 | 0.0556 | 249 | [log](out/autocollie/runs/2026-10-30T13-45-25_20261030T133940-filetypes-plist_inherit_from_filetypes_chm_b86f0748.log) |
+| `36fbe0e3e4e6f816` | plist_kv_vocab_transfer | ok | 0.8053 | 0.9985 | 0.6622 | 431 | [log](out/autocollie/runs/2026-10-30T13-53-00_20261030T133940-filetypes-plist_plist_kv_vocab_transfer.log) |
+| `44eaf308fe71d3a0` | plist_min_malware_score_1 | ok | 0.5123 | 0.9726 | 0.4531 | 34 | [log](out/autocollie/runs/2026-10-30T13-53-43_20261030T133940-filetypes-plist_plist_min_malware_score_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_kv_vocab_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.0476 L25 recall by enabling kv_vocab features, transferring a successful lever from the sister dockerfile route to capture key-value structural signals in plist files that the current disabled kv group misses.
+- **`plist_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.0476 L25 recall by setting min_malware_score to 1 to filter out low-severity noise from training, potentially improving class balance and signal-to-noise ratio without changing the feature matrix.
+
+</details>
+

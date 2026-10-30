@@ -12,7 +12,11 @@ import math
 import os
 import re
 import sys
+import tempfile
 import time
+from collections import Counter
+from contextlib import contextmanager
+from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -24,10 +28,68 @@ from collimator import bundle, cache_identity, data, export, features, policy, t
 from collimator.profiling import initialize_worker, timed
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
+from azoth_specialist_suite import DEPLOYMENT_GROUPS, _temporary_feature_env  # noqa: E402
 
 LOG = logging.getLogger("azoth_calibrate_ensemble")
 _POPCOUNT8 = np.asarray([int(i).bit_count() for i in range(256)], dtype=np.uint8)
+
+
+class _RowIndex:
+    """Compact, shareable ID lookup; positions preserve the original score order."""
+
+    def __init__(self, ids, positions):
+        self.ids, self.positions = ids, positions
+
+    def lookup(self, ids):
+        ids = np.asarray(ids, dtype=np.int64)
+        result = np.full(len(ids), -1, dtype=np.int64)
+        if len(self.ids):
+            slots = np.searchsorted(self.ids, ids)
+            valid = slots < len(self.ids)
+            valid[valid] &= self.ids[slots[valid]] == ids[valid]
+            result[valid] = self.positions[slots[valid]]
+        return result
+
+
+@contextmanager
+def _shared_row_index(row_ids, directory):
+    """Pass two filenames to spawn workers, never a corpus-sized Python dict."""
+    Path(directory).mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="calibration-index-", dir=directory) as tmp:
+        order = np.argsort(row_ids, kind="stable")
+        sorted_ids = row_ids[order]
+        if np.any(sorted_ids[1:] == sorted_ids[:-1]):
+            raise ValueError("general score cache contains duplicate row IDs")
+        paths = (str(Path(tmp) / "ids.npy"), str(Path(tmp) / "positions.npy"))
+        np.save(paths[0], sorted_ids)
+        np.save(paths[1], order.astype(np.int64, copy=False))
+        del order, sorted_ids
+        yield paths
+
+
+def _open_row_index(paths):
+    return _RowIndex(*(np.load(path, mmap_mode="r") for path in paths))
+
+
+def _row_positions(row_index, ids):
+    if isinstance(row_index, _RowIndex):
+        return row_index.lookup(ids)
+    return np.fromiter((row_index.get(int(rid), -1) for rid in ids), dtype=np.int64)
+
+
+def _predict_matrix(clf, matrix, spec):
+    if not spec.standardized:
+        return clf.predict_proba(matrix)
+    # standardize() densifies: bound it using exactly the ONNX prediction
+    # chunk size so neither allocations nor floating reduction boundaries grow.
+    from collimator.model import OnnxModel
+
+    size = OnnxModel.dense_chunk_rows(matrix.shape[1])
+    probs = np.empty(matrix.shape[0], dtype=np.float32)
+    for start in range(0, len(probs), size):
+        stop = min(start + size, len(probs))
+        probs[start:stop] = clf.predict_proba(features.standardize(matrix[start:stop], spec))
+    return probs
 
 
 def _file_sha256(path: Path) -> str:
@@ -324,8 +386,25 @@ def _load_oof_route_scores(
 def _score_route(
     db_path: Path | str,
     route: dict[str, Any],
+    **options: Any,
+) -> dict[str, Any]:
+    """Replay the specialist's training feature settings, including in workers."""
+    benchmark = Path(route["output_dir"]) / "benchmark.json"
+    metadata = json.loads(benchmark.read_text()) if benchmark.exists() else route
+    feature_env = metadata.get("feature_env", {})
+    if not isinstance(feature_env, dict) or any(
+        not isinstance(k, str) or not isinstance(v, str) for k, v in feature_env.items()
+    ):
+        raise ValueError(f"{benchmark}: invalid feature_env")
+    with _temporary_feature_env(feature_env):
+        return _score_route_impl(db_path, route, **options)
+
+
+def _score_route_impl(
+    db_path: Path | str,
+    route: dict[str, Any],
     *,
-    row_index: dict[int, int],
+    row_index: dict[int, int] | _RowIndex,
     max_id: int,
     workers: int,
     refresh: bool,
@@ -345,9 +424,16 @@ def _score_route(
     score_identity = cache_context or hashlib.sha256((
         cache_identity.database_revision(db_path) + cache_identity.code_revision("features")
         + cache_identity.code_revision("training") + _file_sha256(Path(__file__))
-        + _hash_ints(np.fromiter(row_index, dtype=np.int64))
-        + _hash_ints(np.fromiter(row_index.values(), dtype=np.int64))
+        + _hash_ints(row_index.ids if isinstance(row_index, _RowIndex)
+                     else np.fromiter(row_index, dtype=np.int64))
+        + _hash_ints(row_index.positions if isinstance(row_index, _RowIndex)
+                     else np.fromiter(row_index.values(), dtype=np.int64))
     ).encode()).hexdigest()
+    # Feature toggles change values even when the column layout is unchanged.
+    # Include the effective configuration in both score and matrix identities.
+    score_identity = hashlib.sha256((score_identity + json.dumps(
+        asdict(features.feature_config_from_env()), sort_keys=True, default=sorted,
+    )).encode()).hexdigest()
     route_hash = hashlib.sha256((_hash_route_artifacts(output_dir) + score_identity).encode()).hexdigest()
     force_refresh = refresh or route["route"] in refresh_routes or route["name"] in refresh_routes
     if cache_path.exists() and not force_refresh:
@@ -368,9 +454,12 @@ def _score_route(
     rows_all = _fetch_rows(db_path, file_types=route["file_types"], max_id=max_id)
     fetch_s = time.perf_counter() - t0
     t0 = time.perf_counter()
-    rows = [(row_id, label) for row_id, label in rows_all if row_id in row_index]
+    positions = _row_positions(row_index, [rid for rid, _ in rows_all])
+    rows = [row for row, pos in zip(rows_all, positions, strict=True) if pos >= 0]
+    indices = positions[positions >= 0]
     filter_s = time.perf_counter() - t0
     skipped = len(rows_all) - len(rows)
+    del rows_all, positions
     if skipped:
         LOG.warning(
             "%s: skipped %d rows absent from general score cache",
@@ -389,8 +478,11 @@ def _score_route(
     row_ids = np.asarray([row_id for row_id, _label in rows], dtype=np.int64)
     rows_hash = _hash_ints(row_ids)
     t0 = time.perf_counter()
+    # NPZ matrix caches inflate into anonymous memory. Keep them for small
+    # routes; large routes use reclaimable mmap CSR arrays instead.
+    matrix_cache_dir = feature_cache_dir if len(rows) <= 50000 else None
     x_matrix, feature_cache_read_s = _load_route_feature_cache(
-        feature_cache_dir,
+        matrix_cache_dir,
         route_name=route["route"],
         max_id=max_id,
         spec_hash=spec_hash,
@@ -400,16 +492,35 @@ def _score_route(
     )
     feature_cache_write_s = 0.0
     if x_matrix is None:
-        batches = list(features.extract_labeled_from_db_batches(db_path, rows, spec, n_workers=workers))
-        extract_s = time.perf_counter() - t0
-        t0 = time.perf_counter()
-        if batches:
-            x_matrix = sp.vstack([batch[0] for batch in batches], format="csr")
-        else:
-            x_matrix = sp.csr_matrix((0, spec.total_features), dtype=np.float32)
-        matrix_s = time.perf_counter() - t0
+        from collimator.matrix_store import MatrixWriter
+
+        writer = MatrixWriter(os.getenv("COLLIMATOR_MATRIX_DISK_DIR",
+                                        "out/cache/matrix-scratch"), spec.total_features)
+        progress_at = time.perf_counter()
+        try:
+            for block, block_labels in features.extract_labeled_from_db_batches(
+                db_path, rows, spec, n_workers=workers,
+            ):
+                writer.append(block, block_labels)
+                now = time.perf_counter()
+                if now - progress_at >= 30:
+                    LOG.info("%s: extraction progress %d/%d rows (%.1f%%), "
+                             "%d nnz, %.2f GiB written, %.1f rows/s; last_row_id=%d",
+                             route["route"], writer.rows, len(rows),
+                             100 * writer.rows / max(1, len(rows)), writer.nnz,
+                             (12 * writer.nnz + 12 * writer.rows + 8) / 2**30,
+                             writer.rows / max(now - t0, 1e-9), rows[writer.rows - 1][0])
+                    progress_at = now
+            extract_s = time.perf_counter() - t0
+            t0 = time.perf_counter()
+            x_matrix, _ = writer.finish()
+            matrix_s = time.perf_counter() - t0
+        finally:
+            writer.close()
+        if x_matrix.shape[0] != len(rows):
+            raise ValueError(f"{route['route']}: extracted row count changed; refusing misaligned scores")
         feature_cache_write_s = _save_route_feature_cache(
-            feature_cache_dir,
+            matrix_cache_dir,
             route_name=route["route"],
             max_id=max_id,
             spec_hash=spec_hash,
@@ -420,11 +531,9 @@ def _score_route(
         extract_s = 0.0
         matrix_s = 0.0
     t0 = time.perf_counter()
-    X_input = features.standardize(x_matrix, spec) if spec.standardized else x_matrix
-    probs = clf.predict_proba(X_input)
+    probs = _predict_matrix(clf, x_matrix, spec)
     predict_s = time.perf_counter() - t0
     t0 = time.perf_counter()
-    indices = np.asarray([row_index[row_id] for row_id, _label in rows], dtype=np.int64)
     temporary = cache_path.with_name(f"{cache_path.stem}.tmp.{os.getpid()}.npz")
     np.savez_compressed(
         temporary,
@@ -465,9 +574,7 @@ def _score_route(
 
 
 def _budget(n_benign: int, target_per_million: float) -> int:
-    if target_per_million <= 0:
-        return 0
-    return min(n_benign, max(1, int(math.floor(n_benign * target_per_million / 1_000_000))))
+    return thresholds.resolution_adjusted_fp_budget(n_benign, target_per_million * 100.0)
 
 
 def _candidate_thresholds(
@@ -1152,7 +1259,13 @@ def _evaluate_captured_scores(args, routes) -> int:
     return 0
 
 
-def _score_pool_init(log_level: str) -> None:
+_POOL_ROW_INDEX = None
+
+
+def _score_pool_init(log_level: str, index_paths=None) -> None:
+    global _POOL_ROW_INDEX
+    if index_paths is not None:
+        _POOL_ROW_INDEX = _open_row_index(index_paths)
     initialize_worker()
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
@@ -1165,7 +1278,7 @@ def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
     return _score_route(
         job["db_path"],
         job["route"],
-        row_index=job["row_index"],
+        row_index=job.get("row_index", _POOL_ROW_INDEX),
         max_id=job["max_id"],
         workers=job["workers"],
         refresh=job["refresh"],
@@ -1174,6 +1287,72 @@ def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
         oof_route_scores_dir=job.get("oof_route_scores_dir"),
         cache_context=job.get("cache_context"),
     )
+
+
+@contextmanager
+def _scoring_threads():
+    """Bound native pools before spawn imports; also limit this interpreter."""
+    from threadpoolctl import threadpool_limits
+
+    values = {name: "1" for name in (
+        "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS",
+    )}
+    # Keep the inference default: ORT changes floating reduction order when
+    # thread counts change. Bound concurrent routes, not prediction arithmetic.
+    values["COLLIMATOR_ONNX_THREADS"] = os.getenv("COLLIMATOR_ONNX_THREADS", "8")
+    previous = {name: os.environ.get(name) for name in values}
+    os.environ.update(values)
+    try:
+        with threadpool_limits(limits=1):
+            yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+def _run_score_jobs(jobs, row_ids, parallelism, log_level):
+    """Bound job payloads, native threads, and report progress while waiting."""
+    if not jobs:
+        return []
+    parallelism = max(1, min(parallelism, len(jobs)))
+    scratch = os.getenv("COLLIMATOR_MATRIX_DISK_DIR", "out/cache/matrix-scratch")
+    with _shared_row_index(row_ids, scratch) as paths, _scoring_threads():
+        if parallelism == 1:
+            index = _open_row_index(paths)
+            results = []
+            for job in jobs:
+                LOG.info("scoring %s", job["route"]["route"])
+                results.append(_score_route_worker(dict(job, row_index=index)))
+            return results
+        import multiprocessing
+
+        results = [None] * len(jobs)
+        LOG.info("scoring %d routes (parallelism=%d, shared row index, ONNX threads=%s)",
+                 len(jobs), parallelism, os.environ["COLLIMATOR_ONNX_THREADS"])
+        # Spawn avoids inherited BLAS/OpenMP locks. All workers map the same
+        # two index files once; task messages contain only small metadata.
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=parallelism, mp_context=multiprocessing.get_context("spawn"),
+            initializer=_score_pool_init, initargs=(log_level, paths),
+        ) as pool:
+            pending = {pool.submit(_score_route_worker, job): idx for idx, job in enumerate(jobs)}
+            started = time.monotonic()
+            while pending:
+                done, _ = concurrent.futures.wait(
+                    pending, timeout=30, return_when=concurrent.futures.FIRST_COMPLETED,
+                )
+                for future in done:
+                    idx = pending.pop(future)
+                    results[idx] = future.result()
+                    LOG.info("scored %s (%d/%d routes)", jobs[idx]["route"]["route"],
+                             len(jobs) - len(pending), len(jobs))
+                if not done:
+                    LOG.info("route scoring waiting: %d/%d complete, %.0fs elapsed",
+                             len(jobs) - len(pending), len(jobs), time.monotonic() - started)
+        return results
 
 
 def _validate_general_scores(general_cache, general_dir: Path) -> None:
@@ -1325,14 +1504,21 @@ def main() -> int:
             args.partition, n_keep, len(row_ids),
             100.0 * n_keep / max(len(row_ids), 1), len(row_ids),
         )
+        # Unicode hashes can occupy several GiB; retain only the byte needed
+        # by the score table, rather than reading and holding them twice.
+        sha_buckets = np.fromiter(map(_sha_bucket, canonical_shas), dtype=np.uint8)
+        del canonical_shas
     else:
         partition_mask = np.ones(len(row_ids), dtype=bool)
-    row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
+        sha_buckets = (np.fromiter(map(_sha_bucket, general_cache["canonical_shas"]), dtype=np.uint8)
+                       if "canonical_shas" in general_cache.files else None)
 
     file_types_by_row = _fetch_file_types(args.db, row_ids)
     file_types = np.asarray(
         [file_types_by_row.get(int(row_id), "unknown") for row_id in row_ids],
     )
+    observed_filetypes = dict(sorted(Counter(file_types_by_row.values()).items()))
+    del file_types_by_row
     filetype_to_group = _filetype_to_group()
     file_groups = np.asarray([filetype_to_group.get(file_type, "") for file_type in file_types])
     route_scores = [
@@ -1346,21 +1532,16 @@ def main() -> int:
         },
     ]
     refresh_routes = set(args.refresh_route)
-    # Cap per-route extraction workers. Each of the `parallelism` concurrent
-    # route jobs re-extracts its FULL-row matrix, and each worker buffers a
-    # batch of cleave reports — so the resident report memory scales with
-    # (parallelism * workers). At the default workers=128 * parallelism, this
-    # spiked to ~240 GB and OOM-killed the co-tenant litmus scanner. Mirror the
-    # specialist suite: divide by parallelism and cap at an absolute ceiling
-    # (~28 GB/job operating point). Override via AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX.
-    extract_workers = args.workers
-    if args.workers and args.workers > 1:
-        ceiling = max(1, int(os.environ.get("AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX", "16")))
-        per_job = args.workers // max(1, args.parallelism)
-        extract_workers = max(1, min(per_job, ceiling))
-        if extract_workers != args.workers:
-            LOG.info("capping per-route extraction workers at %d (requested %d, parallelism=%d, ceiling=%d)",
-                     extract_workers, args.workers, args.parallelism, ceiling)
+    # Each extraction worker buffers reports even with disk-backed matrices.
+    # Divide the resolved total worker budget across routes; workers=0 must
+    # not accidentally give every route a full host-sized extraction pool.
+    # Override the per-route cap via AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX.
+    requested_workers = features.resolve_worker_count(args.workers)
+    ceiling = max(1, int(os.environ.get("AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX", "16")))
+    per_job = requested_workers // max(1, args.parallelism)
+    extract_workers = max(1, min(per_job, ceiling))
+    LOG.info("per-route extraction workers=%d (total requested=%d, parallelism=%d, ceiling=%d)",
+             extract_workers, requested_workers, args.parallelism, ceiling)
     # Hash the shared corpus/order once, rather than duplicating multi-million
     # row arrays in every worker. The score file includes IDs and canonical groups.
     cache_context = hashlib.sha256((
@@ -1372,7 +1553,6 @@ def main() -> int:
         {
             "db_path": args.db,
             "route": route,
-            "row_index": row_index,
             "max_id": max_id,
             "workers": extract_workers,
             "refresh": args.refresh,
@@ -1383,37 +1563,7 @@ def main() -> int:
         }
         for route in routes
     ]
-    if args.parallelism > 1 and len(score_jobs) > 1:
-        LOG.info("scoring %d routes (parallelism=%d)", len(score_jobs), args.parallelism)
-        route_scores.extend([None] * len(score_jobs))
-        # `spawn` start method instead of `fork` so each worker boots a clean
-        # interpreter and re-imports numpy/lightgbm/onnxruntime fresh — no
-        # inherited OpenMP/BLAS thread-pool state from the parent. Fork
-        # inherited the parent's BLAS mutex in a state the child can't safely
-        # use, producing silent futex_wait deadlocks in worker subprocesses
-        # (observed 2026-06-01 with parallelism=2 on a 64-core box). The
-        # ~1s/worker spawn overhead is negligible vs. minutes-per-route
-        # scoring work.
-        import multiprocessing as _mp  # noqa: PLC0415 — guard against fork side-effects
-        _spawn_ctx = _mp.get_context("spawn")
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=args.parallelism,
-            mp_context=_spawn_ctx,
-            initializer=_score_pool_init,
-            initargs=(args.log_level,),
-        ) as pool:
-            futures = {
-                pool.submit(_score_route_worker, job): idx
-                for idx, job in enumerate(score_jobs)
-            }
-            general_offset = 1  # index 0 is the general entry already appended above
-            for fut in concurrent.futures.as_completed(futures):
-                idx = futures[fut]
-                route_scores[general_offset + idx] = fut.result()
-    else:
-        for job in score_jobs:
-            LOG.info("scoring %s", job["route"]["route"])
-            route_scores.append(_score_route_worker(job))
+    route_scores.extend(_run_score_jobs(score_jobs, row_ids, args.parallelism, args.log_level))
 
     # Score table over the full labeled corpus — downstream tools need full
     # benign coverage to compute deployment-time FP/M.
@@ -1424,10 +1574,7 @@ def main() -> int:
         file_types=file_types,
         file_groups=file_groups,
         route_scores=route_scores,
-        sha_buckets=(
-            np.fromiter(map(_sha_bucket, general_cache["canonical_shas"]), dtype=np.uint8)
-            if "canonical_shas" in general_cache.files else None
-        ),
+        sha_buckets=sha_buckets,
     )
     # Calibrators and L0..L9 thresholds are fit on the partition subset
     # only — that's where the leakage protection lives. Score table above
@@ -1505,10 +1652,7 @@ def main() -> int:
         "fit_benign": int(np.sum(fit_labels == 0)),
         "root": str(args.azoth_root),
         "filetype_to_group": filetype_to_group,
-        "observed_filetypes": {
-            file_type: sum(1 for ft in file_types_by_row.values() if ft == file_type)
-            for file_type in sorted(set(file_types_by_row.values()))
-        },
+        "observed_filetypes": observed_filetypes,
         "models": [
             {
                 "route": route["name"],

@@ -2720,3 +2720,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T155005-filetypes-go` — 2026-10-30T15:50:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ae7e4b7ada15eab` | inherit_from_filetypes_chm_b86f0748 | ok | 0.5143 | 0.7830 | 0.5045 | 38 | [log](out/autocollie/runs/2026-10-30T15-53-41_20261030T155005-filetypes-go_inherit_from_filetypes_chm_b86f0748.log) |
+| `e13143d57652307e` | go_textenc_depth4 | ok | 0.9273 | 0.9763 | 0.8225 | 26 | [log](out/autocollie/runs/2026-10-30T15-54-25_20261030T155005-filetypes-go_go_textenc_depth4.log) |
+| `042b68268c05511c` | go_textenc_hardneg8 | ok | 0.9220 | 0.9709 | 0.8164 | 25 | [log](out/autocollie/runs/2026-10-30T15-54-53_20261030T155005-filetypes-go_go_textenc_hardneg8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_textenc_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 on the text_metrics_full feature set improves L25 recall@1FP beyond the 0.1936 baseline by capturing more specific finding prefixes.
+- **`go_textenc_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing hard_negative_weight to 8 on the text_metrics_full feature set improves L25 recall@1FP by better penalizing benign false positives without changing the feature matrix.
+
+</details>
+

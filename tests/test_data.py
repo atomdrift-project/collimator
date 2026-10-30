@@ -130,6 +130,28 @@ def test_route_filetype_composes_compression_and_canonicalization():
     assert route_filetype("gz") == "gz"
 
 
+def test_compact_unordered_metadata_preserves_corpus_and_canonical_groups():
+    from collimator.data import stream_labeled_metadata_full, _metadata_full_query
+
+    db = _create_test_db([
+        {'sha256':'a'*62+'ff','label':'bad','cleave_result':'{}','path':'/include/one','score':7},
+        {'sha256':'b'*62+'00','label':'good','cleave_result':'{}','path':'/include/two','score':3},
+        {'sha256':'c'*64,'label':'good','cleave_result':'{}','path':'/other','skip':'yes'},
+    ])
+    with sqlite3.connect(db) as conn:
+        conn.execute('UPDATE samples SET canonical_sha256=? WHERE id=2', ('a'*62+'ff',))
+    try:
+        for options in ({}, {'limit':1}, {'min_score':5}, {'path_substr':'two'}, {'partition':'train'}):
+            expected = list(stream_labeled_metadata_full(db, **options))
+            actual = list(stream_labeled_metadata_full(db, compact=True, ordered=False, **options))
+            assert sorted((r[0],r[4],r[5]) for r in actual) == sorted((r[0],r[4],r[5]) for r in expected)
+            assert all(r[1:4] == ('','',0) for r in actual)
+        assert 'ORDER BY' not in _metadata_full_query('true', postgres=True, compact=True, ordered=False)
+        assert 'ORDER BY' in _metadata_full_query('true', postgres=True, compact=True, ordered=False, limit=1)
+    finally:
+        db.unlink()
+
+
 def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:
     """Create a temporary hopper-schema SQLite DB.
 

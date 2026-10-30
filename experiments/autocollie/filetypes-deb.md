@@ -324,3 +324,20 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T145428-filetypes-deb` — 2026-10-30T14:54:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ebf42e4bf15ae07c` | inherit_from_filetypes_chm_b86f0748 | ok | 0.1027 | 0.6752 | 0.1569 | 242 | [log](out/autocollie/runs/2026-10-30T15-05-18_20261030T145428-filetypes-deb_inherit_from_filetypes_chm_b86f0748.log) |
+
+Rejected before run:
+
+- `baseline_depth3_lr005` — features.text_encoding_features: unknown knob (not in allowlist)
+- `depth4_specificity_test` — features.text_encoding_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

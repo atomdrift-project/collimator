@@ -25,10 +25,8 @@ Usage:
   python scripts/autocollie_favorites.py --runs-dir out/experiments/azoth/runs
 
 Phase 1 (this script) is read-only — no retraining, no state changes.
-Run identified candidates manually via:
-  make autocollie-confirm KEY=<key>
-  # if PASS:
-  make autocollie-promote KEY=<key>
+Run identified settings through fresh screening and current gates via:
+  make autocollie-replay KEY=<key>
 """
 
 from __future__ import annotations
@@ -404,10 +402,8 @@ def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
                 if last_reason:
                     print(f"      ↳ last: {last_reason[:140]}")
         print()
-    print("To replay any candidate (after rebuild + restart):")
-    print("  make autocollie-confirm KEY=<key>")
-    print("  # if confirm passes:")
-    print("  make autocollie-promote KEY=<key>")
+    print("To replay historical settings on current data before confirmation/promotion:")
+    print("  make autocollie-replay KEY=<key>")
 
 
 def main() -> int:

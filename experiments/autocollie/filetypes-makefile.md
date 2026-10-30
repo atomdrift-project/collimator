@@ -884,3 +884,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T171805-filetypes-makefile` — 2026-10-30T17:18:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `57fa3f1b13fdd1f3` | inherit_from_filetypes_iso_fec2c64b | ok | 0.1686 | 0.9339 | 0.1029 | 16 | [log](out/autocollie/runs/2026-10-30T17-19-45_20261030T171805-filetypes-makefile_inherit_from_filetypes_iso_fec2c64b.log) |
+| `7e47c17205dd2d8f` | makefile_min_malware_score_0 | ok | 0.8418 | 0.9834 | 0.8038 | 44 | [log](out/autocollie/runs/2026-10-30T17-20-39_20261030T171805-filetypes-makefile_makefile_min_malware_score_0.log) |
+| `57fa3f1b13fdd1f3` | makefile_max_delta_step_5 | dup | 0.1686 | 0.9339 | 0.1029 | 55 | [log](out/autocollie/runs/2026-10-30T17-21-59_20261030T171805-filetypes-makefile_makefile_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if lowering min_malware_score from 4 to 0 recovers low-severity malware samples to improve L25 recall@1FP, which was 0.0303 in the best historical run.
+- **`makefile_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if setting max_delta_step to 5 improves L25 recall@1FP by allowing larger leaf updates, addressing potential constant models or saturated scores in the current configuration.
+
+</details>
+

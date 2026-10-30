@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import warnings
 from pathlib import Path
 from typing import Any
@@ -160,6 +161,7 @@ def create_classifier(
     monotone_constraints: str | dict[str, int] | tuple[int, ...] | None = None,
     learner: str = "litmus-xg",
     scale_pos_weight_mult: float = 1.0,
+    max_delta_step: float = 0.0,
     boosting_type: str = "gbdt",
     extra_trees: bool = False,
     num_threads: int | None = None,
@@ -185,6 +187,8 @@ def create_classifier(
     if device == "auto":
         device = pick_device(n_rows, n_features, nnz)
     if learner == "azoth":
+        if not np.isfinite(max_delta_step) or max_delta_step < 0:
+            raise ValueError("max_delta_step must be finite and nonnegative")
         try:
             import lightgbm as lgb  # noqa: PLC0415
         except ImportError as exc:
@@ -204,6 +208,21 @@ def create_classifier(
             if device not in {"cuda", "gpu"}:
                 raise ValueError(f"unsupported azoth device: {device}")
             device_params["device_type"] = device
+        threads = num_threads if num_threads is not None and num_threads > 0 else -1
+        # Small CPU fits spend more time synchronizing large OpenMP teams than
+        # building trees. A 17.9k-row / 3.25M-nnz DEB fit took 40.6s at 64
+        # threads versus 2.8-3.1s at four, with the same 400-tree budget.
+        # num_threads is a ceiling; preserve lower explicit limits and avoid
+        # applying this small-workload rule to large or unknown shapes.
+        entries = nnz if nnz is not None else (
+            n_rows * n_features if n_rows is not None and n_features is not None else None
+        )
+        if (not device_params and n_rows is not None and n_rows <= 50_000
+                and entries is not None and entries <= 10_000_000
+                and (threads == -1 or threads > 4)):
+            log.info("small LightGBM fit: limiting threads from %s to 4 (%d rows, %d entries)",
+                     "all" if threads == -1 else threads, n_rows, entries)
+            threads = 4
         return lgb.LGBMClassifier(
             objective="binary",
             metric="average_precision",
@@ -223,14 +242,9 @@ def create_classifier(
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
             scale_pos_weight=spw,
+            max_delta_step=max_delta_step,
             random_state=random_state,
-            # n_jobs=-1 means "claim every core" — fine for a solo training,
-            # disastrous when AZOTH_SPECIALIST_PARALLELISM > 1 because
-            # every concurrent LightGBM tries to grab the full host and the
-            # OS spends most of its time context-switching. The specialist
-            # suite passes num_threads = nproc/parallelism to keep total
-            # worker count near the core count.
-            n_jobs=num_threads if num_threads is not None and num_threads > 0 else -1,
+            n_jobs=threads,
             force_col_wise=True,
             verbosity=-1,
             **device_params,
@@ -266,23 +280,52 @@ class OnnxModel:
     a LightGBM Booster.
 
     Inference accepts dense float32 input shape ``(n_samples, n_features)``.
-    Sparse CSR/CSC inputs are dense-batched in chunks so the dense
-    materialization doesn't blow up memory on the 60k-feature azoth
-    routes (a 100k-row × 60k-feature dense matrix is 24 GB float32 —
-    chunking at 1024 rows keeps each batch under 250 MB).
+    Supported tree graphs select only columns used by their splits before
+    densifying. Callers continue supplying the original full feature layout.
+    Dense batches are bounded by both row count and a 64 MiB byte budget.
     """
 
-    # ~1024 rows × 60k features × 4 bytes ≈ 245 MB per chunk. Safe on
-    # most hosts, fast enough that chunking overhead is negligible.
     _CHUNK_ROWS = 1024
+    _DENSE_BYTES = 64 * 1024 * 1024
+
+    @classmethod
+    def dense_chunk_rows(cls, n_features: int) -> int:
+        """Bound the dense input even for unusually wide feature layouts."""
+        return min(cls._CHUNK_ROWS, max(1, cls._DENSE_BYTES // (max(1, n_features) * 4)))
 
     # Module-path sentinel checked by predict_proba dispatch. Distinct
     # from "lightgbm"/"xgboost" so the route can fork on it cleanly.
     __module__ = "collimator.model.onnx"
 
-    def __init__(self, session: Any, input_name: str) -> None:
+    def __init__(self, session: Any, input_name: str, *,
+                 input_columns: np.ndarray | None = None,
+                 original_features: int | None = None) -> None:
         self._session = session
         self._input_name = input_name
+        self._input_columns = input_columns
+        self._original_features = original_features
+
+    def shares_input_layout(self, other: OnnxModel) -> bool:
+        return (self._original_features == other._original_features
+                and (self._input_columns is other._input_columns
+                     or (self._input_columns is not None and other._input_columns is not None
+                         and np.array_equal(self._input_columns, other._input_columns))))
+
+    def validate_input(self, X: Any) -> None:
+        if self._original_features is not None and X.shape[1] != self._original_features:
+            raise ValueError(f'expected {self._original_features} original ONNX features, got {X.shape[1]}')
+
+    def project_input(self, X: Any) -> Any:
+        self.validate_input(X)
+        return X if self._input_columns is None else X[:, self._input_columns]
+
+    def _predict_dense(self, chunk: np.ndarray) -> np.ndarray:
+        """Run one already-projected, bounded dense batch."""
+        outputs = self._session.run(None, {self._input_name: chunk})
+        probs = outputs[1]
+        if probs.ndim != 2 or probs.shape != (len(chunk), 2):
+            raise ValueError(f'unexpected ONNX output shape: {probs.shape}; expected (n, 2) probabilities')
+        return probs
 
     def predict_proba(self, X: Any) -> np.ndarray:
         """Returns shape (n_samples, 2) probabilities for parity with
@@ -293,22 +336,18 @@ class OnnxModel:
         import scipy.sparse as sp  # noqa: PLC0415 — optional dep
 
         n_rows = X.shape[0]
+        self.validate_input(X)
         out = np.empty((n_rows, 2), dtype=np.float32)
-        for start in range(0, n_rows, self._CHUNK_ROWS):
-            end = min(start + self._CHUNK_ROWS, n_rows)
-            chunk = X[start:end]
+        # Preserve pre-projection batch boundaries. ORT can change floating
+        # reduction order for short tails when the batch shape changes.
+        chunk_rows = self.dense_chunk_rows(X.shape[1])
+        for start in range(0, n_rows, chunk_rows):
+            end = min(start + chunk_rows, n_rows)
+            chunk = self.project_input(X[start:end])
             if sp.issparse(chunk):
                 chunk = chunk.toarray()
             chunk = np.ascontiguousarray(chunk, dtype=np.float32)
-            outputs = self._session.run(None, {self._input_name: chunk})
-            # onnxmltools' lightgbm classifier emits [label, probs (n,2)].
-            probs = outputs[1]
-            if probs.ndim != 2 or probs.shape[1] != 2:
-                raise ValueError(
-                    f"unexpected ONNX output shape: {probs.shape}; "
-                    f"expected (n, 2) probabilities"
-                )
-            out[start:end] = probs
+            out[start:end] = self._predict_dense(chunk)
         return out
 
     def predict(self, X: Any) -> np.ndarray:
@@ -316,26 +355,42 @@ class OnnxModel:
         return self.predict_proba(X)[:, 1]
 
 
+def load_onnx_models(paths: list[Path]) -> list[OnnxModel]:
+    """Load ensemble members with a shared projection and dense input buffer."""
+    from collimator.onnx_projection import project_tree_inputs
+
+    try:
+        import onnxruntime as ort
+    except ImportError as e:
+        raise ImportError('onnxruntime is required to load .onnx model files') from e
+    payloads, columns, width = [str(p) for p in paths], None, None
+    if os.getenv('COLLIMATOR_ONNX_PROJECT_INPUT', '1').lower() not in {'0', 'false', 'no', 'off'}:
+        payloads, columns, width = project_tree_inputs(paths)
+    if columns is not None:
+        log.info('ONNX input projection: %d -> %d columns across %d members', width, len(columns), len(paths))
+    threads = int(os.getenv('COLLIMATOR_ONNX_THREADS', '8'))
+    if threads < 1:
+        raise ValueError('COLLIMATOR_ONNX_THREADS must be positive')
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = threads
+    options.inter_op_num_threads = 1
+    options.add_session_config_entry('session.intra_op.allow_spinning', '0')
+    options.add_session_config_entry('session.inter_op.allow_spinning', '0')
+    members = []
+    for path, payload in zip(paths, payloads, strict=True):
+        session = ort.InferenceSession(payload, options, providers=['CPUExecutionProvider'])
+        inputs = session.get_inputs()
+        if not inputs:
+            raise ValueError(f'ONNX model {path} has no inputs')
+        members.append(OnnxModel(session, inputs[0].name, input_columns=columns, original_features=width))
+    return members
+
+
 def load_model(model_path: Path) -> Any:
     """Load a native XGBoost, LightGBM, or ONNX model."""
     path_str = str(model_path)
     if path_str.endswith(".onnx"):
-        try:
-            import onnxruntime as ort  # noqa: PLC0415 — optional dep
-        except ImportError as e:
-            raise ImportError(
-                "onnxruntime is required to load .onnx model files; "
-                "install onnxruntime or remove .onnx artifacts from the bundle"
-            ) from e
-        session = ort.InferenceSession(
-            path_str, providers=["CPUExecutionProvider"],
-        )
-        # Resolve the input tensor name (model-dependent; onnxmltools
-        # uses 'input' by convention but we lookup defensively).
-        inputs = session.get_inputs()
-        if not inputs:
-            raise ValueError(f"ONNX model {model_path} has no inputs")
-        return OnnxModel(session, inputs[0].name)
+        return load_onnx_models([model_path])[0]
     model = xgb.XGBClassifier()
     try:
         model.load_model(path_str)

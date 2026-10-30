@@ -1216,3 +1216,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T172225-filetypes-php` — 2026-10-30T17:22:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8802f11511803b5` | inherit_from_filetypes_iso_fec2c64b | ok | 0.9360 | 0.9859 | 0.8435 | 45 | [log](out/autocollie/runs/2026-10-30T17-24-12_20261030T172225-filetypes-php_inherit_from_filetypes_iso_fec2c64b.log) |
+| `20070b9803ce9bd3` | php_kv_vocab_depth4 | ok | 0.9637 | 0.9923 | 0.8882 | 45 | [log](out/autocollie/runs/2026-10-30T17-25-11_20261030T172225-filetypes-php_php_kv_vocab_depth4.log) |
+| `63a0739849f77044` | php_hardneg_weight10 | ok | 0.9690 | 0.9948 | 0.8946 | 50 | [log](out/autocollie/runs/2026-10-30T17-26-01_20261030T172225-filetypes-php_php_hardneg_weight10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_kv_vocab_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.7430 L25 recall of the ELF-inherited baseline by enabling kv_vocab and increasing trait_path_depth to 4 to capture more specific PHP finding prefixes without the noise of deeper paths.
+- **`php_hardneg_weight10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.7430 L25 recall by increasing hard_negative_weight to 10 to more aggressively penalize false positives on benign PHP files, reusing the existing feature matrix.
+
+</details>
+

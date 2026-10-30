@@ -310,8 +310,8 @@ def recall_at_fp_budget(
     THE canonical FP-count operating point — the efficient-frontier reading of
     "recall at k false positives". Returns ``(recall, threshold_or_None, fp)``;
     threshold is None when no row passes (budget 0 and the top benign outranks
-    every malware). Ties are resolved benigns-BEFORE-malware, the worst case for
-    recall and what an attacker can force.
+    every malware). Scores use float32 serving precision. A threshold includes
+    an entire equal-score group; it cannot split tied benigns or malware.
 
     NOT the same thing as ``quantile_severity_threshold``, and the difference is
     deliberate. The k-th largest benign score also admits exactly k FPs, but so
@@ -329,7 +329,7 @@ def recall_at_fp_budget(
     valid = ~np.isnan(y_prob)
     if not np.any(valid):
         return (float("nan"), None, 0)
-    p = np.asarray(y_prob)[valid]
+    p = np.asarray(y_prob, dtype=np.float32)[valid]
     y = np.asarray(y_true)[valid].astype(np.int8)
     n_mal = int(np.sum(y == 1))
     if n_mal == 0:
@@ -339,7 +339,11 @@ def recall_at_fp_budget(
     y_sorted = y[order]
     fp_cum = np.cumsum(y_sorted == 0)
     tp_cum = np.cumsum(y_sorted == 1)
-    eligible = np.flatnonzero(fp_cum <= fp_budget)
+    # Only complete tie groups are realizable by a >= threshold. Stopping
+    # inside a group can claim one FP while the returned threshold admits two
+    # or more. This also handles distinct float64 scores that tie in serving.
+    group_ends = np.r_[np.flatnonzero(p_sorted[:-1] != p_sorted[1:]), len(p_sorted) - 1]
+    eligible = group_ends[fp_cum[group_ends] <= fp_budget]
     if len(eligible) == 0:
         return (0.0, None, 0)
     end = int(eligible[-1])
@@ -515,18 +519,23 @@ def _select_threshold_at_fp_budget(
     return stats
 
 
-def _fp_budget_for_rate(n_benign: int, rate: float) -> int:
-    """Allowed benign false positives for a target per-good-file FP rate.
+def resolution_adjusted_fp_budget(n_benign: int, level: float) -> int:
+    """Integer FP allowance for one decision pool under the LEVELS.md contract.
 
-    The one shared budget rule (also used by `quantile_severity_threshold`) so
-    the single-model `make thresholds` path and the azoth ensemble can't diverge:
-    rate<=0 -> 0 FP (L0); rate>0 -> max(1, floor(n*rate)) (L1+) — floor is the
-    accurate budget when the level resolves, clamped to >=1 so small benign sets
-    don't collapse to a flat recall@0FP curve.
+    L0 allows zero; L1 is the first observed FP. For L>=1 the continuous
+    allowance is 1 + (L-1)*N/1e8, rounded down. This is an empirical count
+    allowance, not a confidence bound or a literal population FPR promise.
+    An ensemble shares its pool's allowance; component models do not each
+    receive another FP. No benign observations means no measurable allowance.
     """
-    if n_benign <= 0 or rate <= 0:
+    if n_benign <= 0 or level <= 0:
         return 0
-    return max(1, int(np.floor(n_benign * rate)))
+    return min(n_benign, max(1, int(np.floor(1.0 + (level - 1.0) * n_benign / 1e8))))
+
+
+def _fp_budget_for_rate(n_benign: int, rate: float) -> int:
+    """Translate the nominal rate to the shared resolution-adjusted level."""
+    return resolution_adjusted_fp_budget(n_benign, rate * 1e8)
 
 
 def _fp_budget_for_per_million(n_benign: int, per_million: float) -> int:

@@ -1313,3 +1313,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T135352-filetypes-text` — 2026-10-30T13:53:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `53232e143aeacdd4` | inherit_from_filetypes_chm_b86f0748 | ok | 0.5686 | 0.9236 | 0.1578 | 16 | [log](out/autocollie/runs/2026-10-30T13-55-29_20261030T135352-filetypes-text_inherit_from_filetypes_chm_b86f0748.log) |
+| `831b4996d045dbdc` | text_min_malware_score_0 | ok | 0.9180 | 0.9842 | 0.7387 | 137 | [log](out/autocollie/runs/2026-10-30T14-01-24_20261030T135352-filetypes-text_text_min_malware_score_0.log) |
+| `36fb2620d60c97fd` | text_max_delta_step_5 | ok | 0.5785 | 0.9159 | 0.1576 | 12 | [log](out/autocollie/runs/2026-10-30T14-07-04_20261030T135352-filetypes-text_text_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if lowering min_malware_score from 4 to 0 improves L25 recall@1FP by retaining low-severity malware samples that the current cutoff excludes from training.
+- **`text_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if max_delta_step=5 improves L25 recall@1FP by allowing larger leaf updates to overcome potential score saturation or constant model behavior observed in recent runs.
+
+</details>
+

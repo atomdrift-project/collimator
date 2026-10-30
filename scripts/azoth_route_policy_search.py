@@ -1003,21 +1003,13 @@ def _mark_dominated_by_specialist(
     # good threshold at exactly the level's budget. Injecting unconditionally
     # at these FPs guarantees the per-filetype candidate set always carries
     # a real operating point at the user-priority levels.
-    extra_fps |= {0, 3}
-    # Only treat a filetype_only candidate as "covering" its FP level if it
-    # actually fires (tp > 0). Sentinel fire-never candidates — produced
-    # when target_per_million is below what the quantile machinery can
-    # resolve (L0 hostile sets target=0 and falls into the early-return
-    # at _quantile_severity_threshold:560) — claim fp=0 but catch zero
-    # malware, so suppressing the fp=0 injection would leave L0 with no
-    # operating point. The Pareto-tuned injection below is the actual
-    # zero-FP operating point.
-    existing_fps = {
-        int(c.get("fp", 0))
-        for c in candidates
-        if c.get("policy") == "filetype_only" and int(c.get("tp", 0)) > 0
-    }
-    fp_targets = sorted(extra_fps - existing_fps)
+    # Include the actual level allowance: on small pools L25 usually spends
+    # one FP, so searching only 0 and 3 misses the relevant operating point.
+    extra_fps |= {0, 1, 3, _budget(int(np.sum(labels == 0)), target_per_million)}
+    # The calibrated quantile and the maximum-recall frontier can spend the
+    # same FP count at different thresholds. Always try the frontier too;
+    # an existing one-FP quantile must not suppress the better one-FP choice.
+    fp_targets = sorted(extra_fps)
     for fp_target in fp_targets:
         extra = _make_specialist_candidate_at_fp(
             probs=probs,
@@ -1117,50 +1109,17 @@ def _mark_dominated_by_specialist(
                 candidates.append(blend)
 
 
-# Reject candidates whose realized slice FPR is well above the
-# calibration target. "Roughly 3 FP/M per pool" tolerates the noise
-# inherent in finite-sample quantile estimation:
-#
-#   slice with N benigns at target r FP/M -> expected count = rN/1e6
-#   95% Poisson CI -> realized count up to ~3× expected for large N
-#
-# At a 3 FP/M target on a 100K-benign slice that's a realized FPR of
-# up to ~30 FP/M. We accept up to 10× target as plausible noise. Beyond
-# that the candidate is operating at a *different* target (e.g. the
-# `_at_fp_25` policies are blend pareto operating points at ~190 FP/M
-# on python's slice, not noisy 3 FP/M realizations) and gets filtered.
-#
-# Small-benign slices (xlsx with 144 benigns) often produce a
-# candidate that fires on every benign in the slice. That's a broken
-# calibration, not a deployable operating point, and gets filtered
-# whether the multiplier is 10× or 100×.
-_CHOOSE_BEST_FPR_OVER_TARGET_MULTIPLIER = 10.0
-
-
 def _is_over_target(item: dict[str, Any]) -> bool:
-    """A candidate's realized slice FPR is too far above its level's
-    calibration target to count as "roughly the target rate." Used to
-    filter candidates labeled with one target but operating at a
-    different one (e.g. ``learned_blend_at_fp_25`` candidates whose
-    realized FPR is ~50× target — they're pareto operating points the
-    blend explored, not noisy 3 FP/M realizations), and to filter
-    broken calibrations on tiny-benign slices (e.g. xlsx candidates
-    that fire on every benign in the slice).
+    """Compare FP counts in the candidate's pool, using the shared level scale.
 
-    L0 (target=0 FP/M) is special: any non-zero realized FP is
-    over-target. Multiplier can't help — 0 × anything = 0. So strict
-    fp==0 is the gate at L0.
+    Comparing FP/100M directly to FP/M both mixed units and discarded the
+    deliberate one-FP allowance on small routes. Do not approximate it with
+    a rate multiplier: L25 has the same count rule at every pool size.
     """
-    realized_fp = int(item.get("fp") or 0)
+    fp = int(item.get("fp") or 0)
     target = float(item.get("target_per_million") or 0.0)
-    realized_fpm = float(item.get("fp_per_100M") or 0.0)
-    if target <= 0:
-        # L0 hostile / "true zero FP" levels.  Strict: any benign hit
-        # in the slice disqualifies the candidate.
-        return realized_fp > 0
-    if math.isnan(realized_fpm):
-        return False
-    return realized_fpm > target * _CHOOSE_BEST_FPR_OVER_TARGET_MULTIPLIER
+    benign = int(item.get("tn") or 0) + fp
+    return fp > _budget(benign, target)
 
 
 # A slice's own benign sample must justify any threshold derived from it.
@@ -1190,6 +1149,8 @@ def _looser_than_anchor(item: dict[str, Any], anchor: dict[str, float]) -> bool:
     """True when ``item`` fires more easily than the calibrate-derived anchor
     on any route. A candidate naming no thresholds fires on nothing and is
     trivially no looser."""
+    if item.get("blend"):
+        return True  # No componentwise wider-pool anchor proof for a learned blend.
     thresholds = item.get("thresholds") or {}
     if not thresholds:
         return False
@@ -1208,45 +1169,11 @@ def _choose_best(
     *,
     anchor: dict[str, float] | None = None,
 ) -> dict[str, Any]:
-    """Pick the per-filetype policy strategy that gives the best
-    detection-vs-FP balance at this level's per-route 3 FP/M target.
+    """Maximize recall within the resolution-adjusted FP count allowance.
 
-    Selection key (lex, max wins):
-      1. recall — catch more malware at the calibration target. The
-         deployment goal.
-      2. f1 — recall/precision balance.
-      3. -fp — when other metrics tie, prefer the quieter policy.
-      4. len(allowed_routes) — tiebreaker that keeps inclusive policies
-         (naming multiple routes) over single-route ones. Litmus uses
-         the route NAMES in route_policies.json to decide whether to
-         load each specialist; preserving inclusive names keeps every
-         specialist loadable even when below-resolution slices have
-         identical metrics across policies.
-      5. policy — alphabetic, just for determinism.
-
-    Filters (applied before the max):
-      * ``dominated_by_specialist=True`` — spending more FP than the
-        specialist alone needs for the same recall.
-      * at L0 only, looser than the calibrate-derived anchor. See
-        ``_looser_than_anchor``: L0's target is 0 FP/M, which makes the
-        rate filter below vacuous, so the anchor comparison stands in
-        for it. Every level from L1 up keeps the rate filter and is
-        untouched by this.
-      * realized FPR > 10× target. See ``_is_over_target``. Filters
-        two distinct pathologies in one rule:
-        (a) candidates labeled with the level target but actually
-            operating at a different one (e.g. ``learned_blend_at_fp_25``
-            candidates run at ~190 FP/M on python's slice — not noisy
-            3 FP/M but a different operating point the blend search
-            explored), and
-        (b) broken small-slice calibration where the candidate fires on
-            every benign because the (1 - r×10⁻⁶) quantile fell below
-            the smallest observed prob (xlsx with 144 benigns is the
-            canonical case).
-
-    Accuracy is intentionally not used: with the corpus's ~64% benign /
-    36% malware split, accuracy is dominated by the benign class and
-    tracks recall most of the way at strict FP budgets.
+    Ties prefer F1, fewer FPs, and inclusive route references. L0 also keeps
+    the wider-pool anchor safeguard: a tiny slice cannot justify loosening
+    a general/group threshold merely by observing zero FPs on that slice.
     """
     at_zero_target = any(
         float(c.get("target_per_million") or 0.0) <= 0.0 for c in candidates
@@ -1265,12 +1192,9 @@ def _choose_best(
             (c for c in candidates if c.get("policy") == "no_policy"),
             None,
         )
-        if no_policy is not None:
+        if no_policy is not None and not _is_over_target(no_policy):
             return no_policy
-        # Last resort: original candidates without filter. Should not
-        # be reachable for any well-formed candidate list since
-        # _candidate_lists always includes a no_policy entry.
-        eligible = list(candidates)
+        raise ValueError("no candidate satisfies the level budget; include a no_policy candidate")
     return max(
         eligible,
         key=lambda item: (
@@ -1299,6 +1223,78 @@ def _no_hit_candidate(
         primary=None,
         allowed_routes=(),
     )
+
+
+def _select_swept_levels(
+    levels: list[dict[str, Any]],
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    config: dict[str, Any],
+    *,
+    total_benign: int,
+) -> None:
+    """Choose additions to the runtime's cumulative decision, on dev only.
+
+    Equal FP counts do not imply equal false-positive files. A new policy
+    that catches one different benign would spend a second FP when scan
+    sweeps the grid. Evaluate the actual union before selecting each level.
+    Counts on `best` describe that sweep; `single_level_metrics` records the
+    chosen decision alone. Runtime still receives ordinary frozen policies.
+    """
+    carried = np.zeros(len(labels), dtype=bool)
+    anchors = {int(item["level"]): item["hostile"].get("thresholds", {})
+               for item in config["levels"]}
+    for level in sorted(levels, key=lambda item: int(item["level"])):
+        block = level["hostile"]
+        target = float(block["target_per_million"])
+        evaluated = []
+        for candidate in block["candidates"]:
+            single_hit = policy.margin(route_probs, candidate, len(labels)) >= 0
+            single = _metrics(
+                labels, single_hit, target_per_million=target, total_benign=total_benign,
+                thresholds=candidate.get("thresholds", {}), policy=candidate["policy"],
+                primary=candidate.get("primary"),
+                allowed_routes=tuple(candidate.get("allowed_routes", ())),
+            )
+            swept = _metrics(
+                labels, carried | single_hit, target_per_million=target,
+                total_benign=total_benign, thresholds=candidate.get("thresholds", {}),
+                policy=candidate["policy"], primary=candidate.get("primary"),
+                allowed_routes=tuple(candidate.get("allowed_routes", ())),
+            )
+            evaluated.append({
+                **candidate, **swept,
+                # Standalone dominance need not hold after union with earlier
+                # detections; compare the cumulative candidates directly.
+                "dominated_by_specialist": False,
+                "single_level_metrics": {key: single[key] for key in ("tp", "fp", "tn", "fn")},
+                "decision_rule": "saved_policy_sweep",
+            })
+        best = _choose_best(evaluated, anchor=anchors[int(level["level"])])
+        block["best"] = best
+        block["budget"] = _budget(int(np.sum(labels == 0)), target)
+        carried |= policy.margin(route_probs, best, len(labels)) >= 0
+
+
+def _swept_budget_errors(payload: dict[str, Any], config: dict[str, Any], table: dict) -> list[str]:
+    """Audit exported decisions, including scan's all-empty-grid fallback."""
+    errors = []
+    for ft in np.unique(table["file_types"]):
+        mask = table["file_types"] == ft
+        labels = table["labels"][mask]
+        scores = {str(name): table["scores"][i, mask]
+                  for i, name in enumerate(table["route_names"])}
+        grid = policy.routing_levels(scores, config, payload, str(ft))
+        first, _ = policy.first_firing_level(scores, grid, len(labels), -1)
+        benign = labels == 0
+        for item in config["levels"]:
+            level = int(item["level"])
+            budget = _budget(int(benign.sum()), float(item["hostile"]["target_per_million"]))
+            fp = int(np.sum(benign & (first <= level)))
+            if fp > budget:
+                errors.append(f"{ft} L{level}: runtime sweep has {fp} FP, allowance {budget} "
+                              "(including fallback if the policy grid is empty)")
+    return errors
 
 
 def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, Any]) -> None:
@@ -1889,6 +1885,7 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                 "candidates": candidates,
             }
         levels.append(level_item)
+    _select_swept_levels(levels, route_probs, scoped_labels, config, total_benign=total_benign)
     return f"filetypes/{file_type}", {
         "filetype": file_type,
         "filegroup": group,
@@ -1948,19 +1945,15 @@ def main() -> int:
         action="store_true",
         default=False,
         help=(
-            "Legacy semantic: enforce a single corpus-wide FP budget "
-            "(target_per_million × total_corpus_benign) across all "
-            "filetypes via knapsack, replacing per-filetype "
-            "_choose_best picks. The default (omit this flag) is the "
-            "per-route per-filetype 'L3 = roughly 3 FP per 1M scans "
-            "of this filetype/group/pool' semantic — each route's "
-            "threshold is calibrated to its own pool's 3 FP/M and we "
-            "deploy whatever per-filetype combination maximizes recall "
-            "at that calibration."
+            "Removed literal-global-rate mode; omit this flag for the "
+            "resolution-adjusted per-filetype contract."
         ),
     )
     args = parser.parse_args()
 
+    if args.global_fp_budget:
+        parser.error("--global-fp-budget uses the superseded literal-rate contract; "
+                     "omit it to optimize each filetype's resolution-adjusted allowance")
     if args.override_route:
         parser.error("stage replacement models and recalibrate before policy search")
     with open(args.config) as f:
@@ -2042,24 +2035,13 @@ def main() -> int:
         "benign": total_benign,
         "routes": route_payload,
     }
-    if args.global_fp_budget:
-        # Legacy semantic — reinterpret per-level target_per_million as
-        # a CORPUS-WIDE rate (target × total_corpus_benign = budget),
-        # then knapsack across filetypes to maximize TP within that
-        # single global budget. Caps total FPs aggressively (~9 for
-        # L3 at 3 FP/M on a 3M-benign corpus) but distorts the
-        # per-pool calibration since most filetypes end up forced to
-        # at_fp_0 candidates regardless of their slice's own 3 FP/M
-        # threshold.
-        _apply_global_budget_selection(payload, config)
-    # After every path that can set a level's winner — including the global
-    # knapsack above, which replaces them wholesale.
-    adopted = _enforce_level_dominance(payload)
-    if adopted:
-        print(
-            f"policy_search: {adopted} level(s) inherited a stricter level's "
-            f"policy (their own caught less at a looser budget)",
-        )
+    payload["budget_semantics"] = "resolution_adjusted_per_filetype_v1"
+    payload["decision_rule"] = "saved_policy_sweep"
+    if errors := _swept_budget_errors(payload, config, score_table):
+        for message in errors[:20]:
+            print(f"policy_search: FP BUDGET: {message}", file=sys.stderr)
+        print("refusing to write policies whose runtime decisions exceed their allowances", file=sys.stderr)
+        return 1
     if errors := _level_monotonicity_errors(payload):
         for message in errors[:20]:
             print(f"policy_search: NON-MONOTONE GRID: {message}", file=sys.stderr)

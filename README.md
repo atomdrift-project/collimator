@@ -17,8 +17,9 @@ Atomdrift Scan instead.
 - General, file-group, and file-type LightGBM models
 - Three-seed ensembles for routes where averaging improves stability
 - A 42-point false-positive grid from L0 through L25000
-- A canonical deployment default of L25, or 0.25 expected false positives per
-  million benign files
+- A canonical deployment default of L25 on the resolution-adjusted scale:
+  approximately one observed false positive plus 25 per 100 million benign
+  samples in each decision pool (exact formula in [LEVELS.md](LEVELS.md))
 - Deterministic train/test partitioning and per-route evaluation reports
 - ONNX export, bundle validation, and regression gates before publication
 - Autonomous experiment search through
@@ -33,6 +34,26 @@ Policy search sees only dev; test reports the saved decisions without choosing a
 new threshold or strategy. Publication checks model/spec identities and preserves
 them byte for byte. Legacy bundles without train-only provenance must be retrained.
 OOF runs remain useful diagnostics, but cannot set another model's thresholds.
+
+Policy selection maximizes recall within each filetype's shared FP allowance:
+`floor(1 + (L - 1) * N_benign / 100_000_000)` for L>=1, and zero at L0.
+General, group, and specialist components share that allowance. Selection and
+the deployment gate count the union of detections from all levels up to L,
+matching the runtime sweep; different false-positive files at different levels
+cannot each spend the same allowance. The gate checks each filetype on held-out
+test rows, so unused allowances elsewhere cannot hide one route's overrun.
+Small pools are included, and the default no longer applies a 30x multiplier.
+Nightly gates L25 and reports all other levels; requiring an L0 test pass would
+impose a different, zero-observed-FP objective.
+
+This is an empirical operating-point convention, not a population-rate
+guarantee. Reports separate the nominal level, observed FP count/rate, and
+one-sided 95% binomial upper bound. A passing L25 gate does not certify 25 FPs
+per 100 million future files. Zero observed FPs also does not prove zero risk.
+Compare recall at zero and one FP when researching small models; one unusually
+high-scoring benign can make their difference large. Repeatedly tuning against
+test results consumes that holdout; use fresh confirmation data for subsequent
+selection. Existing deployed bundles are not recalibrated by these code changes.
 
 LightGBM early stopping uses average precision. When the validation set has fewer
 than 30 examples of either class, training keeps the configured tree budget rather
@@ -76,6 +97,26 @@ make experiment \
 Experiment records land in `out/experiments/azoth/runs/`. Use a descriptive
 `EXP_IDEA`; the JSON record is the durable comparison and audit trail.
 
+For unstable LightGBM seeds or saturated scores, compare
+`EXP_MAX_DELTA_STEP=0` (uncapped, the default) with values such as 2, 5, and 10.
+Autocollie can search this knob per route and replay it during full training.
+The effective leaf update cap is `learning_rate * max_delta_step`; tighter
+caps can also cause early stopping before useful ranking develops. Compare
+multiple seeds on common dev rows while initially holding class weights and
+hard-negative settings fixed.
+
+`EXP_LGBM_THREADS` is the per-fit CPU ceiling for experiments and all specialist
+Make targets, including both OOF folds. Saved route configurations cannot raise
+the specialist suite's current thread ceiling. Small CPU fits (at most 50,000
+rows and 10 million sparse entries or dense cells) use at most four threads;
+larger OpenMP teams can make these fits substantially slower.
+
+Specialists also check whether the initial Hessian can support two leaves.
+For unweighted binary GBDT fits, a conservative bound can prove that every seed
+would be constant. Such routes record `unsplittable_initial_hessian` and use
+the filegroup/general fallback instead of exhausting seed retries. Weighted
+refits and other boosting modes retain the usual training and health checks.
+
 To bootstrap a specialist before one is deployed, screen configurations first:
 
 ```bash
@@ -88,6 +129,96 @@ make autocollie-screen ROUTES=filetypes/go \
 # Consume the saved results in a full bundle build:
 make azoth-full-train
 ```
+
+Current accepted training knobs live in `model-configs/<route>.json`, for example
+`model-configs/filetypes/npm.json`. Nightly training and autocollie read the same
+file. Edit `train_config`, `feature_env`, or `min_malware_training_score` there;
+explicit experiment/CLI overrides take precedence. Successful autocollie
+promotions update that file. Historical run records and the promotion registry
+record decisions; they do not override an existing model configuration.
+Deployment retains `accepted_config.json` beside each model and
+`training_config.json` records effective specialist settings, including CLI
+overrides, on subsequent training runs.
+
+Recovered history lives in `out/autocollie/history/`: recent experiments and
+older acceptance dependencies are retained together. The original archive is
+not required by the recovered run reader. Recovery can be repeated with
+`scripts/recover_autocollie_history.py`; it preserves active files on conflicts.
+
+Autocollie's search objective is measured recall within the L25 FP-count
+allowance described in [LEVELS.md](LEVELS.md), usually one observed FP on a
+small development cohort. Run records expose this as `level_budget_recall`,
+with its level, allowed/actual FP counts, and contract version. The historical
+interpolated `recall_at_25_per_100M` field remains a separate diagnostic.
+Prompts show measured recall, cohort revisions, accepted configurations and
+explicit overrides. Unverified baseline comparisons cannot claim improvement.
+Small-cohort gains need confirmation across seeds and more benign data.
+If measured L25 recall ties on the same cohort, a PR AUC gain greater than
+0.0002 qualifies for confirmation provided measured zero-FP recall does not
+regress. Missing zero-FP evidence does not qualify for this tie-breaker.
+PR AUC cannot compensate for lower L25 recall. Candidate selection applies
+the same tie-breaker, and confirmation must preserve measured L25 recall.
+Autocollie admits small filetype routes using the same support floors as
+specialist training: `AZOTH_SPECIALIST_MIN_BAD` and
+`AZOTH_SPECIALIST_MIN_GOOD` (both 50 by default). These are research admission
+limits, not a publishing approval. Routes still need usable artifacts and
+the normal confirmation/publishing checks. Concurrent route cycles default
+to two independently of calibration parallelism. While awaiting a complete
+LLM response, autocollie logs a waiting heartbeat every 30 seconds; that
+heartbeat does not imply token generation is progressing.
+Make-driven autocollie runs use `http://elrond:8000/v1` for proposals by default;
+set `AUTOCOLLIE_OPENAI_BASE_URL` to override the endpoint. The model remains
+`Qwen/Qwen3.8-27B`. Compact prompts retain accepted settings, measured research
+history, knob constraints, and deployment rules. Initial endpoint probes took
+27–45 seconds for Gem, C, and OOXML; this is a latency observation, not a
+guarantee of proposal quality or full-sweep runtime.
+Screening and promotion use separate queues: validation no longer holds a
+screening slot. Promotions remain serial, with at most one queued result per
+route in the current pass. Screens, paired baseline scoring, confirmation,
+full training, and validation share a compute-job limit equal to
+`ROUTE_CONCURRENCY`. During autocollie validation, calibration defaults to one
+route at a time and policy search uses the per-job CPU budget; ONNX prediction
+settings and all quality gates stay unchanged. Explicit make-argument overrides
+still apply. Use service CPU and memory limits for hard resource bounds.
+Autocollie PostgreSQL passes share a read-only exported snapshot across
+screening, confirmation, baseline scoring, and validation. Feature workers
+import that same snapshot; ingestion continues normally. The snapshot closes
+at pass completion or cancellation, and the next pass sees newly ingested
+data. Standalone experiments also hold a snapshot through extraction and fit.
+For a research script spanning several extractions, use
+`python scripts/corpus_snapshot.py --db "$DB" -- <command>`. Snapshot ownership
+must remain alive until its workers finish; a PostgreSQL restart still requires
+restarting the interrupted comparison. Long passes retain old database row
+versions until they finish, so refresh at pass boundaries rather than pinning
+an entire unlimited session.
+Historical favorites are configurations to remeasure, including runs that
+predate evaluation provenance. `make autocollie-replay KEY=<historical-key>`
+screens those settings on current data, records the new key's `replay_of`, then
+runs confirmation once and the normal promotion gates on that fresh key.
+The whole ladder shares one database snapshot. `REPLAY_SCREEN_ONLY=1` stops
+after screening and paired baseline scoring. `make autocollie-replay-favorites`
+uses this ladder for each selected historical favorite and keeps logs under
+`out/autocollie/replays/`; errors stop later stages for that candidate.
+Use `COOLDOWN=0` to retry entries previously blocked by infrastructure errors.
+Normal `confirm` still requires recorded evaluation provenance.
+An exported PostgreSQL snapshot also supplies the pass's current maximum row
+ID; a legacy cached `snapshot_max_id.txt` cannot hide newly ingested rows.
+An explicitly requested maximum ID remains an intentional historical cutoff.
+Confirm, promote, replay and auto derive extraction workers from
+`MAX_CPU_THREADS / ROUTE_CONCURRENCY` unless `WORKERS` or `EXP_WORKERS` was
+explicitly supplied. For research alongside another validation job, start with
+`MAX_CPU_THREADS=24 ROUTE_CONCURRENCY=2`; service limits provide hard bounds.
+Additional captured development comparisons can be retained in a run's
+`research_evaluations` list, with `partition: "dev"`, `evaluation_revision`,
+the measured level-budget fields and `evidence_path`. Autocollie includes
+these in future prompts so a larger-cohort ranking reversal is not lost.
+They inform research; they do not replace the paired metrics used by gates.
+
+`trait_path_depth` is available from 1 through 12 (default 3); it changes
+finding-prefix specificity and severity-prefixed n-grams, separately from
+tree `max_depth`. Start with isolated depths 2, 3 and 4, then investigate 5
+when warranted. Training-only follow-ups can reuse a frozen cohort's feature
+matrix; feature expansion is not required in every autocollie batch.
 
 `make autocollie-full-train ROUTES=filetypes/go EXPERIMENTS=12` chains the
 screen and full bundle build. `make autocollie` uses the automatic promotion
@@ -409,6 +540,52 @@ latency, prediction, and worker fetch/extraction/context time (worker sums overl
 Route metadata selection omits unused file paths so the existing covering index
 can supply all required fields without fetching each row from the table.
 
+Full-corpus threshold scoring streams compact metadata without sorting by ID;
+each completed batch keeps IDs, canonical groups, labels, and predictions aligned.
+Dedicated extraction workers receive their feature specification once at startup.
+ONNX ensembles share bounded dense inputs across seeds and use eight non-spinning
+threads per model by default (`COLLIMATOR_ONNX_THREADS` overrides this). Progress
+logs report metadata scan time and separate worker and parent stage totals.
+Deployment calibration defaults to two concurrent routes
+(`AZOTH_CALIBRATE_PARALLELISM=2`), independently of training concurrency.
+Spawned scorers share a read-only, memory-mapped row index instead of receiving
+a full-corpus Python dictionary with every job. Extraction writes bounded
+batches to disk-backed CSR arrays under `COLLIMATOR_MATRIX_DISK_DIR` (default
+`out/cache/matrix-scratch`). Small routes can reuse feature-matrix caches;
+routes above 50,000 rows avoid loading an entire NPZ matrix into RAM.
+BLAS/OpenMP pools are limited during route scoring; ONNX keeps its existing
+thread count and prediction batch boundaries to preserve score arithmetic.
+Calibration logs completed routes and a waiting heartbeat every 30 seconds.
+Labeled calibration workers fetch at most 64 reports at once and return compact
+CSR arrays instead of Python lists of sparse coordinates and values. Admission
+rechecks memory headroom throughout extraction; clean, inactive matrix pages are
+reclaimable, while dirty pages and live allocations remain charged. Outer batch
+boundaries and row order stay unchanged. Progress logs include rows, nonzeros,
+written bytes, and throughput. Wait logs identify the blocking batch's row IDs,
+completed followers, and cgroup pressure counters. Worker stack dumps repeat
+after 120 seconds in a batch (`COLLIMATOR_EXTRACTION_STALL_SECONDS`; zero disables).
+These changes preserve full-corpus coverage and all deployment gates. Score
+reuse still requires matching models, features, and corpus identity; database
+writes or a PostgreSQL restart can therefore require fresh scoring even for
+unchanged models. A waiting heartbeat alone does not prove worker progress.
+At load time, supported direct-input ONNX tree classifiers are remapped in memory
+to the union of columns their splits actually use. Callers still supply the full
+feature layout; projection happens before densification and is shared across
+ensemble members. Model files, thresholds, missing-value routing, and ensemble
+averaging remain unchanged. Original batch boundaries are preserved because
+ONNX can change floating-point reduction order for short tail batches.
+Unsupported graphs use the full input layout. Set
+`COLLIMATOR_ONNX_PROJECT_INPUT=0` to disable projection for comparisons.
+On 32,768 real rows, the earlier worker/threading changes reduced scoring from
+52.4s to 20.4s with maximum probability difference below 9e-8. This bounded
+benchmark excludes the full metadata scan and is not a full-corpus runtime claim.
+The general model's input projection reduces 127,227 columns to 8,116. Three
+alternating inference-only comparisons on 32,768 frozen corpus rows took
+0.62–0.88s with projection versus 8.1–34.0s without it under concurrent host
+load, with bit-identical probabilities. This excludes database extraction;
+larger prediction batches or different thread counts are not enabled because
+they can change floating-point results on short tails.
+
 To benchmark scoring without retraining, capture reports for rows already selected
 by an existing run, then compare against the frozen inputs and models:
 
@@ -449,10 +626,38 @@ metadata queries that need paths fetch them by primary key only after selecting
 sampled IDs. Route scoring does not need those path lookups.
 The one-time index build is separate from the fresh pipeline runtime.
 
+To benchmark only threshold scoring with existing models, use
+`make azoth-profile-scoring PROFILE_PERCENT=1 PROFILE_DIR=out/profiles/scoring-1pct`.
+This compares 6, 12, then 6 extraction workers on the same sampled corpus and
+database snapshot. Override the sequence with `PROFILE_SCORING_WORKERS`.
+It checks exact score, label, and row-ID parity after aligning rows, saves an
+extraction CPU profile, and writes only to the new profiling directory.
+On the fixed 213,941-row sample measured on 2026-10-29, six workers took
+228 and 222 seconds, while twelve took 165 seconds with identical scores.
+Autocollie therefore uses up to twelve general threshold-scoring workers,
+bounded by its per-job CPU budget; `AZOTH_THRESHOLD_WORKERS` overrides this.
+Ordinary Make invocations default that setting to `EXP_WORKERS`.
+Sampling is for iteration speed; final confirmation and deployment validation
+still use their full-data gates. Small filetype quality studies need enough
+class support and should usually use row budgets rather than a global 1% cut.
+
 Trigram extraction indexes learned triples by their first token, so archive
 members only test triples whose first token is present. This preserves feature
 values and the existing per-file token limits. On 1,000 archive reports, complete
 feature extraction fell from 8.27 to 2.11 seconds with identical feature vectors.
+Bigram and severity n-gram lookups now use the same first-token indexing.
+Finding summaries, normalized metrics, and risk statistics are reused within
+each report, then released before the next report. Together these changes
+reduced measured extraction time from 42.84 to 21.66 seconds on a fixed
+21,452-report sample, with exact parity across all 127,227 general-model
+feature columns and ONNX scores. This measures time spent extracting features, excluding fetching and prediction;
+complete scoring and full-pipeline wall times require separate benchmarks.
+The subsequent fixed 1% scoring comparison covered 213,940 rows using production
+unordered scheduling under the same 12-core CPU limit. The original extractor
+with six workers took 303.59 and 245.08 seconds; the optimized extractor with
+twelve workers took 106.92 seconds, 61.0% below the baseline average. Sorted row
+IDs, labels, and every ONNX score matched exactly. This is a sampled scoring
+benchmark, not a measured 100% validation or nightly runtime reduction.
 
 Vocabulary counting also checkpoints each committed shard, including scalar
 counts and completed batch IDs, in the experiment cache. Recovery hashes the
@@ -518,6 +723,13 @@ growth allowance, capped at the conservative 48 GiB default. Reclaimable file
 cache does not reduce the growth allowance. Missing or unlimited competitor
 limits retain 48 GiB; an explicit `COLLIMATOR_MEM_RESERVE_GB` overrides this
 policy. This changes admission only, not the 160 GiB hard limit or the models.
+
+Before fit admission and after fitting, coordinated runs collect unreachable
+objects and, where supported, return unused native allocator pages to the OS.
+The log reports the actual drop in anonymous memory. Live models and matrices
+remain referenced; admission uses newly measured headroom rather than assuming
+that retained heap is reusable. This prevents freed workspaces from one seed
+blocking the next seed's reservation.
 
 Extraction streams CSR arrays to `COLLIMATOR_MATRIX_DISK_DIR` (default
 `out/cache/matrix-scratch`) instead of retaining all blocks and then copying
@@ -606,6 +818,12 @@ be enabled independently, including symbol pairs/triples and key/value shape
 and split-value tokens. The obsolete `text_encoding` knob is removed: compact
 reports no longer carry its raw strings. Use `text_metrics_full` for retained
 text metrics.
+
+Training and scoring keep samples whose fact profile omits some model inputs.
+Available facts are extracted normally; absent inputs use the existing defaults
+(typically zero). Each extraction worker warns once per profile and feature
+layout. Reduced reports do not remove metrics discovered in other reports from
+the vocabulary. Explicit fact-profile compatibility checks remain strict.
 
 ### Optional feature allowlist
 

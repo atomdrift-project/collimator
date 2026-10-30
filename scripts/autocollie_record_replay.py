@@ -13,7 +13,7 @@ Usage:
       --reason "LWM gate: 3 filetypes regressed"
 
 Outcomes (free-form, but conventional values):
-  promoted          — replay made it through confirm + promote → deploy
+  promoted          — replay passed confirmation and publication gates
   confirm-failed    — confirm rejected (seed-spread or PR_AUC regression)
   rejected          — promote ran but azoth-validate / regression check rejected
   error             — unexpected crash; reason captures the tail
@@ -61,6 +61,10 @@ def detect_outcome_from_logs(
         if "=== confirm " in line and ": FAIL ===" in line:
             return ("confirm-failed", line.strip())
 
+    for line in confirm_text.splitlines():
+        if line.startswith("SKIP-PROMOTE:"):
+            return ("rejected", line.strip())
+
     # Promote attempted — look for PASS or REJECTED in promote log.
     for line in promote_text.splitlines():
         if "=== promote " in line and ": PASS ===" in line:
@@ -74,6 +78,9 @@ def detect_outcome_from_logs(
             return ("rejected", "promote rejected (no 'blocked by' line in log)")
 
     # Neither pattern present — crash or unexpected early exit.
+    for line in reversed((confirm_text + "\n" + promote_text).splitlines()):
+        if "level=ERROR" in line or "lacks evaluation provenance" in line:
+            return ("error", line.strip()[:500])
     tail = _read_tail(promote_log) or _read_tail(confirm_log)
     return ("error", f"no outcome marker in logs; tail: {tail[:300]}")
 

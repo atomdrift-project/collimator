@@ -586,7 +586,8 @@ if stage_active 7; then
         deploy_target=azoth-validate
     fi
     banner 7 "Calibrate production ensembles on dev + gate ($deploy_target)"
-    require_dir "OOF route scores" "${OOF_ROUTE_SCORES_DIR}" 6
+    # Production calibration reads the production ensembles; OOF diagnostics
+    # are independent and need not exist when resuming publication at stage 7.
     time timed_stage validation make "$deploy_target" \
         AZOTH_CALIBRATE_PARTITION=dev \
         AZOTH_USE_OOF_ROUTE_SCORES=0 \

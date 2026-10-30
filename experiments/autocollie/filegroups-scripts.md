@@ -1076,3 +1076,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T154954-filegroups-scripts` — 2026-10-30T15:49:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `102a8d450a941577` | inherit_from_filetypes_chm_b86f0748 | ok | 0.8884 | 0.8779 | 0.6880 | 183 | [log](out/autocollie/runs/2026-10-30T15-56-20_20261030T154954-filegroups-scripts_inherit_from_filetypes_chm_b86f0748.log) |
+| `e0b93f30113cbb36` | scripts_kv_vocab_transfer | ok | 0.9964 | 0.9963 | 0.9741 | 303 | [log](out/autocollie/runs/2026-10-30T15-59-35_20261030T154954-filegroups-scripts_scripts_kv_vocab_transfer.log) |
+| `6fe5073bdb42d27d` | scripts_min_malware_score_0 | ok | 0.9970 | 0.9968 | 0.9756 | 99 | [log](out/autocollie/runs/2026-10-30T16-05-06_20261030T154954-filegroups-scripts_scripts_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_kv_vocab_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests whether enabling kv_vocab features, as done in high-recall sister routes like asar and rtf, improves the measured L25 recall of 0.4342 by providing richer key-value signal for script malware detection.
+- **`scripts_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if lowering min_malware_score from 4 to 0 increases the training malware cohort size, potentially improving the measured L25 recall of 0.4342 by allowing the model to learn from lower-severity script malware patterns.
+
+</details>
+

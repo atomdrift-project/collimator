@@ -1,6 +1,7 @@
 # Severity levels: what they mean and how they are computed
 
-Status: 2026-08-03. Supersedes the level description in METHODOLOGY.md
+Status: 2026-10-28. Preserves the 2026-08-03 resolution-adjusted scale and
+aligns policy selection and deployment gates with it. Supersedes METHODOLOGY.md
 §"L0..L10000 severity tiers". Implemented in
 `collimator.thresholds.quantile_severity_threshold`; experiments and evidence
 in `FP_CURVE_RESULTS.md`.
@@ -29,6 +30,57 @@ routes (L25 is 31.7/100M on general, 39,394/100M on gem). Comparability moves
 from the label to the false-positive count. That is deliberate. The
 alternative is claiming a rate a route cannot deliver, which is what the rule
 before 2026-08-03 did by a median factor of ~945x.
+
+### The count budget used for optimization and gating
+
+For a pool with `N` benign samples, the equivalent continuous count is
+`1 + (L - 1) * N / 100_000_000`. Its integer allowance is the floor of that
+value (capped at N); L0 allows zero, and a pool with no benign observations
+has no measurable allowance. The `-1` makes L1 exactly the first FP. This is
+the precise version of “one FP plus roughly L FPs per hundred million.”
+
+For historical Gem's 2,540 benigns, L25 therefore allows **one** FP. Expressing
+that single event as a rate gives roughly 39,370/100M. That conversion is not
+evidence of Gem's future population rate. Historical counts below are examples,
+not current corpus sizes.
+
+The unit of the deployed budget is **one final filetype decision pool**, not
+each component in its ensemble. General, group, and type models must share it.
+Standalone model calibration still uses that model's own benign pool; these
+thresholds are candidates/anchors for final policy selection, not additive FP
+credits for overlapping components.
+
+Policy search maximizes recall within the allowance on dev. Candidate choices
+include the one-FP operating point, alongside zero-FP and other applicable
+counts. Selection evaluates actual float32 decisions and unions each candidate
+with all previously selected stricter levels. Two policies hitting different
+benigns spend two FPs even if each individually hits only one. Their shared
+false positives are counted only once. This is a sequential search over the
+available candidates, not a claim of a globally optimal policy grid.
+
+The deployment gate applies the frozen runtime sweep to test rows and checks
+each filetype's allowance using its test benign count. Totals sum those
+allowances for reporting; an under-budget route cannot subsidize an over-budget
+one. The default multiplier is 1 and there is no small-pool exemption. Nightly
+gates the canonical operating point, L25, while reporting the whole grid.
+`--budget-gate-level` selects another checkpoint; `--budget-gate-max-level`
+explicitly opts into checking every level up to a ceiling. An L0 gate would
+require zero observed test FPs, so it is not silently imposed on an L25 deploy.
+All-empty grids are evaluated with the runtime's
+general fallback rather than assumed to be inert. A dev policy whose fallback
+exceeds the allowance is rejected before publication.
+
+The gate is an **empirical count gate**, not a confidence-bound gate. Reports
+include observed counts/rates and one-sided 95% exact binomial upper bounds
+separately. Those bounds assume independent, representative benign samples;
+archive grouping reduces leakage but does not establish those assumptions.
+Zero observed FPs is also not proof of zero population risk. Maximizing recall
+at zero observed FPs remains a useful comparison, but can let one extreme benign
+sample dictate a much stricter threshold. L25 deliberately accepts the first FP
+to measure the recall available beyond that point.
+
+Selection never fits thresholds on the test partition. Once repeated research
+uses test results to choose configurations, fresh confirmation data is needed.
 
 ## Three floors, per route
 

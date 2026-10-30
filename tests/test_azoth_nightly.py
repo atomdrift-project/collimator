@@ -126,6 +126,44 @@ def run_pipeline(env):
     )
 
 
+@pytest.mark.parametrize("target", ["azoth-specialists", "azoth-specialists-fold-a", "azoth-specialists-fold-b"])
+def test_specialist_make_targets_forward_thread_budget(target):
+    result = subprocess.run(
+        ["make", "-n", "-o", "venv", "-o", "check-db", target, "EXP_LGBM_THREADS=3"],
+        cwd=ROOT, text=True, capture_output=True, timeout=10, check=True,
+    )
+    assert "--lgbm-threads 3" in result.stdout
+
+
+@pytest.mark.parametrize("invalid", [False, True])
+def test_publish_train_checks_and_snapshots_script(tmp_path, invalid):
+    (tmp_path / "Makefile").write_text((ROOT / "Makefile").read_text())
+    pipeline = tmp_path / "scripts/azoth_oof_pipeline.sh"
+    pipeline.parent.mkdir()
+    # Force a later file read in ordinary Bash execution, after the script
+    # replaces its own file. The Make target must keep executing the original.
+    body = (
+        'printf "started\\n"\n'
+        'printf "broken )\\n" > "$0"\n'
+        + "# padding\n" * 2000
+        + 'printf "finished %s %s %s\\n" "$WORKERS" '
+        '"$PUBLISH_TRAIN_SAMPLES" "$PUBLISH_MAX_TEST_SAMPLES"\n'
+    )
+    pipeline.write_text(body + ("broken )\n" if invalid else ""))
+    result = subprocess.run(
+        ["make", "-o", "venv", "-o", "check-db", "azoth-publish-train",
+         "WORKERS=48", "DEPLOY_TRAIN_SAMPLES_FULL=0", "DEPLOY_MAX_TEST_SAMPLES_FULL=0"],
+        cwd=tmp_path, text=True, capture_output=True, timeout=10,
+    )
+    if invalid:
+        assert result.returncode != 0
+        assert "started" not in result.stdout
+    else:
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "finished 48 0 0" in result.stdout
+        assert pipeline.read_text() == "broken )\n"
+
+
 @needs_bash_4_4
 def test_parallel_training_when_ram_available(shell_env):
     env, _, events = shell_env
@@ -198,7 +236,6 @@ def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
 def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path, validate_only):
     env, _, events = shell_env
     models = tmp_path / "models"
-    (models / "azoth/oof_route_scores").mkdir(parents=True)
     env.update(
         OUT_ROOT=str(models), AZOTH_ROOT=str(models / "azoth"),
         START_STAGE="7", STOP_STAGE="7", THRESHOLD_MAX_ID="123",

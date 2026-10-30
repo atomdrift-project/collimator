@@ -1136,3 +1136,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T161454-filetypes-xml` — 2026-10-30T16:14:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5dd5cab020eb0688` | inherit_from_filetypes_bmp_7a70d4cf | ok | 0.9500 | 0.9925 | 0.7559 | 371 | [log](out/autocollie/runs/2026-10-30T16-23-09_20261030T161454-filetypes-xml_inherit_from_filetypes_bmp_7a70d4cf.log) |
+| `688afa25e552a5f6` | xml_min_malware_score_0 | ok | 0.8601 | 0.9598 | 0.8385 | 515 | [log](out/autocollie/runs/2026-10-30T16-32-02_20261030T161454-filetypes-xml_xml_min_malware_score_0.log) |
+| `5be2c46bcdbfc327` | xml_max_delta_step_5 | ok | 0.7960 | 0.9458 | 0.8088 | 23 | [log](out/autocollie/runs/2026-10-30T16-33-07_20261030T161454-filetypes-xml_xml_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_7a70d4cf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=7a70d4cf4f438553, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_malware_training_score=4 cutoff is discarding low-severity malware that contributes to the 0.0894 L25 recall, aiming to improve recall@1FP by retaining the full labeled population for training.
+- **`xml_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates potential score saturation or constant model behavior by capping leaf outputs with max_delta_step=5, aiming to improve L25 recall@1FP by allowing more aggressive gradient updates without changing the feature matrix.
+
+</details>
+

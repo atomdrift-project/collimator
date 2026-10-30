@@ -111,6 +111,8 @@ class TrainConfig:
     # training time, biasing toward fewer false positives at low FPR — what we
     # want when optimizing recall@k FP/M for the deployed operating point.
     scale_pos_weight_mult: float = 1.0
+    # LightGBM leaf-output cap before learning-rate scaling; 0 disables it.
+    max_delta_step: float = 0.0
     # LightGBM-only: gbdt | dart | goss.  Ignored by the XGBoost learner.
     boosting_type: str = "gbdt"
     # LightGBM-only: random splits instead of greedy.  Ignored by XGBoost.
@@ -121,6 +123,7 @@ class TrainConfig:
     # AZOTH_SPECIALIST_PARALLELISM > 1) so each LightGBM instance doesn't
     # try to claim all 128 cores and thrash on context switches. The suite
     # auto-computes nproc/parallelism when this is None and parallelism>1.
+    # Small CPU matrices use at most four threads to avoid OpenMP overhead.
     #
     # ``COLLIMATOR_NUM_THREADS`` env override applies when this is None — lets
     # the OOF pipeline cap threads for concurrent prod+fold-A+fold-B general
@@ -128,6 +131,8 @@ class TrainConfig:
     num_threads: int | None = None
 
     def __post_init__(self) -> None:
+        if not np.isfinite(self.max_delta_step) or self.max_delta_step < 0:
+            raise ValueError("max_delta_step must be finite and nonnegative")
         if self.num_threads is None:
             env_val = os.environ.get("COLLIMATOR_NUM_THREADS", "").strip()
             if env_val:
@@ -160,6 +165,16 @@ class TrainResult:
     # predictions for FPR measurement over the entire database.
     cv_predictions: np.ndarray = field(default_factory=lambda: np.array([]))
     cv_labels: np.ndarray = field(default_factory=lambda: np.array([]))
+
+
+def _retained_tree_count(model: Any) -> int:
+    """Count trees used for inference, respecting each learner's index base."""
+    if model.__class__.__module__.startswith("lightgbm"):
+        return int(model.booster_.num_trees())
+    best_iteration = getattr(model, "best_iteration", None)
+    if best_iteration is not None:
+        return int(best_iteration) + 1  # XGBoost uses a zero-based index.
+    return int(model.get_booster().num_boosted_rounds())
 
 
 def _compute_metrics(
@@ -583,6 +598,7 @@ def train(
                 reg_lambda=config.reg_lambda,
                 learner=config.learner,
                 scale_pos_weight_mult=config.scale_pos_weight_mult,
+                max_delta_step=config.max_delta_step,
                 boosting_type=config.boosting_type,
                 extra_trees=config.extra_trees,
                 num_threads=config.num_threads,
@@ -626,6 +642,7 @@ def train(
                         monotone_constraints=config.monotone_constraints,
                         learner=config.learner,
                         scale_pos_weight_mult=config.scale_pos_weight_mult,
+                        max_delta_step=config.max_delta_step,
                         boosting_type=config.boosting_type,
                         extra_trees=config.extra_trees,
                         num_threads=config.num_threads,
@@ -692,6 +709,7 @@ def train(
         monotone_constraints=config.monotone_constraints,
         learner=config.learner,
         scale_pos_weight_mult=config.scale_pos_weight_mult,
+        max_delta_step=config.max_delta_step,
         boosting_type=config.boosting_type,
         extra_trees=config.extra_trees,
         num_threads=config.num_threads,
@@ -757,6 +775,7 @@ def train(
                 monotone_constraints=config.monotone_constraints,
                 learner=config.learner,
                 scale_pos_weight_mult=config.scale_pos_weight_mult,
+                max_delta_step=config.max_delta_step,
                 boosting_type=config.boosting_type,
                 extra_trees=config.extra_trees,
                 num_threads=config.num_threads,
@@ -776,18 +795,11 @@ def train(
                 eval_set=[(X_calib, y_calib)],
                 early_stopping_rounds=config.early_stopping_rounds,
             )
-        best_iter = getattr(final_model, "best_iteration", None)
-        if best_iter is None:
-            best_iter = getattr(final_model, "best_iteration_", None)
-        if best_iter is not None:
-            log.info(
-                "final model: %d trees (early stopped at %d) on %s",
-                final_model.n_estimators,
-                best_iter,
-                booster_device(final_model),
-            )
-        else:
-            log.info("final model: %d trees on %s", final_model.n_estimators, booster_device(final_model))
+        log.info(
+            "final model: %d retained trees (budget %d) on %s",
+            _retained_tree_count(final_model), config.n_estimators,
+            booster_device(final_model),
+        )
         split_summary = {
             "policy": "train/calibration/evaluation" if calibration_split is not None else "train/holdout",
             "holdout_split": "stratified",
@@ -801,7 +813,7 @@ def train(
         if hasattr(final_model, "set_params"):
             final_model.set_params(early_stopping_rounds=None)
         _fit_model(final_model, X_tv, y_tv, sample_weight=final_base_weight)
-        log.info("final model: %d trees on %s", final_model.n_estimators, booster_device(final_model))
+        log.info("final model: %d retained trees on %s", _retained_tree_count(final_model), booster_device(final_model))
         split_summary = {
             "policy": "train_only",
             "holdout_split": "none",
@@ -865,10 +877,7 @@ def train(
     n_eval_benign = tn + fp
     n_eval_malware = tp + fn
 
-    best_iteration = getattr(final_model, "best_iteration", None)
-    if best_iteration is None:
-        best_iteration = getattr(final_model, "best_iteration_", None)
-    n_actual_trees = (best_iteration or config.n_estimators - 1) + 1
+    n_actual_trees = _retained_tree_count(final_model)
     imbalance = n_benign / max(n_malware, 1)
 
     print(f"\n{'=' * 54}")

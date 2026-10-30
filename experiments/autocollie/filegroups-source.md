@@ -1218,3 +1218,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261029T030711-filegroups-source` — 2026-10-29T03:07:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f5c1b6621b41090` | inherit_from_filetypes_chm_b86f0748 | ok | 0.8531 | 0.8807 | 0.5312 | 127 | [log](out/autocollie/runs/2026-10-29T03-13-16_20261029T030711-filegroups-source_inherit_from_filetypes_chm_b86f0748.log) |
+| `0f82b6a1001ee4ed` | source_coverage_cutoff0 | ok | 0.9828 | 0.9816 | 0.9331 | 151 | [log](out/autocollie/runs/2026-10-29T03-15-39_20261029T030711-filegroups-source_source_coverage_cutoff0.log) |
+| `cdd48814b15c3542` | source_training_leaves128_reg2 | ok | 0.9812 | 0.9803 | 0.9325 | 93 | [log](out/autocollie/runs/2026-10-29T03-18-24_20261029T030711-filegroups-source_source_training_leaves128_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_coverage_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if retaining all labeled malware (cutoff 0) instead of filtering to score>=4 improves measured L25 recall by increasing training coverage of low-severity patterns, addressing the known failure mode where high cutoffs exclude most malware and inflate holdout metrics while hurting dev recall.
+- **`source_training_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing model capacity (num_leaves 128) and regularization (reg_lambda 2.0) improves measured L25 recall by better capturing complex source-code patterns while preventing overfitting to noise, reusing the existing feature matrix for a cheap training-only comparison.
+
+</details>
+

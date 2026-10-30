@@ -118,6 +118,7 @@ def test_resolve_env_maps_train_config_to_exp_vars() -> None:
             "learning_rate": 0.05,
             "extra_trees": True,
             "scale_pos_weight_mult": 1.5,
+            "max_delta_step": 2.5,
             "monotone_constraints": {"x": 1},  # not in mapping — must be skipped
         },
         "feature_env": {"COLLIMATOR_FORMAT_HINTS": "1", "COLLIMATOR_FOO": "bar"},
@@ -131,6 +132,7 @@ def test_resolve_env_maps_train_config_to_exp_vars() -> None:
     assert env["EXP_LEARNING_RATE"] == "0.05"
     assert env["EXP_EXTRA_TREES"] == "1"
     assert env["EXP_SCALE_POS_WEIGHT_MULT"] == "1.5"
+    assert env["EXP_MAX_DELTA_STEP"] == "2.5"
     assert env["EXP_TRAIN_SAMPLES"] == "600000"
     assert env["EXP_SEED_SEARCH_K"] == "3"
     assert env["EXP_MIN_MALWARE_SCORE"] == "5"

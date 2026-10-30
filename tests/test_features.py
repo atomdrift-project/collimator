@@ -243,7 +243,8 @@ def test_extract_labeled_from_db_batches_fetches_reports_in_workers(tmp_path) ->
     assert all(X.nnz > 0 for X, _y in batches)
 
 
-def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_aligned(tmp_path) -> None:
+@pytest.mark.parametrize('workers', [1, 2])
+def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_aligned(tmp_path, workers) -> None:
     report = _make_report(
         findings=[{"i": "objectives/evasion/process", "l": _CRIT_MAP["hostile"], "c": 1.0}],
     )
@@ -274,15 +275,15 @@ def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_align
             db_path,
             metadata,
             spec,
-            n_workers=1,
+            n_workers=workers,
             batch_size=2,
         ),
     )
 
     returned = [row for batch_meta, _X, _y, _stats in batches for row in batch_meta]
     labels = [int(label) for _batch_meta, _X, y, _stats in batches for label in y]
-    assert returned == metadata
-    assert labels == [row[-1] for row in metadata]
+    assert sorted(returned) == metadata
+    assert labels == [row[-1] for row in returned]
     assert all(X.nnz > 0 for _batch_meta, X, _y, _stats in batches)
     assert all(stats["rows"] > 0 for _batch_meta, _X, _y, stats in batches)
     assert all("fetch_sec" in stats for _batch_meta, _X, _y, stats in batches)

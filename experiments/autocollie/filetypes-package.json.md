@@ -1316,3 +1316,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T132706-filetypes-package.json` — 2026-10-30T13:27:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb8825a47ea45b53` | inherit_from_filetypes_chm_b86f0748 | ok | 0.9776 | 0.9824 | 0.9612 | 39 | [log](out/autocollie/runs/2026-10-30T13-28-08_20261030T132706-filetypes-package.json_inherit_from_filetypes_chm_b86f0748.log) |
+| `69c2214a29f7ec1a` | pkgjson_hardneg_sweep_low_frac | ok | 0.9982 | 0.9994 | 0.9868 | 33 | [log](out/autocollie/runs/2026-10-30T13-28-55_20261030T132706-filetypes-package.json_pkgjson_hardneg_sweep_low_frac.log) |
+| `36f39ad345553389` | pkgjson_min_malware_score_zero | ok | 0.9983 | 0.9995 | 0.9872 | 17 | [log](out/autocollie/runs/2026-10-30T13-29-29_20261030T132706-filetypes-package.json_pkgjson_min_malware_score_zero.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkgjson_hardneg_sweep_low_frac`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.6622 L25 recall ceiling by testing if a lower hard_negative_fraction (0.01) with higher weight (16) improves the combiner threshold without degrading the saturated PR_AUC, addressing the 'or_loses' diagnostic where ranking is strong but recall is capped.
+- **`pkgjson_min_malware_score_zero`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 recovers recall on low-severity malware that was previously filtered, aiming to improve the 0.6622 L25 recall by increasing the effective training set size for the minority class.
+
+</details>
+

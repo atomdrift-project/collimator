@@ -280,6 +280,7 @@ def _collimator_env() -> dict[str, str]:
             "COLLIMATOR_EXPERIMENT_TAG", "COLLIMATOR_FIT_RESOURCE_DIR",
             "COLLIMATOR_MATRIX_DISK_DIR", "COLLIMATOR_FIT_WAIT_SECONDS",
             "COLLIMATOR_FIT_POLL_SECONDS", "COLLIMATOR_FIT_BOUNDED_CGROUPS",
+            "COLLIMATOR_PG_SNAPSHOT", "COLLIMATOR_PG_SNAPSHOT_DATABASE",
         }
     }
 
@@ -291,9 +292,18 @@ def _cached_snapshot_max_id(
     *,
     refresh: bool = False,
 ) -> int:
-    """Pin cached experiments to one DB snapshot until explicitly refreshed."""
+    """Use the active MVCC snapshot, or the legacy cached row boundary."""
     if requested_max_id > 0 or cache_dir is None:
         return int(requested_max_id) if requested_max_id > 0 else data.snapshot_max_id(db_path)
+    from .corpus_snapshot import SNAPSHOT_ENV
+    if data._is_pg(db_path) and os.getenv(SNAPSHOT_ENV):
+        # The exported snapshot already freezes this entire comparison. A
+        # cache-wide max_id from an older pass would silently exclude ongoing
+        # ingestion forever. Read the boundary through the active snapshot;
+        # all commands in this pass see the same value, the next pass refreshes.
+        value = data.snapshot_max_id(db_path)
+        log.info("using active PostgreSQL snapshot boundary: max_id=%d", value)
+        return value
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = cache_dir / "snapshot_max_id.txt"
     if not refresh and path.exists():
@@ -688,6 +698,9 @@ def _print_test_metrics(
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
         rec_fp = recall_at_per_100M(y_true, y_prob)
         _L = _severity.DEFAULT_SEVERITY_LEVEL
+        print(f"  Measured L{_L}: recall={rec_fp['level_budget_recall']:.4f}, "
+              f"FP={rec_fp['level_budget_fp']}/{rec_fp['level_budget_fp_budget']} allowed "
+              f"among {rec_fp['n_benign_holdout']} benigns")
         print(
             f"  Recall@FP/100M: L{_L}(deploy)={rec_fp[f'recall_at_{_L}_per_100M']:.4f} "
             f"50={rec_fp['recall_at_50_per_100M']:.4f} "
@@ -743,24 +756,19 @@ if _severity.DEFAULT_SEVERITY_LEVEL not in RECALL_AT_PER_100M_KS:
 def recall_at_per_100M(
     y_true: np.ndarray, y_prob: np.ndarray,
 ) -> dict[str, float | int]:
-    """Recall on malware at thresholds where benign FP rate equals k per 100M.
+    """Recall at the shared resolution-adjusted level thresholds.
 
-    For each ``k`` in :data:`RECALL_AT_PER_100M_KS` we compute the FP budget
-    ``floor(n_benign * k / 1e8)`` and return the recall at the lowest threshold
-    whose cumulative benign FPs do not exceed that budget. When ``n_benign``
-    is small enough that ``k FP/100M`` rounds to zero allowed FPs (typical for
-    narrow routes), the metric collapses to recall@0 — the truthful answer at
-    that holdout size. Callers can read ``n_benign_holdout`` to detect this
-    saturation case.
+    L1 anchors the first observed benign FP; L25 is approximately one FP plus
+    25 per hundred million samples, not a literal population-rate promise.
+    The historical metric key names are retained for run-record compatibility.
+    Separate recall_at_0fp / recall_at_1fp anchors expose the small-pool tradeoff.
     """
     n_benign = int(np.sum(y_true == 0))
     n_malware = int(np.sum(y_true == 1))
     # `min_observable_per_100M` is 1e8 / n_benign — the smallest non-zero FPR
     # resolvable with this holdout (one false positive over the benign pool).
-    # Below this floor, recall@k collapses to recall@0 because there's no
-    # integer FP budget to spend. Reporting the floor lets downstream gates
-    # pick the smallest meaningful k for the route instead of optimizing a
-    # metric the holdout can't actually distinguish.
+    # Below this nominal rate floor, nearby levels usually resolve the same
+    # first FP. Reporting the floor makes that limited resolution explicit.
     #
     # When n_benign == 0 the floor is mathematically infinite (no FP is
     # resolvable), but `float("inf")` isn't JSON-compliant — Python's encoder
@@ -810,6 +818,14 @@ def recall_at_per_100M(
         out[f"recall_at_{budget}fp"] = rec
         out[f"threshold_at_{budget}fp"] = thr
         out[f"fp_at_{budget}fp"] = fp
+    # Explicit count-budget objective. Keep the historical interpolated grid
+    # below for compatibility, but never confuse it with this measured target.
+    level = _severity.DEFAULT_SEVERITY_LEVEL
+    budget = _severity.resolution_adjusted_fp_budget(n_benign, level)
+    rec, thr, fp = _severity.recall_at_fp_budget(y_true, y_prob, budget)
+    out.update(level_budget_contract=1, level_budget_level=level,
+               level_budget_fp_budget=budget, level_budget_fp=fp,
+               level_budget_recall=rec, level_budget_threshold=thr)
     for k in RECALL_AT_PER_100M_KS:
         suffix = f"{int(k)}_per_100M"
         thr, _method = _severity.quantile_severity_threshold(
@@ -857,6 +873,10 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
     )
 
 
+from .corpus_snapshot import stable_experiment
+
+
+@stable_experiment
 def run_experiment(
     db_path: Path | str,
     *,
@@ -890,6 +910,7 @@ def run_experiment(
     hard_negative_weight: float = 1.0,
     benign_filetype_weights: dict[str, float] | None = None,
     scale_pos_weight_mult: float = 1.0,
+    max_delta_step: float = 0.0,
     boosting_type: str = "gbdt",
     extra_trees: bool = False,
     seed_search_k: int = 1,
@@ -951,6 +972,7 @@ def run_experiment(
         "hard_negative_weight": float(hard_negative_weight),
         "benign_filetype_weights": benign_filetype_weights or {},
         "scale_pos_weight_mult": float(scale_pos_weight_mult),
+        "max_delta_step": float(max_delta_step),
         "boosting_type": str(boosting_type),
         "extra_trees": bool(extra_trees),
     }
@@ -1260,6 +1282,7 @@ def run_experiment(
                 hard_negative_weight=hard_negative_weight,
                 benign_filetype_weights=benign_filetype_weights or {},
                 scale_pos_weight_mult=scale_pos_weight_mult,
+                max_delta_step=max_delta_step,
                 boosting_type=boosting_type,
                 extra_trees=extra_trees,
                 monotone_constraints=constraints,
@@ -1294,17 +1317,16 @@ def run_experiment(
         if attempt_probs is not None:
             all_attempt_probs.append(attempt_probs)
 
-        # Winner score: prefer recall@L50 per-100M (today's deployed operating
-        # point); fall back to F1 when the holdout is too small to resolve L50
-        # (collapses to recall@0 across all attempts and F1 becomes the only
-        # signal).
-        attempt_score = float(attempt_metrics.get("recall_at_50_per_100M",
+        # Select seeds by measured recall at the configured level's FP count
+        # allowance. F1 is only a fallback when class coverage is unavailable.
+        attempt_score = float(attempt_metrics.get("level_budget_recall",
                               attempt_metrics.get("f1", 0.0)))
         seed_search_results.append({
             "seed": attempt_seed,
             "f1": float(attempt_metrics.get("f1", 0.0)),
             "roc_auc": float(attempt_metrics.get("roc_auc", 0.0)),
             "avg_precision": float(attempt_metrics.get("avg_precision", 0.0)),
+            "level_budget_recall": float(attempt_metrics.get("level_budget_recall", 0.0)),
             "recall_at_50_per_100M": float(attempt_metrics.get("recall_at_50_per_100M", 0.0)),
             "wall_s": float(time.perf_counter() - attempt_started),
         })

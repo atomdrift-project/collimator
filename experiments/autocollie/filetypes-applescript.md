@@ -362,3 +362,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T152048-filetypes-applescript` — 2026-10-30T15:20:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8fbad4050be05da3` | inherit_from_filetypes_chm_b86f0748 | ok | 0.8396 | 0.9868 | 0.8800 | 8 | [log](out/autocollie/runs/2026-10-30T15-22-06_20261030T152048-filetypes-applescript_inherit_from_filetypes_chm_b86f0748.log) |
+| `9ff49ceb10b48aae` | enable_text_metrics_kv_severity | ok | 0.9075 | 0.9544 | 0.7826 | 7 | [log](out/autocollie/runs/2026-10-30T15-22-17_20261030T152048-filetypes-applescript_enable_text_metrics_kv_severity.log) |
+| `93160d2427fed6c7` | relax_leaf_constraint | ok | 0.8848 | 0.9456 | 0.7273 | 6 | [log](out/autocollie/runs/2026-10-30T15-22-25_20261030T152048-filetypes-applescript_relax_leaf_constraint.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`enable_text_metrics_kv_severity`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 EXP_HARD_NEGATIVE_FRACTION=0 …` — Aims to improve L25 recall@1FP by enabling text_metrics_full, kv_vocab, and severity_fractions to capture script-specific textual and severity signals that the current default configuration lacks, mirroring the high-recall configuration of sister routes like rtf and chm.
+- **`relax_leaf_constraint`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 EXP_HARD_NEGATIVE_FRACTION=0 …` — Aims to improve L25 recall@1FP by reducing min_child_samples from 100 to 10 to allow the model to fit smaller, more specific AppleScript malware patterns without over-regularizing, a change that has proven effective in sister routes with similar minority class dynamics.
+
+</details>
+

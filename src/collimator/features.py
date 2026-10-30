@@ -82,6 +82,7 @@ from __future__ import annotations
 from .profiling import timed
 
 import collections
+import faulthandler
 import fcntl
 import hashlib
 import json
@@ -113,10 +114,12 @@ import scipy.sparse as sp
 import scipy.stats as stats
 
 from .memory import available_memory_gb, cgroup_headroom_gb
+from .errors import FactProfileError
 from .vocabulary import CountView, DiskTrigramCandidates, TrigramSource, VocabularyCounts
 
 log = logging.getLogger(__name__)
 _extract_trait_depth: ContextVar[int | None] = ContextVar("extract_trait_depth", default=None)
+_report_feature_cache: ContextVar[dict | None] = ContextVar("report_feature_cache", default=None)
 T = TypeVar("T")
 LabeledMetadata = tuple[int, str, str, int, int] | tuple[int, str, str, int, int, int]
 
@@ -1043,10 +1046,9 @@ def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
 
 
 # cleave metric renames (2026-08-22, Pike-naming pass, and later). Trained
-# models and allowed_features.json carry the OLD feature names; reports carry
-# the NEW metric names. `file_metrics` back-fills the old key from the new one so
-# every existing vocab keeps resolving. Keep every entry: hopper keeps reports
-# from every generation, so training always mixes old and new names. Mirrored
+# models and stored reports carry names from every generation. `file_metrics`
+# fills missing equivalent spellings in both directions so old and new layouts
+# resolve the same facts. Keep every entry: training mixes document generations. Mirrored
 # in scan's src/features.rs METRIC_RENAMES; change both together.
 _METRIC_RENAMES: dict[str, str] = {  # old flat name -> new flat name
     "archive.total_compressed": "archive.compressed_size",
@@ -1115,25 +1117,123 @@ _METRIC_RENAMES: dict[str, str] = {  # old flat name -> new flat name
     "pe.tls_callbacks": "pe.tls_callback_count",
     "pe.version_info_present": "pe.has_version_info",
     "text.max_ws_run": "text.max_whitespace_run",
+    # filefacts 2.0 / compact v9 (6d62e88): identical values, renamed keys.
+    "apk.declared_size": "apk.installed_size",
+    "apk.depend_count": "apk.dependency_count",
+    "archive.prefix_bytes": "archive.leading_bytes",
+    "archive.timing.mtime_dominant_fraction": "archive.timing.mtime_dominant_ratio",
+    "ast.max_array_len": "ast.max_array_length",
+    "ast.max_numeric_seq": "ast.max_numeric_sequence",
+    "binary.basic_blocks": "binary.basic_block_count",
+    "binary.huge_func_count": "binary.huge_function_count",
+    "binary.leaf_func_count": "binary.leaf_function_count",
+    "binary.tiny_func_count": "binary.tiny_function_count",
+    "class.constant_pool_size": "class.constant_pool_count",
+    "deb.depends_count": "deb.dependency_count",
+    "deb.installed_size": "deb.installed_size_kib",
+    "dmg.total_uncompressed_bytes": "dmg.uncompressed_size",
+    "elf.compressed_sections_count": "elf.compressed_section_count",
+    "elf.has_direct_loader_dep": "elf.has_direct_loader_dependency",
+    "iso.blank_identifier_fields": "iso.blank_identifier_count",
+    "iso.dir_count": "iso.directory_count",
+    "iso.udf.dir_count": "iso.udf.directory_count",
+    "jpeg.appended_bytes": "jpeg.trailing_bytes",
+    "lnk.args_leading_spaces": "lnk.arguments_leading_spaces",
+    "lnk.args_leading_tabs": "lnk.arguments_leading_tabs",
+    "lnk.args_max_whitespace_run": "lnk.arguments_max_whitespace_run",
+    "lnk.args_whitespace_total": "lnk.arguments_whitespace_count",
+    "office.vba.mean_identifier_length": "office.vba.avg_identifier_length",
+    "office.vba_project_size": "office.vba.project_size",
+    "pdf.decoded_form_value_max_len": "pdf.decoded_form_value_max_length",
+    "pdf.leading_bytes_before_header": "pdf.leading_bytes",
+    "pdf.trailing_bytes_after_eof": "pdf.trailing_bytes",
+    "pe.clr.strong_name_sig_size": "pe.clr.strong_name_signature_size",
+    "pe.recovered_exports": "pe.recovered_export_count",
+    "pe.recovered_functions": "pe.recovered_function_count",
+    "pe.recovered_imports": "pe.recovered_import_count",
+    "pe.recovered_sections": "pe.recovered_section_count",
+    "pe.reloc_overhang_bytes": "pe.relocation_overhang_bytes",
+    "pe.reloc_overhang_ratio": "pe.relocation_overhang_ratio",
+    "png.chunks_after_iend": "png.trailing_chunk_count",
+    "rar.encrypted_header": "rar.headers_encrypted",
+    "registry.first_published_at": "registry.first_published_unix",
+    "registry.maintainers": "registry.maintainer_count",
+    "registry.previous_published_at": "registry.previous_published_unix",
+    "registry.published_at": "registry.published_unix",
+    "rtf.group_depth_max": "rtf.max_group_depth",
+    "scpt.calls": "scpt.call_count",
+    "scpt.decoded": "scpt.decoded_count",
+    "scpt.events": "scpt.event_count",
+    "scpt.handlers": "scpt.handler_count",
+    "sections.entropy_max": "sections.max_entropy",
+    "sections.entropy_mean": "sections.avg_entropy",
+    "source.ast_walk_panic": "source.ast_walk_panicked",
+    "source.extract_panic": "source.extract_panicked",
 }
 
 
+def _metric_equivalents() -> tuple[tuple[tuple[str, str], ...], ...]:
+    """Group every spelling, preferring the newest explicitly supplied value."""
+    groups: dict[str, list[str]] = {}
+    for old in _METRIC_RENAMES:
+        current, seen = old, set()
+        while current in _METRIC_RENAMES:
+            if current in seen:
+                raise ValueError(f"cyclic metric rename: {old}")
+            seen.add(current)
+            current = _METRIC_RENAMES[current]
+        group = groups.setdefault(current, [current])
+        if old not in group:
+            group.append(old)
+    return tuple(tuple(tuple(key.split(".", 1)) for key in group) for group in groups.values())
+
+
+_METRIC_EQUIVALENTS = _metric_equivalents()
+
+
 def _backfill_renamed_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
-    """Alias renamed metrics under their old names (see _METRIC_RENAMES)."""
-    for old, new in _METRIC_RENAMES.items():
-        old_group, old_field = old.split(".", 1)
-        new_group, new_field = new.split(".", 1)
-        new_grp = metrics.get(new_group)
-        if not isinstance(new_grp, dict) or new_field not in new_grp:
+    """Read old/new spellings symmetrically without mutating stored reports.
+
+    Explicit values (including zero/null) and malformed groups win. Only
+    missing aliases are filled; genuinely absent facts remain absent.
+    """
+    result = metrics
+    copied_groups: set[str] = set()
+    for equivalents in _METRIC_EQUIVALENTS:
+        source = next(((group, field) for group, field in equivalents
+                       if isinstance(metrics.get(group), dict) and field in metrics[group]), None)
+        if source is None:
             continue
-        old_grp = metrics.setdefault(old_group, {})
-        if isinstance(old_grp, dict) and old_field not in old_grp:
-            old_grp[old_field] = new_grp[new_field]
-    return metrics
+        value = metrics[source[0]][source[1]]
+        for group, field in equivalents:
+            original = metrics.get(group, {})
+            if not isinstance(original, dict) or field in original:
+                continue
+            if result is metrics:
+                result = dict(metrics)
+            if group not in copied_groups:
+                result[group] = dict(original)
+                copied_groups.add(group)
+            result[group][field] = value
+    return result
 
 
 def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return per-file metrics from v8 facts.metrics / v7 fact.met / v5 ff.m / v4 ms."""
+    """Reuse normalized metrics within a single report extraction."""
+    cache = _report_feature_cache.get()
+    if cache is None:
+        return _compute_file_metrics(file_entry)
+    key = ("metrics", id(file_entry))
+    cached = cache.get(key)
+    if cached is not None and cached[0] is file_entry:
+        return cached[1]
+    result = _compute_file_metrics(file_entry)
+    cache[key] = (file_entry, result)
+    return result
+
+
+def _compute_file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
+    """Return normalized v8/v9 facts.metrics / v7 fact.met / v5 ff.m / v4 ms."""
     facts = file_facts(file_entry)
     metrics = _alias(facts, "metrics", "met", "m") if facts else None
     if not isinstance(metrics, dict):
@@ -1644,21 +1744,16 @@ class FeatureSpec:
 # Fact profiles
 # ---------------------------------------------------------------------------
 # cleave stores reports whose `files[].facts` are cut down to a model-input
-# profile and stamps the report `"fp": <profile id>`. Every metric outside the
-# profile, every symbol row whose name is not a gap token, and every section is
-# gone, and a feature reading one would silently extract 0 for these reports
-# but the true value for full-facts reports. A report with no `fp` carries
-# full facts and needs no check.
+# profile and stamps the report `"fp": <profile id>`. Metrics and symbol rows
+# outside that specific profile are gone (older profiles kept only gap tokens),
+# and a feature reading one uses the usual absent-input default (typically 0).
+# Incomplete reports remain usable alongside full-facts reports; extraction
+# warns once per profile and context rather than rejecting the whole route.
 #
 # The profile is cleave's src/model_facts_manifest.json, vendored here so
-# training does not depend on a sibling checkout; a report naming any other
-# profile is rejected rather than guessed at. The rules are those of cleave's
-# model_facts::supports, so both sides agree on what a profile covers.
+# training does not depend on a sibling checkout. Explicit compatibility
+# checks remain strict and follow cleave's model_facts::supports rules.
 FACT_PROFILE_MANIFEST = Path(__file__).parent / "data" / "model_facts_manifest.json"
-
-
-class FactProfileError(ValueError):
-    """A report's fact profile cannot supply every feature in the layout."""
 
 
 @lru_cache(maxsize=1)
@@ -1668,22 +1763,31 @@ def _fact_profile_manifest() -> dict[str, Any]:
     return manifest
 
 
+def _fact_profile_for(profile: str) -> dict[str, Any]:
+    manifest = _fact_profile_manifest()
+    if profile == manifest["id"]:
+        return manifest
+    previous = manifest.get("previous_profiles", {}).get(profile)
+    if previous is not None:
+        return previous
+    raise FactProfileError(
+        f"unknown fact profile {profile!r}: no matching contract in "
+        f"{FACT_PROFILE_MANIFEST}; copy the matching manifest from cleave"
+    )
+
+
 def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
     """Raise FactProfileError unless `profile` covers every feature named.
 
-    A metric must be one the profile retains. Families that only re-key
+    A metric must be one the profile retains; discovery profiles keep the
+    complete metric map. Derived metrics still need a dependency audit.
+    Families that only re-key
     vocabulary entries (present:, bigrams:, ...) or read no facts at all
     (filetype:, ghost:, ...) are covered as a whole; any other feature must be
     in the profile's audited fixed-feature list, so a new scalar feature fails
     until its fact dependencies have been audited.
     """
-    manifest = _fact_profile_manifest()
-    if profile != manifest["id"]:
-        raise FactProfileError(
-            f"unknown fact profile {profile!r}: collimator knows only "
-            f"{manifest['id']!r} ({FACT_PROFILE_MANIFEST}); copy the matching "
-            "src/model_facts_manifest.json from cleave"
-        )
+    manifest = _fact_profile_for(profile)
     families = set(manifest["families"])
     parameterized = set(manifest["parameterized_families"])
     metrics = set(manifest["metrics"])
@@ -1694,7 +1798,9 @@ def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
         if family not in families:
             uncovered.append(f"{name} (family {family!r} not in profile)")
         elif family == "metrics":
-            if key not in metrics:
+            if key not in metrics and not (
+                manifest.get("all_metrics") and not key.startswith("derived_")
+            ):
                 uncovered.append(f"{name} (metric not retained)")
         elif family not in parameterized and name not in fixed:
             uncovered.append(f"{name} (no fact-dependency audit)")
@@ -1703,8 +1809,9 @@ def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
         more = f", and {len(uncovered) - 20} more" if len(uncovered) > 20 else ""
         raise FactProfileError(
             f"fact profile {profile} omits inputs for {len(uncovered)} features "
-            f"in this layout: {shown}{more}. Train on full facts (cleave "
-            "--full-facts), drop these features, or extend the profile in cleave"
+            f"in this layout: {shown}{more}. Reanalyze affected samples with "
+            "a current cleave or scan to obtain the current fact profile, "
+            "drop these features, or extend the profile in cleave"
         )
 
 
@@ -2345,6 +2452,7 @@ class _ExtractContext:
         "tiered_quadgram_vocab_tokens",
         "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple", "trigrams_by_first",
         "trait_path_depth", "ranked_ngrams", "tiered_slots", "fact_profiles",
+        "bigrams_by_first", "tiered_by_first",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -2359,7 +2467,7 @@ class _ExtractContext:
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
         self.absolute_lookup = name_to_idx
-        # Fact profiles already checked against this layout (see check_fact_profile).
+        # Fact profiles already checked or warned about for this layout.
         self.fact_profiles: set[str] = set()
 
         self.presence_lookup: dict[str, int] = {}
@@ -2433,6 +2541,15 @@ class _ExtractContext:
             for order, prefix in ((2, "tierbi:"), (3, "tiertri:"), (4, "tierquad:"))
         }
 
+        self.tiered_by_first = {}
+        # Token selection and overflow limits stay in the extractor. This
+        # index only skips vocabulary entries that cannot possibly match.
+        for order, slots in self.tiered_slots.items():
+            index = {}
+            for slot, parts in slots:
+                index.setdefault(parts[0], []).append((slot, parts[1:]))
+            self.tiered_by_first[order] = index
+
         self.ghost_vocab = spec.ghost_vocab
         self.ghost_lookup: dict[str, int] = {}
         for gh in spec.ghost_vocab:
@@ -2494,6 +2611,9 @@ class _ExtractContext:
             parts = bi.split(" + ")
             if len(parts) == 2:
                 self.bigram_lookup_pair[(parts[0], parts[1])] = idx
+        self.bigrams_by_first: dict[str, list[tuple[str, int]]] = {}
+        for (first, second), idx in self.bigram_lookup_pair.items():
+            self.bigrams_by_first.setdefault(first, []).append((second, idx))
         self.synergy_lookup_pair: dict[tuple[str, str], int] = {}
         for bi, idx in self.synergy_lookup.items():
             parts = bi.split(" + ")
@@ -2569,6 +2689,21 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
 
 
 def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
+    """Reuse a file's summary only within the current report extraction."""
+    cache = _report_feature_cache.get()
+    if cache is None:
+        return _compute_finding_summary(findings)
+    key = (id(findings), _extract_trait_depth.get())
+    cached = cache.get(key)
+    if cached is not None and cached[0] is findings:
+        return cached[1]
+    result = _compute_finding_summary(findings)
+    # Retain the list too: a temporary list's ID can otherwise be reused.
+    cache[key] = (findings, result)
+    return result
+
+
+def _compute_finding_summary(findings: list[dict[str, Any]]) -> _FindingSummary:
     """Collect reusable per-report finding statistics."""
     # Hoist hot lookups into locals: dot-attribute and global-name lookups
     # are slow in a tight loop. include_soft_presence and trait_path_depth are
@@ -2778,6 +2913,20 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
 
 
 def _file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
+    """Reuse per-file risk statistics within the current extraction."""
+    cache = _report_feature_cache.get()
+    if cache is None:
+        return _compute_file_risk_stats(file_entry)
+    key = ("risk", id(file_entry), _extract_trait_depth.get())
+    cached = cache.get(key)
+    if cached is not None and cached[0] is file_entry:
+        return cached[1]
+    result = _compute_file_risk_stats(file_entry)
+    cache[key] = (file_entry, result)
+    return result
+
+
+def _compute_file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
     """Compute per-file suspiciousness for top-k package aggregation."""
     summary = _summarize_findings(file_findings(file_entry))
     denom = max(summary.filtered_finding_count, 1)
@@ -4051,13 +4200,13 @@ def _apply_bigram_features(
     """Group 11: trait bigram multi-hot features."""
     config = feature_config_from_env()
     use_conf = config.include_confidence_weighted_ngrams and summary is not None
-    lookup = ctx.bigram_lookup_pair
     for paths_list in _ngram_files(report, ctx, BIGRAM_MAX_PATHS, ctx.bigram_vocab_paths):
         present = set(paths_list)
-        for (p1, p2), idx in lookup.items():
-            if p1 in present and p2 in present:
-                vec[idx] = ((summary.path_confidences.get(p1, 1.0)
-                             + summary.path_confidences.get(p2, 1.0)) / 2.0) if use_conf else 1.0
+        for p1 in present:
+            for p2, idx in ctx.bigrams_by_first.get(p1, ()):
+                if p2 in present:
+                    vec[idx] = ((summary.path_confidences.get(p1, 1.0)
+                                 + summary.path_confidences.get(p2, 1.0)) / 2.0) if use_conf else 1.0
 
 
 def _apply_tiered_features(
@@ -4077,10 +4226,12 @@ def _apply_tiered_features(
         if len(tokens) > (64 if order == 4 else 512):
             return
     present = set(tokens)
-    # Work is bounded by the model vocabulary, not C(n, order).
-    for slot, parts in slots:
-        if all(part in present for part in parts):
-            vec[slot] = 1.0
+    # Visit only vocabulary slots whose first token is actually present.
+    index = ctx.tiered_by_first[order]
+    for first in present:
+        for slot, rest in index.get(first, ()):
+            if all(part in present for part in rest):
+                vec[slot] = 1.0
 
 
 def _apply_tiered_bigram_features(summary, ctx, vec) -> None:
@@ -4256,12 +4407,22 @@ def _extract_into(
     if profile is not None:
         profile = str(profile)
         if profile not in ctx.fact_profiles:
-            check_fact_profile(profile, ctx.absolute_lookup)
+            try:
+                check_fact_profile(profile, ctx.absolute_lookup)
+            except FactProfileError as error:
+                log.warning(
+                    "fact profile %s does not cover this feature layout; "
+                    "keeping the sample and using available facts with the "
+                    "usual defaults for absent inputs", profile,
+                )
+                log.debug("fact profile compatibility detail: %s", error)
             ctx.fact_profiles.add(profile)
     token = _extract_trait_depth.set(ctx.trait_path_depth)
+    summaries_token = _report_feature_cache.set({})
     try:
         _extract_into_at_depth(report, ctx, vec, formula, elements, score, mtime, cluster_id)
     finally:
+        _report_feature_cache.reset(summaries_token)
         _extract_trait_depth.reset(token)
 
 
@@ -4660,6 +4821,7 @@ def _vocab_db_batch_worker(
 # costs ~0.7s (the element x filetype lookups) against ~0.3s of real work
 # in a 341-row task.
 _worker_ctx: _ExtractContext | None = None
+_worker_spec: FeatureSpec | None = None
 _worker_spec_identity: bytes | None = None
 
 
@@ -4704,7 +4866,8 @@ def _extract_persistent_metadata_worker(args):
 
 
 def _init_extract_worker(spec: FeatureSpec) -> None:
-    global _worker_ctx
+    global _worker_ctx, _worker_spec
+    _worker_spec = spec
     _worker_ctx = _ExtractContext(spec)
 
 
@@ -4727,10 +4890,11 @@ def _context(spec: FeatureSpec) -> _ExtractContext:
 
 def _extract_batch_worker(
     args: tuple[int, list[tuple[dict[str, Any] | str, int]], FeatureSpec],
+    *, context: _ExtractContext | None = None,
 ) -> tuple[list[int], list[int], list[float], list[int]]:
     """Extract features from a batch of (item, label) pairs. CPU-only."""
     offset, batch, spec = args
-    ctx = _context(spec)
+    ctx = context if context is not None else _context(spec)
     vec = np.zeros(spec.total_features, dtype=np.float32)
     rows: list[int] = []
     cols: list[int] = []
@@ -4862,7 +5026,10 @@ def ram_headroom_gb(reserve_gb: float) -> float | None:
             headroom = min(headroom, float(ceiling) - _cgroup_anon_gb())
         except (OSError, ValueError, IndexError) as exc:
             log.warning("ignoring COLLIMATOR_MEM_CEILING_GB=%s: %s", ceiling, exc)
-    cgroup_headroom = cgroup_headroom_gb()
+    # Disk-backed extraction matrices accumulate clean file pages. Counting
+    # those as pinned memory can stop admission forever before another task
+    # gets a chance to trigger reclaim. Dirty/writeback pages remain charged.
+    cgroup_headroom = cgroup_headroom_gb(reclaim_file=True)
     if cgroup_headroom is not None:
         headroom = min(headroom, cgroup_headroom)
     from .fit_resources import reserved_headroom_gb
@@ -5174,7 +5341,7 @@ def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable,
 _WORKER_BUDGET_REFRESH_SECONDS = 30.0
 
 
-def _bounded_ordered_dynamic_iter(pool, fn, it, budget):
+def _bounded_ordered_dynamic_iter(pool, fn, it, budget, *, describe=None):
     """Drain under pressure, expand after recovery, and preserve row ordering."""
     pending = collections.deque()
     source = iter(it)
@@ -5193,16 +5360,38 @@ def _bounded_ordered_dynamic_iter(pool, fn, it, budget):
             buffered = next(source, sentinel)
             exhausted = buffered is sentinel
         while len(pending) < limit and not exhausted:
-            pending.append(pool.submit(fn, buffered))
+            pending.append((pool.submit(fn, buffered), buffered, time.monotonic()))
             buffered = next(source, sentinel)
             exhausted = buffered is sentinel
         if pending:
-            done, _ = wait([pending[0]], timeout=max(0, refresh_at - time.monotonic()),
+            done, _ = wait([pending[0][0]], timeout=max(0, refresh_at - time.monotonic()),
                            return_when=FIRST_COMPLETED)
             if done:
-                yield pending.popleft().result()
+                yield pending.popleft()[0].result()
+            elif describe is not None:
+                _log_extraction_wait(pending, limit, describe)
         elif not exhausted:
             time.sleep(max(0, refresh_at - time.monotonic()))
+
+
+def _log_extraction_wait(pending, limit, describe):
+    from .memory import cgroup_memory, cgroup_path
+
+    memory = ""
+    try:
+        path = cgroup_path()
+        if path is not None:
+            stats = cgroup_memory(path)
+            memory = (f"; cgroup={stats['current'] / 2**30:.2f} GiB"
+                      f" memory_full_avg10={stats['full_avg10']:.1f}%"
+                      f" events={stats['events']}")
+    except (OSError, ValueError):
+        pass
+    _future, item, submitted = pending[0]
+    log.warning("ordered extraction waiting: %s; age=%.1fs pending=%d "
+                "completed_behind_head=%d admission=%d%s",
+                describe(item), time.monotonic() - submitted, len(pending),
+                sum(future.done() for future, _, _ in list(pending)[1:]), limit, memory)
 
 
 def _extraction_budget(n_workers):
@@ -5455,6 +5644,7 @@ def _check_missing_cleave_rows(ids: list[int], reports_map: dict[int, Any]) -> N
 
 def _extract_labeled_db_batch_worker(
     args: tuple[int, Path | str, list[tuple[int, int]], FeatureSpec],
+    *, context: _ExtractContext | None = None,
 ) -> tuple[list[int], list[int], list[float], list[int]]:
     """Fetch and extract one labeled batch from the DB."""
     from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
@@ -5464,7 +5654,49 @@ def _extract_labeled_db_batch_worker(
     reports_map = data.fetch_cleave_results(dsn, ids)
     _check_missing_cleave_rows(ids, reports_map)
     batch = [(reports_map[rid], label) for rid, label in batch_ids if rid in reports_map]
-    return _extract_batch_worker((offset, batch, spec))
+    return _extract_batch_worker((offset, batch, spec), context=context)
+
+
+def _extract_labeled_db_csr_worker(args):
+    """Keep fetched reports and Python sparse triplets out of the IPC queue.
+
+    Outer batch boundaries and row order stay unchanged. Sub-batches bound
+    live JSON and triplet lists; only compact CSR arrays cross processes.
+    """
+    dsn, batch_ids, spec = args
+    if spec is None:
+        spec = _worker_spec
+    if spec is None:
+        raise RuntimeError("extraction worker has no initialized feature spec")
+    context = _context(spec)
+    blocks, labels = [], []
+    diagnostic_seconds = float(os.getenv("COLLIMATOR_EXTRACTION_STALL_SECONDS", "120"))
+    if diagnostic_seconds > 0:
+        faulthandler.dump_traceback_later(diagnostic_seconds, repeat=True)
+    try:
+        for batch in _batched(batch_ids, 64):
+            rows, cols, vals, y = _extract_labeled_db_batch_worker((0, dsn, batch, spec), context=context)
+            blocks.append(sp.csr_matrix(
+                (np.asarray(vals, dtype=np.float32),
+                 (np.asarray(rows, dtype=np.int32), np.asarray(cols, dtype=np.int32))),
+                shape=(len(y), spec.total_features),
+            ))
+            labels.extend(y)
+            del rows, cols, vals, y
+        matrix = (sp.vstack(blocks, format="csr") if blocks else
+                  sp.csr_matrix((0, spec.total_features), dtype=np.float32))
+        return matrix, np.asarray(labels, dtype=np.float32)
+    finally:
+        if diagnostic_seconds > 0:
+            faulthandler.cancel_dump_traceback_later()
+
+
+def _extract_initialized_metadata_worker(args):
+    """Use the spec installed once by the pool initializer, not per task."""
+    if _worker_spec is None:
+        raise RuntimeError("metadata extraction worker has no initialized feature spec")
+    dsn, metadata = args
+    return _extract_labeled_metadata_db_batch_worker((dsn, metadata, _worker_spec))
 
 
 def _extract_labeled_metadata_db_batch_worker(
@@ -5530,46 +5762,18 @@ def extract_labeled_from_db_batches(
         nw,
         eff_batch_size,
     )
-    batch_args = (
-        (0, db_path, batch, spec)
-        for batch in _batched(row_ids_labels, eff_batch_size)
-    )
-
-    def _to_matrix(
-        result: tuple[list[int], list[int], list[float], list[int]],
-    ) -> tuple[sp.csr_matrix, np.ndarray]:
-        rows, cols, vals, labels = result
-        n = len(labels)
-        y = np.array(labels, dtype=np.float32)
-        X = sp.csr_matrix(
-            (
-                np.array(vals, dtype=np.float32),
-                (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32)),
-            ),
-            shape=(n, spec.total_features),
-        )
-        log.debug(
-            "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
-            n,
-            spec.total_features,
-            X.nnz,
-            100.0 * X.nnz / max(n * spec.total_features, 1),
-        )
-        return X, y
-
     if nw > 1:
         with _extract_pool(nw, spec) as pool:
-            for result in _bounded_iter(
-                pool,
-                _extract_labeled_db_batch_worker,
-                batch_args,
-                max_inflight=nw,
-            ):
-                yield _to_matrix(result)
+            tasks = ((db_path, batch, None) for batch in _batched(row_ids_labels, eff_batch_size))
+            yield from _bounded_ordered_dynamic_iter(
+                pool, _extract_labeled_db_csr_worker, tasks, _extraction_budget(nw),
+                describe=lambda task: (f"rows={len(task[1])} "
+                                       f"ids={task[1][0][0]}..{task[1][-1][0]}"),
+            )
         return
 
-    for args in batch_args:
-        yield _to_matrix(_extract_labeled_db_batch_worker(args))
+    for batch in _batched(row_ids_labels, eff_batch_size):
+        yield _extract_labeled_db_csr_worker((db_path, batch, spec))
 
 
 def extract_labeled_metadata_from_db_batches_unordered(
@@ -5665,8 +5869,8 @@ def extract_labeled_metadata_from_db_batches_unordered(
         with _extract_pool(nw, spec) as pool:
             for result in _bounded_unordered_iter(
                 pool,
-                _extract_labeled_metadata_db_batch_worker,
-                batch_args,
+                _extract_initialized_metadata_worker,
+                ((dsn, metadata) for dsn, metadata, _spec in batch_args),
                 max_inflight=2 * nw,
             ):
                 yield _to_matrix(result)
@@ -6453,7 +6657,6 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
     if config.include_extended_metrics:
         from . import data as _data  # noqa: PLC0415
         metric_key_counts: dict[str, int] = {}
-        reduced = False  # whether any scanned report carries cleave's fact profile
         # Scan a random subset for speed (5000 rows is enough to find common keys).
         scan_ids = [rid for rid, _l in scan_rows]
         for start in range(0, len(scan_ids), 500):
@@ -6462,7 +6665,6 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
                 report = _coerce_report(item["cleave_result"])
                 if report is None:
                     continue
-                reduced = reduced or report.get("fp") is not None
                 report_metric_keys: set[str] = set()
                 for file_entry in report_files(report):
                     ms = file_metrics(file_entry)
@@ -6493,15 +6695,12 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
         # the threshold but still respects base_keys and the prefix filter). The
         # allowlist reserves the slot even when the scan sample never saw the key
         # — exactly the case for a rare anti-analysis signal.
-        # On a corpus with reduced reports, offer only metrics the fact profile
-        # retains: those reports carry no others, so a column for one would be
-        # zero on every reduced row. To offer a new metric there, add it to
-        # cleave's profile first.
-        retained = frozenset(_fact_profile_manifest()["metrics"]) if reduced else None
+        # Discover from the facts actually present. A reduced report must not
+        # veto a metric observed in other reports; absent values use the same
+        # defaults as any other missing input during extraction.
         kept = {
             k for k, c in metric_key_counts.items()
             if c >= threshold and k not in base_keys and _passes_prefix(k)
-            and (retained is None or k in retained)
         }
         forced = {
             k for k in ALWAYS_KEEP_METRICS

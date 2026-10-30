@@ -137,3 +137,35 @@ def test_ensemble_k3_averages(tmp_path: Path) -> None:
 def test_ensemble_rejects_empty() -> None:
     with pytest.raises(ValueError, match="at least one"):
         Ensemble([])
+
+
+def test_onnx_ensemble_shares_bounded_dense_inputs(monkeypatch):
+    from scipy import sparse
+    from collimator.model import OnnxModel
+
+    class Session:
+        def __init__(self, offset):
+            self.offset = offset
+
+        def run(self, _outputs, inputs):
+            x = inputs['input']
+            assert x.dtype == np.float32 and x.flags.c_contiguous
+            assert x.nbytes <= 64
+            p = (x[:, 0] + self.offset) / 100
+            return [np.zeros(len(x)), np.column_stack((1-p, p))]
+
+    monkeypatch.setattr(OnnxModel, '_DENSE_BYTES', 64)
+    x = sparse.csr_matrix(np.arange(17*7, dtype=np.float32).reshape(17, 7) / 10)
+    calls = []
+    original = sparse.csr_matrix.toarray
+
+    def tracked(matrix, *args, **kwargs):
+        calls.append(matrix.shape)
+        return original(matrix, *args, **kwargs)
+
+    monkeypatch.setattr(sparse.csr_matrix, 'toarray', tracked)
+    ensemble = Ensemble([OnnxModel(Session(v), 'input') for v in (1, 2, 3)])
+    actual = ensemble.predict_proba(x)
+    np.testing.assert_allclose(actual, (np.arange(17)*.7+2)/100, atol=1e-7)
+    assert len(calls) == 9  # one conversion per two rows, shared by all seeds
+    assert ensemble.predict_proba(x[:0]).shape == (0,)

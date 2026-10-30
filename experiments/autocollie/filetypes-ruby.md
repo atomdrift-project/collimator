@@ -319,3 +319,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T171107-filetypes-ruby` — 2026-10-30T17:11:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `97b35adf414e70ea` | inherit_from_filetypes_iso_fec2c64b | ok | 0.9674 | 0.9997 | 0.8132 | 39 | [log](out/autocollie/runs/2026-10-30T17-15-35_20261030T171107-filetypes-ruby_inherit_from_filetypes_iso_fec2c64b.log) |
+| `b94574eaddfa11f1` | ruby_baseline_control | ok | 0.9836 | 0.9999 | 0.9250 | 38 | [log](out/autocollie/runs/2026-10-30T17-16-28_20261030T171107-filetypes-ruby_ruby_baseline_control.log) |
+| `00779361cbefe945` | ruby_kv_vocab_text_metrics | ok | 0.9831 | 0.9999 | 0.9487 | 53 | [log](out/autocollie/runs/2026-10-30T17-17-35_20261030T171107-filetypes-ruby_ruby_kv_vocab_text_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ruby_baseline_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Establishes the baseline L25 recall@1FP for the ruby route using the inherited sister configuration to identify the starting point for optimization.
+- **`ruby_kv_vocab_text_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests if enabling kv_vocab and text_metrics_full improves L25 recall@1FP by capturing script-specific structural and key-value signals that the baseline control lacks.
+
+</details>
+

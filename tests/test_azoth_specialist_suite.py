@@ -8,17 +8,79 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import numpy as np
+from scipy import sparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import azoth_specialist_suite as suite  # noqa: E402
 
 from collimator import train  # noqa: E402
+from collimator.model import create_classifier  # noqa: E402
 
 
 class _FakeModel:
     def __init__(self, *, constant: bool = False) -> None:
         self.constant = constant
+
+
+def test_initial_hessian_bound_catches_rar_but_not_deb():
+    config = train.TrainConfig(learner="azoth", min_child_weight=5)
+    blocked = suite._initial_split_blocker(config, n_benign=47, n_malware=16334)
+    assert blocked["initial_hessian_upper_bound"] == pytest.approx(2 * 47**2 / 14742)
+    assert blocked["two_leaf_hessian_minimum"] == 10
+    assert suite._initial_split_blocker(config, n_benign=19843, n_malware=25) is None
+
+
+@pytest.mark.parametrize("changes", [
+    {"hard_negative_fraction": .1, "hard_negative_weight": 3},
+    {"benign_filetype_weights": {"rar": 100}},
+    {"boosting_type": "goss"},
+    {"learner": "litmus-xg"},
+    {"min_child_weight": .1},
+])
+def test_initial_hessian_bound_preserves_potentially_learnable_configurations(changes):
+    config = train.TrainConfig(**{"learner": "azoth", "min_child_weight": 5, **changes})
+    assert suite._initial_split_blocker(config, n_benign=47, n_malware=16334) is None
+
+
+def test_initial_hessian_block_is_real_even_with_a_perfect_feature():
+    y = np.r_[np.zeros(42), np.ones(14700)]
+    X = sparse.csr_matrix(y[:, None])
+    for seed in (42, 43, 44):
+        model = create_classifier(42, 14700, learner="azoth", device="cpu",
+                                  random_state=seed, n_estimators=4, num_threads=1,
+                                  min_child_weight=5, min_child_samples=1, subsample=1)
+        model.fit(X, y)
+        assert suite.export.is_constant_predictor(model)
+    # Initialization can rescue the same separable dataset. This is a model
+    # change to validate separately, not something the skip guard enables.
+    model.set_params(boost_from_average=False)
+    model.fit(X, y)
+    assert not suite.export.is_constant_predictor(model)
+
+
+def test_rar_preflight_skips_seed_training_and_records_fallback(tmp_path, monkeypatch):
+    labels = np.r_[np.zeros(47), np.ones(16334)].astype(np.float32)
+    matrix = sparse.csr_matrix((len(labels), 1), dtype=np.float32)
+    spec = SimpleNamespace(total_features=1, feature_names=["test"], save=lambda path: None)
+    monkeypatch.setattr(suite.cache_identity, "database_revision", lambda _: "test")
+    monkeypatch.setattr(suite, "_fetch_rows", lambda *a, **k: [])
+    monkeypatch.setattr(suite, "_ids_labels", lambda *a, **k: list(enumerate(labels)))
+    monkeypatch.setattr(suite, "_file_types", lambda *a, **k: ["rar"] * len(labels))
+    monkeypatch.setattr(suite.features, "build_vocab_from_db", lambda *a, **k: spec)
+    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", lambda *a, **k:
+                        (matrix, labels, matrix[:0], labels[:0]))
+    monkeypatch.setattr(suite.train, "train", lambda *a, **k: pytest.fail("must not fit any seeds"))
+    result = suite._train_one(
+        db_path="unused", name="rar", kind="filetype", file_types=("rar",),
+        output_dir=tmp_path, general_spec_path=tmp_path/"unused", general_spec=spec,
+        mask_spec_path=None, feature_env={}, config=train.TrainConfig(learner="azoth"),
+        workers=1, max_id=1, filegroup_score_filter=False, skip_benchmark=True, n_seed_extras=2,
+    )
+    assert result["skip_reason"] == "unsplittable_initial_hessian"
+    assert result["seed_health"]["attempts"] == []
+    assert result["seed_health"]["target_members"] == 3
 
 
 def _fake_train_result(
@@ -128,6 +190,7 @@ def test_parse_train_overrides_coerces_train_config_values() -> None:
     parsed = suite._parse_train_overrides(
         [
             "filetypes/pe:num_leaves=160",
+            "filetypes/pe:max_delta_step=2.5",
             "filetypes/pe:learning_rate=0.03",
             "filetypes/pe:threshold_fpr_target=0.000003",
             'filetypes/pe:benign_filetype_weights={"pe": 2.5}',
@@ -136,6 +199,7 @@ def test_parse_train_overrides_coerces_train_config_values() -> None:
     )
 
     assert parsed["filetypes/pe"]["num_leaves"] == 160
+    assert parsed["filetypes/pe"]["max_delta_step"] == 2.5
     assert parsed["filetypes/pe"]["learning_rate"] == 0.03
     assert parsed["filetypes/pe"]["threshold_fpr_target"] == 0.000003
     assert parsed["filetypes/pe"]["benign_filetype_weights"] == {"pe": 2.5}
@@ -159,6 +223,7 @@ def test_route_train_config_accepts_short_and_full_route_keys() -> None:
         [
             "pe:n_estimators=250",
             "filetypes/pe:num_leaves=160",
+            "filetypes/pe:max_delta_step=2.5",
         ],
     )
 
@@ -166,6 +231,8 @@ def test_route_train_config_accepts_short_and_full_route_keys() -> None:
 
     assert got.n_estimators == 250
     assert got.num_leaves == 160
+    assert got.max_delta_step == 2.5
+    assert base.max_delta_step == 0
     assert base.n_estimators == 400
     assert base.num_leaves == 96
 
@@ -179,6 +246,16 @@ def test_route_train_config_accepts_filegroup_route_key() -> None:
 
     assert got.reg_lambda == 3.5
     assert base.reg_lambda == 1.0
+
+
+@pytest.mark.parametrize("saved,expected", [(64, 8), (4, 4), (None, 8), (0, 8), (-1, 8)])
+def test_route_replay_cannot_exceed_current_thread_budget(saved, expected):
+    base = train.TrainConfig(learner="azoth", num_threads=8)
+    overrides = {"filetypes/deb": {"num_threads": saved, "num_leaves": 96}}
+    got = suite._route_train_config(base, {"name": "deb", "kind": "filetype"}, overrides)
+    assert got.num_threads == expected
+    assert got.num_leaves == 96
+    assert overrides["filetypes/deb"]["num_threads"] == saved
 
 
 @pytest.mark.parametrize("group,spellings", [

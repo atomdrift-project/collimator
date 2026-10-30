@@ -1002,3 +1002,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T152233-filetypes-lnk` — 2026-10-30T15:22:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0024a9d00b29caba` | inherit_from_filetypes_chm_b86f0748 | ok | 0.9929 | 0.9709 | 0.8947 | 50 | [log](out/autocollie/runs/2026-10-30T15-24-09_20261030T152233-filetypes-lnk_inherit_from_filetypes_chm_b86f0748.log) |
+| `8169833f4a406660` | lnk_kv_vocab_depth4 | ok | 0.9948 | 0.9813 | 0.9770 | 16 | [log](out/autocollie/runs/2026-10-30T15-24-26_20261030T152233-filetypes-lnk_lnk_kv_vocab_depth4.log) |
+| `c951f064eb7fe438` | lnk_kv_vocab_cutoff2 | ok | 0.9989 | 0.9954 | 0.9825 | 20 | [log](out/autocollie/runs/2026-10-30T15-24-44_20261030T152233-filetypes-lnk_lnk_kv_vocab_cutoff2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_kv_vocab_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves the 0.7404 L25 recall of the kv_vocab winner by capturing more specific finding prefixes without changing the feature matrix.
+- **`lnk_kv_vocab_cutoff2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score to 2 improves the 0.7404 L25 recall by including lower-severity malware in training, which may provide more diverse signal for the LNK format.
+
+</details>
+

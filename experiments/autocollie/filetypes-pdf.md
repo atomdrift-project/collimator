@@ -2704,3 +2704,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T163313-filetypes-pdf` — 2026-10-30T16:33:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fe18bc3718e01a0a` | inherit_from_filetypes_bmp_7a70d4cf | ok | 0.9998 | 0.9993 | 0.9955 | 30 | [log](out/autocollie/runs/2026-10-30T16-36-59_20261030T163313-filetypes-pdf_inherit_from_filetypes_bmp_7a70d4cf.log) |
+| `41b9a2065e8b85f6` | pdf_hardneg_sweep_low_frac_high_weight | ok | 0.9979 | 0.9933 | 0.9864 | 16 | [log](out/autocollie/runs/2026-10-30T16-37-37_20261030T163313-filetypes-pdf_pdf_hardneg_sweep_low_frac_high_weight.log) |
+| `48cd0816eb8efa38` | pdf_min_malware_score_zero_control | ok | 0.9981 | 0.9940 | 0.9904 | 3 | [log](out/autocollie/runs/2026-10-30T16-37-55_20261030T163313-filetypes-pdf_pdf_min_malware_score_zero_control.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_7a70d4cf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=7a70d4cf4f438553, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_hardneg_sweep_low_frac_high_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.7502 L25 recall ceiling by testing the route-specific hard-negative sweep hypothesis (fraction 0.015, weight 16) to improve ranking precision at the 1-FP budget without altering the feature matrix.
+- **`pdf_min_malware_score_zero_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_malware_training_score=4 cutoff is suppressing recall by removing low-severity malware from training, aiming to recover the 0.8340 historical recall level observed with score=0 on the larger cohort.
+
+</details>
+

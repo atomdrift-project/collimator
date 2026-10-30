@@ -10,6 +10,34 @@ from collimator import model as model_mod
 from collimator.model import _shape_args, create_classifier, pick_device, predict_proba
 
 
+@pytest.mark.parametrize("shape,requested,expected", [
+    ({"n_rows": 17_881, "n_features": 7260, "nnz": 3_253_076}, 64, 4),
+    ({"n_rows": 17_881, "n_features": 7260, "nnz": 3_253_076}, 2, 2),
+    ({"n_rows": 17_881, "n_features": 7260, "nnz": 3_253_076}, None, 4),
+    ({"n_rows": 1000, "n_features": 20}, 64, 4),
+    ({"n_rows": 1000, "n_features": 20_000}, 64, 64),
+    ({"n_rows": 50_001, "n_features": 100, "nnz": 100_000}, 64, 64),
+    ({"n_rows": 20_000, "n_features": 1000, "nnz": 10_000_001}, 64, 64),
+    ({}, 64, 64),
+])
+def test_lightgbm_small_workload_thread_ceiling(shape, requested, expected):
+    model = create_classifier(100, 20, learner="azoth", device="cpu",
+                              num_threads=requested, **shape)
+    assert model.get_params()["n_jobs"] == expected
+
+
+def test_small_lightgbm_fit_uses_effective_thread_limit():
+    rng = np.random.default_rng(7)
+    X = csr_matrix(rng.normal(size=(240, 12)).astype(np.float32))
+    y = (X.toarray()[:, 0] > 0).astype(int)
+    model = create_classifier(int((y == 0).sum()), int(y.sum()),
+                              learner="azoth", device="cpu", num_threads=64,
+                              n_estimators=8, **_shape_args(X))
+    model.fit(X, y)
+    assert model.booster_.params["num_threads"] == 4
+    assert model.booster_.num_trees() == 8
+
+
 def test_create_classifier_defaults() -> None:
     model = create_classifier(n_benign=100, n_malware=50, device="cpu")
     assert model.get_params()["objective"] == "binary:logistic"

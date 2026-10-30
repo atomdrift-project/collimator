@@ -23,7 +23,7 @@ def code_revision(stage: str) -> str:
     names = {
         "corpus": ("data.py", "filegroups.py", "experiment.py", "cache_identity.py"),
         "features": ("features.py", "matrix_store.py", "vocabulary.py", "vocabulary_runs.py", "allowlist.py", "data.py", "filegroups.py", "cache_identity.py"),
-        "training": ("train.py", "fit_resources.py", "model.py", "experiment.py", "export.py", "bundle.py", "cache_identity.py"),
+        "training": ("train.py", "fit_resources.py", "model.py", "onnx_projection.py", "experiment.py", "export.py", "bundle.py", "cache_identity.py"),
     }[stage]
     h = hashlib.sha256()
     for name in names:

@@ -67,6 +67,7 @@ from typing import Any
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+from collimator import model_config  # noqa: E402
 from collimator.thresholds import default_recall_per_100M_field  # noqa: E402
 from collimator.autocollie_selection import replay_feature_env, replay_malware_score, select_bootstrap_run  # noqa: E402
 
@@ -120,6 +121,7 @@ _TRAIN_CONFIG_TO_EXP_ENV: dict[str, str] = {
     "hard_negative_fraction": "EXP_HARD_NEGATIVE_FRACTION",
     "hard_negative_weight":   "EXP_HARD_NEGATIVE_WEIGHT",
     "scale_pos_weight_mult":  "EXP_SCALE_POS_WEIGHT_MULT",
+    "max_delta_step":         "EXP_MAX_DELTA_STEP",
     "boosting_type":          "EXP_BOOSTING_TYPE",
     "extra_trees":            "EXP_EXTRA_TREES",
     "n_folds":                "EXP_FOLDS",
@@ -563,6 +565,11 @@ def main() -> int:
             "values without autocollie history",
             args.route,
         )
+
+    accepted = model_config.load(args.route)
+    if accepted is not None:
+        run = model_config.as_run(accepted)
+        LOG.info("using current per-model configuration: %s", model_config.config_path(model_config.DEFAULT_ROOT,args.route))
 
     extra = _parse_extra(args.set)
     extra.setdefault("EXP_ROUTE", args.route)

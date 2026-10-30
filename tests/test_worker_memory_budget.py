@@ -157,3 +157,34 @@ def test_ordered_extraction_rebudgets_without_reordering(monkeypatch):
 def test_ordered_empty_extraction_does_not_wait_at_zero_budget():
     with ThreadPoolExecutor(max_workers=1) as pool:
         assert list(features._bounded_iter(pool, abs, [], max_inflight=lambda: 0)) == []
+
+
+def test_ordered_stall_reports_blocking_batch_and_completed_followers(monkeypatch, caplog):
+    from collimator import memory
+
+    clock = 0.0
+    pool = ManualPool()
+    calls = 0
+    monkeypatch.setattr(features.time, "monotonic", lambda: clock)
+    monkeypatch.setattr(memory, "cgroup_path", lambda: None)
+
+    def wait(pending, *, timeout, return_when):
+        nonlocal clock, calls
+        calls += 1
+        if calls == 1:
+            pool.submitted[1][0].set_result(1)
+            clock += timeout
+            return set(), pending
+        future = next(iter(pending))
+        if not future.done():
+            future.set_result(pool.submitted[0 if calls == 2 else 2][2])
+        return {future}, set()
+
+    monkeypatch.setattr(features, "wait", wait)
+    results = list(features._bounded_ordered_dynamic_iter(
+        pool, abs, range(3), lambda: 3, describe=lambda value: f"row_id={value}",
+    ))
+    assert results == [0, 1, 2]
+    assert "row_id=0" in caplog.text
+    assert "completed_behind_head=1" in caplog.text
+    assert "age=30.0s" in caplog.text

@@ -18,6 +18,7 @@ PROFILE_STOP_STAGE ?= 9
 PROFILE_TARGET_MINUTES ?= 15
 PROFILE_FIT_MEMORY_GB ?=
 PROFILE_EXTRACT_WORKERS_PER_FIT ?=
+PROFILE_SCORING_WORKERS ?= 6 12 6
 MODEL ?= azoth
 LEARNER ?= $(if $(filter azoth%,$(MODEL)),azoth,$(MODEL))
 OUT_ROOT ?= out/models
@@ -202,13 +203,16 @@ AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
 # for a stricter per-filetype gate, or set AZOTH_ALLOW_REGRESSION=1 to bypass
 # entirely. litmus validate + severity-sync stay on regardless.
 AZOTH_REGRESSION_ARGS ?= --net-improvement-fallback
-# Global FP-budget gate args for azoth_policy_global_metrics. Default enforces
-# the gate (fail if a level exceeds 30x its FP budget). Set to empty
+# FP gate at the canonical deployment level (L25); other levels are reported.
+# Final swept decisions get ONE resolution-adjusted allowance per
+# filetype pool: L0=0; L>=1=floor(1+(L-1)*N_benign/1e8). Small pools are gated,
+# not skipped. Components do not each get another FP. This empirical check
+# is not a statistical guarantee of the nominal population rate. Set to empty
 #   AZOTH_BUDGET_GATE_ARGS=
 # to WAIVE it for an intentional ship that accepts a known FP overrun (e.g. a
 # fresh-start deploy where some routes are still overconfident). litmus validate
 # + severity-sync stay on.
-AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget --max-budget-multiplier 30
+AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 # scan v2 reads its default bundle from <data>/atomdrift/scan/models/<bundle>,
 # where <bundle> is the last segment of SCAN_MODELS_REPO (default repo
@@ -342,12 +346,17 @@ DEMO_DB ?= out/demo.db
 # these on the command line if a specific run needs different shape.
 NPROC := $(shell nproc 2>/dev/null || echo 4)
 EXP_LGBM_THREADS ?= 8
-AZOTH_CALIBRATE_PARALLELISM ?= $(shell expr $(NPROC) / $(EXP_LGBM_THREADS))
-AZOTH_SPECIALIST_PARALLELISM ?= $(AZOTH_CALIBRATE_PARALLELISM)
+# Scoring is limited by corpus/matrix memory and DB throughput, not fit cores.
+# Keep training concurrency independent of the conservative calibration default.
+AZOTH_CALIBRATE_PARALLELISM ?= 2
+AZOTH_POLICY_PARALLELISM ?= 0
+AZOTH_SPECIALIST_PARALLELISM ?= $(shell expr $(NPROC) / $(EXP_LGBM_THREADS))
 WORKERS ?= $(NPROC)
 EXP_WORKERS ?= $(WORKERS)
+AZOTH_THRESHOLD_WORKERS ?= $(EXP_WORKERS)
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
+AZOTH_THRESHOLD_WORKERS_ARG := $(if $(AZOTH_THRESHOLD_WORKERS),--workers $(AZOTH_THRESHOLD_WORKERS),)
 SEED ?= 42
 # Training device. `auto` runs the pick_device() heuristic in
 # src/collimator/model.py: it picks CUDA only when the workload is dense
@@ -394,6 +403,7 @@ EXP_HARD_NEGATIVE_WEIGHT ?= 1.0
 EXP_BENIGN_FILETYPE_WEIGHT ?=
 EXP_MONOTONE_JSON ?=
 EXP_SCALE_POS_WEIGHT_MULT ?= 1.0
+EXP_MAX_DELTA_STEP ?= 0
 EXP_BOOSTING_TYPE ?= gbdt
 EXP_EXTRA_TREES ?= 0
 EXP_SEED_SEARCH_K ?= 1
@@ -648,7 +658,14 @@ azoth-fast-train: venv check-db
 	$(MAKE) azoth-prune-feature-cache
 	@echo "azoth-fast-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
-.PHONY: azoth-profile
+.PHONY: azoth-profile azoth-profile-scoring
+azoth-profile-scoring: venv check-db
+	@test -n "$(PROFILE_DIR)" || { echo "Set PROFILE_DIR to a new output directory"; exit 1; }
+	$(VENV_DIR)/bin/python scripts/benchmark_threshold_scoring.py \
+		--db "$(DB)" --model "$(AZOTH_GENERAL_DIR)" \
+		--percent "$(PROFILE_PERCENT)" --workers $(PROFILE_SCORING_WORKERS) \
+		--output "$(PROFILE_DIR)"
+
 azoth-profile: venv check-db
 	$(VENV_DIR)/bin/python scripts/azoth_profile.py --db "$(DB)" \
 		--percent "$(PROFILE_PERCENT)" --workers "$(PROFILE_WORKERS)" \
@@ -688,10 +705,13 @@ azoth-profile: venv check-db
 azoth-publish-train: venv check-db
 	@echo "azoth-publish-train: starting full k=2 OOF run (general + specialists)."
 	@echo "  3x general + 3x specialists (folds skip benchmark) + OOF merge/route-scores + calibrate + deploy."
+	@# Read once: edits during hours of training must not shift Bash's file offset.
+	@pipeline=$$(cat scripts/azoth_oof_pipeline.sh) && \
+	bash -n <<< "$$pipeline" && \
 	WORKERS=$(WORKERS) \
 	PUBLISH_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 	PUBLISH_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL) \
-	scripts/azoth_oof_pipeline.sh
+	bash -c "$$pipeline" scripts/azoth_oof_pipeline.sh
 	@echo "azoth-publish-train: complete (validation-only=$(or $(AZOTH_VALIDATE_ONLY),0))."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
@@ -1057,6 +1077,7 @@ azoth-specialists: venv check-db
 		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
 		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
+		--lgbm-threads $(EXP_LGBM_THREADS) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
 		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
@@ -1117,6 +1138,7 @@ azoth-specialists-fold-a: venv check-db
 		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
 		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
+		--lgbm-threads $(EXP_LGBM_THREADS) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
 		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
@@ -1154,6 +1176,7 @@ azoth-specialists-fold-b: venv check-db
 		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
 		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
+		--lgbm-threads $(EXP_LGBM_THREADS) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
 		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
@@ -1211,10 +1234,8 @@ azoth-oof-route-scores: venv check-db
 
 # Fit thresholds on held-out dev scores from the exact production ensemble.
 AZOTH_CALIBRATE_PARTITION ?= dev
-# Concurrent route scoring. The auto-derived default (NPROC/8, capped at 16)
-# is set with the rest of the parallelism block near the top of this file;
-# this comment block is kept for context. Override via the command line if
-# you have a specific DB/CPU bottleneck you want to dodge.
+# Concurrent route scoring defaults to two jobs, with shared row-index maps
+# and disk-backed feature matrices. Override after measuring DB/memory headroom.
 
 # Retain the old option so callers receive an explicit error if they attempt
 # to calibrate production models with diagnostic OOF scores.
@@ -1231,7 +1252,7 @@ azoth-calibrate: venv check-db
 		--model "$(AZOTH_GENERAL_DIR)" --scores-only \
 		--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
 		$(THRESHOLD_MAX_ID_ARG) \
-		$(EXP_WORKERS_ARG) \
+		$(AZOTH_THRESHOLD_WORKERS_ARG) \
 		--scores-cache "$(AZOTH_GENERAL_SCORES)" \
 		--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
@@ -1295,6 +1316,7 @@ azoth-diagnostics: venv
 
 azoth-policies: venv
 	$(PYTHON) scripts/azoth_route_policy_search.py \
+		--parallelism $(AZOTH_POLICY_PARALLELISM) \
 		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
 		--config $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
@@ -1334,6 +1356,7 @@ azoth-validate: azoth-calibrate
 	  printf 'status,message\nskipped,fast azoth-validate\n' > "$(AZOTH_SLICE_METRICS_CSV)"; \
 	fi
 	$(PYTHON) scripts/azoth_route_policy_search.py \
+		--parallelism $(AZOTH_POLICY_PARALLELISM) \
 		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
 		--config $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
@@ -1512,6 +1535,7 @@ azoth-score-route: venv
 		--route $(ROUTE) \
 		--db $(DB) \
 		--deploy-root $(AZOTH_ROOT) \
+		--workers $(EXP_WORKERS) \
 		$(if $(ROW_IDS_FILE),--row-ids-file $(ROW_IDS_FILE),) \
 		--output $(OUTPUT)
 
@@ -1545,6 +1569,7 @@ azoth-deploy: azoth-calibrate
 	  printf 'status,message\nskipped,AZOTH_DEPLOY_DIAGNOSTICS=0\n' > "$(AZOTH_SLICE_METRICS_CSV)"; \
 	fi
 	$(PYTHON) scripts/azoth_route_policy_search.py \
+		--parallelism $(AZOTH_POLICY_PARALLELISM) \
 		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
 		--config $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
@@ -2109,6 +2134,7 @@ experiment: venv check-db
 		$(if $(EXP_THRESHOLD_FPR_TARGET),--threshold-fpr-target $(EXP_THRESHOLD_FPR_TARGET),) \
 		--hard-negative-fraction $(EXP_HARD_NEGATIVE_FRACTION) --hard-negative-weight $(EXP_HARD_NEGATIVE_WEIGHT) \
 		--scale-pos-weight-mult $(EXP_SCALE_POS_WEIGHT_MULT) \
+		--max-delta-step $(EXP_MAX_DELTA_STEP) \
 		--boosting-type $(EXP_BOOSTING_TYPE) \
 		$(if $(filter 1 true yes,$(EXP_EXTRA_TREES)),--extra-trees,) \
 		--seed-search-k $(EXP_SEED_SEARCH_K) \
@@ -2182,6 +2208,8 @@ verify-litmus:
 
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
+# Shared proposal endpoint; command-line/environment overrides remain supported.
+export AUTOCOLLIE_OPENAI_BASE_URL ?= http://elrond:8000/v1
 EXPERIMENTS ?= 12
 AUTOCOLLIE_LLM_TIMEOUT ?= 15m
 AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
@@ -2190,11 +2218,14 @@ AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
 # EXP_WORKERS and EXP_LGBM_THREADS are auto-derived from MAX_CPU_THREADS /
 # ROUTE_CONCURRENCY in autocollie so concurrent screens don't fight for
 # the host's full CPU. Set ROUTE_CONCURRENCY=1 to force sequential.
-# Autocollie's own concurrency mirrors the calibrate side: as many routes
-# in parallel as we have LightGBM thread groups. MAX_CPU_THREADS is the
-# total CPU budget passed through to LightGBM as a per-spawn cap.
-ROUTE_CONCURRENCY ?= $(AZOTH_CALIBRATE_PARALLELISM)
+# Route cycles include LLM proposals and DB extraction as well as fitting.
+# Calibration's CPU-derived parallelism can flood the shared LLM with prompts.
+# Keep the default bounded independently; operators may explicitly raise it.
+ROUTE_CONCURRENCY ?= 2
 MAX_CPU_THREADS ?= $(NPROC)
+# Pass extraction limits only when explicitly supplied. The default WORKERS
+# expands to the whole host; autocollie divides its own CPU budget per job.
+AUTOCOLLIE_WORKER_ARG = $(if $(filter command line environment override,$(origin EXP_WORKERS)),EXP_WORKERS=$(EXP_WORKERS),$(if $(filter command line environment override,$(origin WORKERS)),EXP_WORKERS=$(WORKERS),))
 # Autocollie defaults to the local Hopper replica. Using the bare `hopper`
 # hostname can resolve through public DNS and burn screen slots on timeouts.
 AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
@@ -2202,7 +2233,7 @@ AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
 
-.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-full-train autocollie-confirm autocollie-promote azoth-augment-small-routes
+.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-full-train autocollie-confirm autocollie-promote autocollie-replay autocollie-replay-favorites azoth-augment-small-routes
 
 # azoth-augment-small-routes — post-hoc threshold re-search for routes whose
 # default-level policy is `no_policy` because their own benign pool is too
@@ -2270,6 +2301,8 @@ autocollie-screen: venv check-db autocollie-build
 		--experiments $(EXPERIMENTS) \
 		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
 		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
+		--min-route-malware $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-route-benign $(AZOTH_SPECIALIST_MIN_GOOD) \
 		--route-concurrency $(ROUTE_CONCURRENCY) \
 		--max-cpu-threads $(MAX_CPU_THREADS) \
 		--make-args "DB=$(DB) EXP_LGBM_THREADS=$(EXP_LGBM_THREADS) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
@@ -2294,7 +2327,7 @@ CONFIRM_SEED ?= 43
 # candidates that look promising under CURRENT gate logic but were never
 # promoted (rejected by older gates, broke at confirm/promote, etc.).
 # Read-only — no retraining. Use this to spot candidates worth re-running
-# manually via `make autocollie-confirm KEY=...` + `make autocollie-promote`.
+# via `make autocollie-replay KEY=...` (fresh screening before current gates).
 #
 # Usage:
 #   make autocollie-favorites-report                                   # top 10 per route
@@ -2314,7 +2347,8 @@ autocollie-favorites-report: venv
 # Phase-2 auto-replay. Picks top-N candidates per route (globally
 # ranked by replay_score: apples-to-apples first, then biggest d_r3,
 # then largest n_ben_holdout), filters out anything that recently
-# failed (cooldown window), then iterates confirm + promote per key.
+# failed (cooldown window), then refreshes screening and runs confirm + promote
+# once per key, under one PostgreSQL snapshot per candidate.
 # Each outcome is recorded in out/autocollie/replay_history.json so the
 # favorites report can show "last attempted YYYY-MM-DD: <reason>" and
 # the cooldown skips recently-failed candidates next time around.
@@ -2330,6 +2364,7 @@ autocollie-favorites-report: venv
 autocollie-replay-favorites: venv autocollie-build
 	@set -e; \
 	plan=$$(mktemp); \
+	trap 'rm -f "$$plan"' EXIT; \
 	$(PYTHON) scripts/autocollie_favorites.py \
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
 		--baselines $(AZOTH_ROOT)/.autocollie/promoted_baselines.json \
@@ -2341,31 +2376,23 @@ autocollie-replay-favorites: venv autocollie-build
 	echo "▶ replay-favorites: $$count candidate(s) queued"; \
 	if [ "$$count" -eq 0 ]; then \
 	  echo "no candidates eligible (try TOP=N, ROUTE=, or COOLDOWN=0)"; \
-	  rm -f "$$plan"; \
 	  exit 0; \
 	fi; \
+	mkdir -p out/autocollie/replays; \
 	while IFS="	" read key route idea; do \
 	  echo ""; \
 	  echo "▶▶▶ replay candidate: $$route  idea=$$idea  key=$$key"; \
 	  echo ""; \
-	  conf_log=/tmp/replay-confirm-$$key.log; \
-	  prom_log=/tmp/replay-promote-$$key.log; \
-	  : > "$$conf_log"; : > "$$prom_log"; \
-	  $(MAKE) --no-print-directory autocollie-confirm KEY=$$key 2>&1 | tee "$$conf_log" || true; \
-	  if grep -q ": FAIL ===" "$$conf_log"; then \
-	    : ; \
-	  elif grep -q "^SKIP-PROMOTE:" "$$conf_log"; then \
-	    echo "  ⊘ skipping promote — confirm passed but predicted regression vs deployed"; \
-	  else \
-	    $(MAKE) --no-print-directory autocollie-promote KEY=$$key 2>&1 | tee "$$prom_log" || true; \
+	  replay_log=out/autocollie/replays/$$(date -u +%Y%m%dT%H%M%S)-$$key.log; \
+	  if ! $(MAKE) --no-print-directory autocollie-replay KEY=$$key 2>&1 | tee "$$replay_log"; then \
+	    echo "  replay failed; later stages were not attempted after the error"; \
 	  fi; \
 	  $(PYTHON) scripts/autocollie_record_replay.py \
 	    --auto-detect \
 	    --key $$key --route "$$route" \
-	    --confirm-log "$$conf_log" --promote-log "$$prom_log" \
+	    --confirm-log "$$replay_log" --promote-log "$$replay_log" \
 	    || echo "warn: record_replay failed for $$key"; \
 	done < "$$plan"; \
-	rm -f "$$plan"; \
 	echo ""; \
 	echo "🏁 replay-favorites complete"
 
@@ -2378,7 +2405,7 @@ autocollie-confirm: venv check-db autocollie-build
 		--seed $(CONFIRM_SEED) \
 		--route-concurrency $(ROUTE_CONCURRENCY) \
 		--max-cpu-threads $(MAX_CPU_THREADS) \
-		--make-args "DB=$(DB) EXP_WORKERS=$(NPROC) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+		--make-args "DB=$(DB) $(AUTOCOLLIE_WORKER_ARG) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # Promote a winner: confirm (different seed) -> full-train (inflated profile)
 # -> compare. On pass, writes a report telling the user to run `make azoth-deploy`.
@@ -2394,7 +2421,24 @@ autocollie-promote: venv check-db autocollie-build
 		--promote-timeout 180m \
 		--route-concurrency $(ROUTE_CONCURRENCY) \
 		--max-cpu-threads $(MAX_CPU_THREADS) \
-		--make-args "DB=$(DB) EXP_WORKERS=$(NPROC) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+		--make-args "DB=$(DB) $(AUTOCOLLIE_WORKER_ARG) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+
+# Recover historical knobs, then measure them on current data before gates.
+# REPLAY_SCREEN_ONLY=1 stops after the fresh screen for a bounded live check.
+autocollie-replay: venv check-db autocollie-build
+	@test -n "$(KEY)" || { echo "error: set KEY=<16-hex historical experiment_key>"; exit 1; }
+	$(AUTOCOLLIE_BIN) replay \
+		--collimator $(CURDIR) \
+		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
+		--baseline-azoth-root $(AZOTH_ROOT) \
+		--key $(KEY) \
+		$(if $(filter 1 true yes,$(REPLAY_SCREEN_ONLY)),--screen-only,) \
+		--seed $(CONFIRM_SEED) \
+		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
+		--promote-timeout 180m \
+		--route-concurrency $(ROUTE_CONCURRENCY) \
+		--max-cpu-threads $(MAX_CPU_THREADS) \
+		--make-args "DB=$(DB) $(AUTOCOLLIE_WORKER_ARG) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # The full hands-off ladder: screen N specs per route -> if any winner beats
 # the route's currently trained Azoth specialist in $(AZOTH_ROOT), automatically promote it (confirm + full-train
@@ -2423,9 +2467,11 @@ autocollie: venv check-db autocollie-build
 		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
 		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
+		--min-route-malware $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-route-benign $(AZOTH_SPECIALIST_MIN_GOOD) \
 		--route-concurrency $(ROUTE_CONCURRENCY) \
 		--max-cpu-threads $(MAX_CPU_THREADS) \
-		--make-args "DB=$(DB) $(if $(WORKERS),EXP_WORKERS=$(WORKERS) ,)EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+		--make-args "DB=$(DB) $(AUTOCOLLIE_WORKER_ARG) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # autocollie-loop is the same target with PASSES=0 — loops the screen+promote
 # ladder over the route list until Ctrl-C.

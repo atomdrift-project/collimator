@@ -28,12 +28,13 @@ from collimator import bundle  # noqa: E402
 # SHAP is generated every train (see the Makefile `azoth-shap` target) and kept
 # in out/ as an internal debugging aid for `ascan --extra`; it is not published
 # in the deployed bundle.
-ROUTE_AUX_FILES = ("training_provenance.json", "feature_spec.json", "README.md", "recall_curve.svg")
+ROUTE_AUX_FILES = ("accepted_config.json", "training_config.json", "training_provenance.json", "feature_spec.json", "README.md", "recall_curve.svg")
 ROOT_FILES = ("config.json", "route_policies.json")
 
 # Optional root files. Deploy proceeds without them, but downstream
 # tools (regression check, dashboards) read them when present.
 OPTIONAL_ROOT_FILES = (
+    ".autocollie/promoted_baselines.json",
     "per_filetype_metrics.json",
     "test_metrics.json",
     "route_policy_eval_oof.json",

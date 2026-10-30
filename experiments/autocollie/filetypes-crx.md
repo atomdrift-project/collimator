@@ -476,3 +476,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261029T025436-filetypes-crx` — 2026-10-29T02:54:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `224815c04d4c7d2f` | inherit_from_filetypes_chm_b86f0748 | ok | 0.8679 | 0.9801 | 0.6842 | 78 | [log](out/autocollie/runs/2026-10-29T02-59-43_20261029T025436-filetypes-crx_inherit_from_filetypes_chm_b86f0748.log) |
+| `7ea590995297b8e5` | crx_coverage_cutoff0 | ok | 0.8746 | 0.9812 | 0.6856 | 116 | [log](out/autocollie/runs/2026-10-29T03-01-10_20261029T025436-filetypes-crx_crx_coverage_cutoff0.log) |
+| `9296d9845bd4d7f5` | crx_hardneg_weight8 | ok | 0.8691 | 0.9798 | 0.7466 | 41 | [log](out/autocollie/runs/2026-10-29T03-03-08_20261029T025436-filetypes-crx_crx_hardneg_weight8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_coverage_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 increases training coverage of low-severity malware, aiming to improve measured L25 recall by capturing patterns currently excluded from the training set.
+- **`crx_hardneg_weight8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if upweighting hard negatives (fraction 0.2, weight 8) sharpens the decision boundary to reduce false positives, aiming to improve measured L25 recall by allowing a lower threshold without exceeding the FP budget.
+
+</details>
+
+## Cycle `20261030T170710-filetypes-crx` — 2026-10-30T17:07:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4b1dbd4daaa8b1d7` | inherit_from_filetypes_iso_fec2c64b | ok | 0.8709 | 0.9799 | 0.7259 | 58 | [log](out/autocollie/runs/2026-10-30T17-07-47_20261030T170710-filetypes-crx_inherit_from_filetypes_iso_fec2c64b.log) |
+| `71c94ff3cb2a792d` | crx_hardneg_weight8_depth4 | ok | 0.8765 | 0.9812 | 0.6881 | 60 | [log](out/autocollie/runs/2026-10-30T17-08-44_20261030T170710-filetypes-crx_crx_hardneg_weight8_depth4.log) |
+| `5bbfb35d7ea4e45c` | crx_hardneg_weight8_mds5 | ok | 0.8653 | 0.9807 | 0.7040 | 60 | [log](out/autocollie/runs/2026-10-30T17-09-45_20261030T170710-filetypes-crx_crx_hardneg_weight8_mds5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_hardneg_weight8_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP beyond the 0.4013 baseline by capturing more specific finding prefixes without changing the hard-negative training configuration.
+- **`crx_hardneg_weight8_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if raising max_delta_step to 5 improves L25 recall@1FP by allowing larger leaf updates to better fit the minority class, reusing the existing feature matrix from the best hard-negative run.
+
+</details>
+

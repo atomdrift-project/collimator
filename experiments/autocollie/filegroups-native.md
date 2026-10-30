@@ -1216,3 +1216,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T161237-filegroups-native` — 2026-10-30T16:12:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a7766bed32665ce8` | inherit_from_filetypes_bmp_7a70d4cf | ok | 0.9995 | 0.9996 | 0.9913 | 411 | [log](out/autocollie/runs/2026-10-30T16-16-18_20261030T161237-filegroups-native_inherit_from_filetypes_bmp_7a70d4cf.log) |
+| `e590e21d774a188d` | native_threshold_fpr_target_250e9 | ok | 0.9991 | 0.9992 | 0.5576 | 479 | [log](out/autocollie/runs/2026-10-30T16-24-08_20261030T161237-filegroups-native_native_threshold_fpr_target_250e9.log) |
+| `0110c28e3368e45c` | native_hardneg_fraction_001_weight_16 | ok | 0.9992 | 0.9992 | 0.9868 | 22 | [log](out/autocollie/runs/2026-10-30T16-32-46_20261030T161237-filegroups-native_native_hardneg_fraction_001_weight_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_7a70d4cf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=7a70d4cf4f438553, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_threshold_fpr_target_250e9`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the L25 recall gap (0.6685) by switching threshold_mode to max_recall_at_fpr with a 2.5e-07 target to directly optimize the deployed operating point for the 1-FP budget, reusing the existing feature matrix.
+- **`native_hardneg_fraction_001_weight_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates the 'or_loses' diagnostic shape by testing a lower hard_negative_fraction (0.01) with a higher weight (16) to refine the hard-negative signal without altering the feature space, aiming to improve L25 recall beyond 0.6685.
+
+</details>
+

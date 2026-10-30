@@ -387,3 +387,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T160927-filetypes-html` — 2026-10-30T16:09:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8c5019fce15c1c31` | inherit_from_filetypes_jsp_b2a84555 | ok | 0.9871 | 0.9856 | 0.9695 | 29 | [log](out/autocollie/runs/2026-10-30T16-10-56_20261030T160927-filetypes-html_inherit_from_filetypes_jsp_b2a84555.log) |
+| `4a501176c7ab83bf` | html_hard_negative_sweep | ok | 0.9951 | 0.9943 | 0.9712 | 26 | [log](out/autocollie/runs/2026-10-30T16-11-36_20261030T160927-filetypes-html_html_hard_negative_sweep.log) |
+| `113621f4cd3c8812` | html_min_malware_score_2 | ok | 0.9991 | 0.9989 | 0.9918 | 28 | [log](out/autocollie/runs/2026-10-30T16-12-06_20261030T160927-filetypes-html_html_min_malware_score_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_b2a84555`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=b2a84555280db3db, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`html_hard_negative_sweep`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 and weight 12 to address the 'or_loses' diagnostic where strong PR-AUC (0.9955) fails to translate to higher L25 recall (0.9190) by sharpening the decision boundary against benign noise.
+- **`html_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Lowers min_malware_score from 4 to 2 to include lower-severity malware in training, aiming to improve L25 recall by preventing the model from ignoring subtle HTML injection patterns that fall below the current severity cutoff.
+
+</details>
+

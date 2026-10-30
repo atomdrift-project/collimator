@@ -1224,3 +1224,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T171808-filetypes-rust` — 2026-10-30T17:18:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12409c7415728c08` | inherit_from_filetypes_iso_fec2c64b | ok | 0.4151 | 0.9808 | 0.1394 | 36 | [log](out/autocollie/runs/2026-10-30T17-20-08_20261030T171808-filetypes-rust_inherit_from_filetypes_iso_fec2c64b.log) |
+| `56be587961aa5b7b` | rust_depth4_transfer_elf | ok | 0.6153 | 0.9909 | 0.1328 | 58 | [log](out/autocollie/runs/2026-10-30T17-21-06_20261030T171808-filetypes-rust_rust_depth4_transfer_elf.log) |
+| `be6ad04876792c29` | rust_depth2_transfer_elf | ok | 0.6114 | 0.9904 | 0.1328 | 18 | [log](out/autocollie/runs/2026-10-30T17-22-05_20261030T171808-filetypes-rust_rust_depth2_transfer_elf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_depth4_transfer_elf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.0591 L25 recall of the ELF-transfer baseline by testing if deeper trait prefixes (depth 4) capture more specific Rust malware patterns without increasing FPs beyond the 1-FP budget.
+- **`rust_depth2_transfer_elf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.0591 L25 recall of the ELF-transfer baseline by testing if shallower trait prefixes (depth 2) reduce noise and improve generalization for the small Rust malware cohort within the 1-FP budget.
+
+</details>
+

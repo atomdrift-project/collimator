@@ -346,3 +346,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T164849-filetypes-groovy` — 2026-10-30T16:48:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7d87dd7297c781ac` | inherit_from_filetypes_chm_fee8fe57 | ok | 0.9009 | 0.9991 | 0.7273 | 120 | [log](out/autocollie/runs/2026-10-30T16-58-59_20261030T164849-filetypes-groovy_inherit_from_filetypes_chm_fee8fe57.log) |
+| `ab185053bc497051` | groovy_baseline_control | ok | 0.9120 | 0.9993 | 0.8696 | 163 | [log](out/autocollie/runs/2026-10-30T17-01-52_20261030T164849-filetypes-groovy_groovy_baseline_control.log) |
+| `b1087db8beacf47d` | groovy_text_metrics_kv_vocab | ok | 0.9184 | 0.9994 | 0.8696 | 9 | [log](out/autocollie/runs/2026-10-30T17-02-03_20261030T164849-filetypes-groovy_groovy_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_fee8fe57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=fee8fe5717e658a4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`groovy_baseline_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 …` — Establishes the measured L25 recall baseline for the current cohort using the archived feature set and training hyperparameters to serve as the reference for subsequent isolated hypothesis tests.
+- **`groovy_text_metrics_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 …` — Tests whether enabling text_metrics_full and kv_vocab improves measured L25 recall by capturing lexical and key-value patterns specific to Groovy scripts, leveraging the success of similar feature expansions in sister routes like jsp and asar.
+
+</details>
+

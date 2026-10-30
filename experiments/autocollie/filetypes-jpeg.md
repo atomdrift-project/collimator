@@ -1451,3 +1451,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T172205-filetypes-jpeg` — 2026-10-30T17:22:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b2abd0fb0e5aedba` | inherit_from_filetypes_iso_fec2c64b | ok | 0.2962 | 0.6804 | 0.3553 | 10 | [log](out/autocollie/runs/2026-10-30T17-23-59_20261030T172205-filetypes-jpeg_inherit_from_filetypes_iso_fec2c64b.log) |
+| `001b371398cabfd0` | jpeg_min_malware_score_0_coverage | ok | 0.8331 | 0.9898 | 0.6586 | 53 | [log](out/autocollie/runs/2026-10-30T17-24-57_20261030T172205-filetypes-jpeg_jpeg_min_malware_score_0_coverage.log) |
+| `e3a155134fedb72f` | jpeg_max_delta_step_5_regularization | ok | 0.8312 | 0.9889 | 0.7552 | 47 | [log](out/autocollie/runs/2026-10-30T17-25-55_20261030T172205-filetypes-jpeg_jpeg_max_delta_step_5_regularization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_min_malware_score_0_coverage`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_malware_score=4 cutoff is suppressing recall by removing low-severity malware from training, aiming to improve the 0.2050 L25 recall of the best historical run by increasing training coverage.
+- **`jpeg_max_delta_step_5_regularization`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates score saturation or constant models by capping leaf outputs with max_delta_step=5 to improve the 0.2050 L25 recall, reusing the feature matrix from the best historical configuration.
+
+</details>
+

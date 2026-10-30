@@ -2648,3 +2648,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T133448-filetypes-pe` — 2026-10-30T13:34:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `504e6effb2a58273` | inherit_from_filetypes_chm_b86f0748 | ok | 0.9988 | 0.9989 | 0.9869 | 392 | [log](out/autocollie/runs/2026-10-30T13-38-54_20261030T133448-filetypes-pe_inherit_from_filetypes_chm_b86f0748.log) |
+| `3ec2962c2bf168cd` | pe_hardneg_fine_sweep | ok | 0.9992 | 0.9992 | 0.9885 | 421 | [log](out/autocollie/runs/2026-10-30T13-46-01_20261030T133448-filetypes-pe_pe_hardneg_fine_sweep.log) |
+| `527e19dd6e93c9c4` | pe_fpr_threshold_tune | ok | 0.9991 | 0.9991 | 0.9591 | 28 | [log](out/autocollie/runs/2026-10-30T13-53-16_20261030T133448-filetypes-pe_pe_fpr_threshold_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_hardneg_fine_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.5863 L25 recall ceiling by testing finer hard-negative fractions (0.015) and higher weights (12) to sharpen the decision boundary for the 15k benign cohort without altering the feature matrix.
+- **`pe_fpr_threshold_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directly optimizes the deployed operating point for the 1-FP budget by switching to max_recall_at_fpr with a 2.5e-07 target, aiming to capture the ranking gain hidden by the coarse fbeta threshold at the L25 level.
+
+</details>
+

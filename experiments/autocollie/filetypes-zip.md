@@ -1306,3 +1306,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T140722-filetypes-zip` — 2026-10-30T14:07:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9f876bd35389116` | inherit_from_filetypes_chm_b86f0748 | ok | 0.9691 | 0.9687 | 0.8347 | 499 | [log](out/autocollie/runs/2026-10-30T14-11-12_20261030T140722-filetypes-zip_inherit_from_filetypes_chm_b86f0748.log) |
+| `4fc28bd9683ad39e` | zip_min_malware_score_0 | ok | 0.9978 | 0.9977 | 0.9783 | 640 | [log](out/autocollie/runs/2026-10-30T14-23-01_20261030T140722-filetypes-zip_zip_min_malware_score_0.log) |
+| `820c45cbf912e94e` | zip_max_delta_step_5 | ok | 0.9978 | 0.9977 | 0.9783 | 36 | [log](out/autocollie/runs/2026-10-30T14-36-48_20261030T140722-filetypes-zip_zip_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.5654 L25 recall by testing if the current min_malware_score=4 cutoff is discarding low-severity malware that contributes to recall, using 0 as a control to verify if the high cutoff is inflating class weights and removing signal.
+- **`zip_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.5654 L25 recall by addressing potential constant models or saturated scores via max_delta_step=5, which allows larger leaf updates to better fit the minority class without changing feature matrices.
+
+</details>
+

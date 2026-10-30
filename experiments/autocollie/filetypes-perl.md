@@ -356,3 +356,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T170512-filetypes-perl` — 2026-10-30T17:05:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `753cc0627da0485a` | inherit_from_filetypes_rar_8eed8006 | ok | 0.7938 | 0.9939 | 0.6565 | 22 | [log](out/autocollie/runs/2026-10-30T17-06-48_20261030T170512-filetypes-perl_inherit_from_filetypes_rar_8eed8006.log) |
+| `77c2ed405b761e73` | perl_kv_vocab_depth2 | ok | 0.7741 | 0.9931 | 0.5600 | 16 | [log](out/autocollie/runs/2026-10-30T17-07-14_20261030T170512-filetypes-perl_perl_kv_vocab_depth2.log) |
+| `524f361fd43f3464` | perl_text_metrics_depth4 | ok | 0.7706 | 0.9935 | 0.7130 | 16 | [log](out/autocollie/runs/2026-10-30T17-07-31_20261030T170512-filetypes-perl_perl_text_metrics_depth4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_8eed8006`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rar (key=8eed80066a1da808, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_kv_vocab_depth2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if enabling kv_vocab and reducing trait_path_depth to 2 improves L25 recall by capturing specific Perl key-value patterns with higher specificity than the default depth 3.
+- **`perl_text_metrics_depth4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests if enabling text_metrics_full and increasing trait_path_depth to 4 improves L25 recall by adding text structural features and broader finding context for Perl scripts.
+
+</details>
+

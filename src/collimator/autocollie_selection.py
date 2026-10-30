@@ -113,7 +113,7 @@ def replay_feature_env(run: dict[str, Any]) -> dict[str, str]:
     return {
         str(k): ("1" if v is True else "0" if v is False else str(v))
         for k, v in (run.get("feature_env") or {}).items()
-        if str(k).startswith("COLLIMATOR_") and k not in excluded and v is not None
+        if str(k).startswith("COLLIMATOR_") and k not in excluded and k not in {"COLLIMATOR_PG_SNAPSHOT", "COLLIMATOR_PG_SNAPSHOT_DATABASE"} and v is not None
     }
 
 

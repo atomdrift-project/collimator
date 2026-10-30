@@ -8,6 +8,7 @@ makes simultaneous admissions atomic; PID start times reject stale leases.
 from contextlib import contextmanager
 from functools import wraps
 import fcntl
+import gc
 import json
 import logging
 import math
@@ -19,6 +20,34 @@ import uuid
 from . import memory
 
 log = logging.getLogger(__name__)
+
+
+def release_unused_memory(reason='fit boundary'):
+    """Return unused allocator pages; never count them as hypothetical credit.
+
+    glibc can retain large freed native workspaces between seeds. Only memory
+    actually released contributes to the next admission's measured headroom.
+    Live matrices, fitted models and predictions keep their references.
+    """
+    import ctypes
+
+    before = _process(os.getpid())
+    started = time.monotonic()
+    gc.collect()
+    try:
+        trim = ctypes.CDLL(None).malloc_trim
+        trim.argtypes = [ctypes.c_size_t]
+        trim.restype = ctypes.c_int
+        trim(0)
+    except (AttributeError, OSError):
+        # Other C libraries need not expose glibc's optional allocator API.
+        pass
+    after = _process(os.getpid())
+    released = max(0.0, before[1] - after[1]) if before and after else 0.0
+    log.info('memory cleanup (%s): released %.2f GiB anonymous; now %s GiB; %.2fs',
+             reason, released, f'{after[1]:.2f}' if after else 'unknown',
+             time.monotonic() - started)
+    return released
 
 
 def _process(pid):
@@ -155,6 +184,7 @@ def fit_reservation(need):
     if not directory:
         yield
         return
+    release_unused_memory('before fit admission')
     token = uuid.uuid4().hex
     started = time.monotonic()
     interval = float(os.getenv('COLLIMATOR_FIT_POLL_SECONDS', '10'))
@@ -203,5 +233,9 @@ def budgeted_fit(fn):
     @wraps(fn)
     def wrapped(X, y, config=None, *args, **kwargs):
         with fit_reservation(estimate_fit_gb(X, config)):
-            return fn(X, y, config, *args, **kwargs)
+            try:
+                return fn(X, y, config, *args, **kwargs)
+            finally:
+                if os.getenv('COLLIMATOR_FIT_RESOURCE_DIR'):
+                    release_unused_memory('after fit')
     return wrapped

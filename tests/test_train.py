@@ -16,6 +16,30 @@ from collimator.train import (
 )
 
 
+def test_retained_tree_count_handles_lightgbm_one_based_best_iteration():
+    import lightgbm as lgb
+    from collimator.train import _retained_tree_count
+
+    X = np.arange(200, dtype=float).reshape(-1, 1)
+    y = (X[:, 0] >= 100).astype(int)
+    estimator = lgb.LGBMClassifier(n_estimators=20, n_jobs=1, verbosity=-1, metric="None")
+    estimator.fit(X, y, eval_set=[(X.copy(), y.copy())],
+                  eval_metric=lambda y, p: ("constant", .5, True),
+                  callbacks=[lgb.early_stopping(3, verbose=False)])
+    assert estimator.best_iteration_ == 1
+    assert _retained_tree_count(estimator) == 1
+
+
+def test_retained_tree_count_handles_xgboost_best_iteration_zero():
+    from types import SimpleNamespace
+    from collimator.train import _retained_tree_count
+
+    assert _retained_tree_count(SimpleNamespace(best_iteration=0)) == 1
+    assert _retained_tree_count(SimpleNamespace(best_iteration=399)) == 400
+    assert _retained_tree_count(SimpleNamespace(
+        get_booster=lambda: SimpleNamespace(num_boosted_rounds=lambda: 17))) == 17
+
+
 @pytest.mark.parametrize('dtype', [np.float32, np.float64, np.int32])
 def test_sparse_moments_are_bounded_and_preserve_input(monkeypatch, dtype):
     import collimator.train as module

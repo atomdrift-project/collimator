@@ -1214,3 +1214,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T160658-filegroups-media` — 2026-10-30T16:06:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4667912c36c5f648` | inherit_from_filetypes_chm_b86f0748 | ok | 0.1824 | 0.5484 | 0.1767 | 14 | [log](out/autocollie/runs/2026-10-30T16-08-56_20261030T160658-filegroups-media_inherit_from_filetypes_chm_b86f0748.log) |
+| `9b84b39fbaaee805` | media_min_malware_score_zero | ok | 0.4627 | 0.8814 | 0.2679 | 10 | [log](out/autocollie/runs/2026-10-30T16-09-13_20261030T160658-filegroups-media_media_min_malware_score_zero.log) |
+| `81d2c40b9118afe6` | media_max_delta_step_5 | ok | 0.4627 | 0.8814 | 0.2679 | 2 | [log](out/autocollie/runs/2026-10-30T16-09-24_20261030T160658-filegroups-media_media_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_min_malware_score_zero`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_malware_score=4 cutoff is suppressing low-severity malware signals that could improve the measured L25 recall of 0.0848 by increasing training coverage without changing features.
+- **`media_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates potential score saturation or constant models by capping leaf outputs with max_delta_step=5 to improve the measured L25 recall of 0.0848 through better gradient utilization.
+
+</details>
+

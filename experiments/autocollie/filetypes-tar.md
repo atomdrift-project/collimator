@@ -1168,3 +1168,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T132706-filetypes-tar` — 2026-10-30T13:27:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `65ca4c057f7389f3` | inherit_from_filetypes_chm_b86f0748 | ok | 0.9359 | 0.9751 | 0.8429 | 65 | [log](out/autocollie/runs/2026-10-30T13-27-59_20261030T132706-filetypes-tar_inherit_from_filetypes_chm_b86f0748.log) |
+| `2dacdf0176096f54` | tar_depth4_textmetrics | ok | 0.9586 | 0.9888 | 0.8142 | 94 | [log](out/autocollie/runs/2026-10-30T13-29-08_20261030T132706-filetypes-tar_tar_depth4_textmetrics.log) |
+| `f578158f2b88c487` | tar_cutoff2_textmetrics | ok | 0.9614 | 0.9877 | 0.7664 | 51 | [log](out/autocollie/runs/2026-10-30T13-30-45_20261030T132706-filetypes-tar_tar_cutoff2_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_depth4_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP beyond the 0.7099 baseline by capturing more specific finding prefixes while retaining the text_metrics_full surface that drove the current best result.
+- **`tar_cutoff2_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_training_score from 4 to 2 improves L25 recall@1FP by including lower-severity malware samples in training, potentially increasing class weight and model sensitivity without changing the feature matrix.
+
+</details>
+

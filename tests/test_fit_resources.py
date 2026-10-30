@@ -160,3 +160,51 @@ with r.fit_reservation(2):
             if process.poll() is None:
                 process.kill()
             process.wait(timeout=5)
+
+
+def test_cleanup_returns_unused_native_pages_without_touching_live_buffers():
+    # Pin heap segments with live tiny buffers, leaving freed large blocks
+    # between them. Unlike an RSS mock this exercises real allocator retention.
+    script = '''
+import ctypes,json
+from collimator import fit_resources as r
+libc=ctypes.CDLL(None)
+if not hasattr(libc, 'malloc_trim'):
+    raise SystemExit(77)
+libc.malloc.argtypes=[ctypes.c_size_t]
+libc.malloc.restype=ctypes.c_void_p
+libc.free.argtypes=[ctypes.c_void_p]
+blocks=[]; keep=[]
+for i in range(2048):
+    block=libc.malloc(65536); live=libc.malloc(32)
+    assert block and live
+    ctypes.memset(block, 7, 65536); ctypes.memset(live, 19, 32)
+    blocks.append(block); keep.append(live)
+for block in blocks: libc.free(block)
+released=r.release_unused_memory('test')
+assert all(ctypes.string_at(p, 32) == bytes([19])*32 for p in keep)
+for p in keep: libc.free(p)
+print(json.dumps({'released_gib':released}))
+'''
+    result = subprocess.run([sys.executable, '-c', script], text=True,
+                            capture_output=True, timeout=30)
+    if result.returncode == 77:
+        pytest.skip('glibc malloc_trim unavailable')
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)['released_gib'] > .05
+
+
+def test_fit_cleanup_preserves_returned_arrays_and_releases_reservation(tmp_path, monkeypatch):
+    import numpy as np
+    from types import SimpleNamespace
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setattr(resources, '_available', lambda: 100)
+    @resources.budgeted_fit
+    def fit(X, y, config):
+        return X * 2, y.copy()
+    X = np.arange(2000, dtype=np.float32).reshape(100, 20)
+    y = np.arange(100)
+    matrix, labels = fit(X, y, SimpleNamespace(n_folds=0, num_threads=1))
+    np.testing.assert_array_equal(matrix, X * 2)
+    np.testing.assert_array_equal(labels, y)
+    assert json.loads((tmp_path / 'fits.json').read_text()) == []

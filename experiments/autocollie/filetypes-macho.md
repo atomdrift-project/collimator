@@ -1438,3 +1438,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T170213-filetypes-macho` — 2026-10-30T17:02:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `274c9b757d2ac4a1` | inherit_from_filetypes_rar_8eed8006 | ok | 0.9854 | 0.9984 | 0.9350 | 36 | [log](out/autocollie/runs/2026-10-30T17-03-45_20261030T170213-filetypes-macho_inherit_from_filetypes_rar_8eed8006.log) |
+| `0caec36b1dfbc750` | macho_min_malware_score_0 | ok | 0.9887 | 0.9987 | 0.9465 | 34 | [log](out/autocollie/runs/2026-10-30T17-04-26_20261030T170213-filetypes-macho_macho_min_malware_score_0.log) |
+| `d19d55244212d1d9` | macho_max_delta_step_5 | ok | 0.9887 | 0.9985 | 0.9515 | 10 | [log](out/autocollie/runs/2026-10-30T17-05-02_20261030T170213-filetypes-macho_macho_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_8eed8006`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rar (key=8eed80066a1da808, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 recovers low-severity malware to improve the 0.7951 L25 recall of the best historical run without increasing FPs.
+- **`macho_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if setting max_delta_step to 5 improves the 0.7951 L25 recall by allowing larger leaf updates to better fit the minority class, reusing the existing feature matrix.
+
+</details>
+

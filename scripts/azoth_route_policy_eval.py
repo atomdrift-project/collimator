@@ -383,6 +383,29 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def _partition_mask(table, partition: str, general_scores: Path | None = None) -> np.ndarray:
+    """Use captured canonical buckets without reopening/rebuilding general scores."""
+    row_ids = table["row_ids"]
+    if partition == "all":
+        return np.ones(len(row_ids), dtype=bool)
+    if "sha_bucket" in table:
+        buckets = np.asarray(table["sha_bucket"])
+        if buckets.shape != row_ids.shape or np.any((buckets < 0) | (buckets > 255)):
+            raise ValueError("invalid canonical buckets in score table")
+        if partition == "test":
+            return buckets < data.TEST_BUCKET_MAX
+        if partition == "dev":
+            return (buckets >= data.TEST_BUCKET_MAX) & (buckets < data.DEV_BUCKET_MAX)
+        if partition == "train":
+            return buckets >= data.DEV_BUCKET_MAX
+        raise ValueError(f"unknown partition {partition}")
+    if general_scores is None:
+        raise ValueError("legacy score table needs --general-scores for canonical partitions")
+    with np.load(general_scores, allow_pickle=False) as cache:
+        sha_by_row = dict(zip(cache["row_ids"].tolist(), cache["canonical_shas"].tolist(), strict=True))
+    return np.asarray([data.partition_of(str(sha_by_row[int(r)])) == partition for r in row_ids])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--score-table", type=Path, default=Path("out/models/azoth/score_table.npz"))
@@ -401,8 +424,7 @@ def main() -> int:
     parser.add_argument(
         "--general-scores",
         type=Path,
-        required=True,
-        help="general/threshold_scores.npz, used for canonical_shas → partition filter",
+        help="Legacy fallback for score tables lacking canonical sha_bucket values",
     )
     parser.add_argument(
         "--route-policies",
@@ -440,28 +462,8 @@ def main() -> int:
     fp_budgets = tuple(sorted(set(args.fp_budget or [0, 1, 3])))
 
     score_table = np.load(args.score_table, allow_pickle=False)
-    general_cache = np.load(args.general_scores, allow_pickle=False)
-    if "canonical_shas" not in general_cache.files:
-        raise SystemExit(
-            f"{args.general_scores} lacks canonical_shas; rerun thresholds-refresh",
-        )
-    canonical_shas = general_cache["canonical_shas"]
-    general_row_ids = general_cache["row_ids"].astype(np.int64)
     row_ids = score_table["row_ids"].astype(np.int64)
-    if not np.array_equal(row_ids, general_row_ids):
-        # Score table is the source of truth for ordering; build a permuted view.
-        sha_by_row = dict(zip(general_row_ids.tolist(), canonical_shas.tolist(), strict=True))
-        canonical_shas = np.asarray(
-            [sha_by_row.get(int(r), "") for r in row_ids],
-        )
-
-    if args.partition == "all":
-        partition_mask = np.ones(len(row_ids), dtype=bool)
-    else:
-        partition_mask = np.asarray(
-            [data.partition_of(str(c)) == args.partition for c in canonical_shas],
-            dtype=bool,
-        )
+    partition_mask = _partition_mask(score_table, args.partition, args.general_scores)
     if not np.any(partition_mask):
         raise SystemExit(f"no rows in partition {args.partition!r}")
 

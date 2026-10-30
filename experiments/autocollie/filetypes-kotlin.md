@@ -1270,3 +1270,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T152423-filetypes-kotlin` — 2026-10-30T15:24:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5f6e02e352b5bddf` | inherit_from_filetypes_chm_b86f0748 | ok | 0.6456 | 0.7609 | 0.6854 | 26 | [log](out/autocollie/runs/2026-10-30T15-26-01_20261030T152423-filetypes-kotlin_inherit_from_filetypes_chm_b86f0748.log) |
+| `e12dbd7a4e9c393c` | kotlin_min_malware_score_0 | ok | 0.9942 | 0.9969 | 0.9566 | 40 | [log](out/autocollie/runs/2026-10-30T15-28-12_20261030T152423-filetypes-kotlin_kotlin_min_malware_score_0.log) |
+| `05169f6cadf0679e` | kotlin_max_delta_step_2 | ok | 0.9939 | 0.9965 | 0.9626 | 5 | [log](out/autocollie/runs/2026-10-30T15-30-07_20261030T152423-filetypes-kotlin_kotlin_max_delta_step_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.6087 L25 recall by testing if the current min_malware_score=4 cutoff is discarding low-severity malware that contributes to ranking, using the 0.7278 historical result with min_malware_score=0 as a hypothesis for the current cohort.
+- **`kotlin_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.6087 L25 recall by transferring the max_delta_step=2 setting from the sister Java route to address potential constant models or saturated scores, while reusing the existing feature matrix.
+
+</details>
+

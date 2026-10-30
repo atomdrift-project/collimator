@@ -885,3 +885,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T164710-filetypes-rtf` — 2026-10-30T16:47:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8debb98176a5a47f` | inherit_from_filetypes_chm_fee8fe57 | ok | 0.9992 | 0.9967 | 0.9950 | 9 | [log](out/autocollie/runs/2026-10-30T16-49-58_20261030T164710-filetypes-rtf_inherit_from_filetypes_chm_fee8fe57.log) |
+| `5218e6729da8cba4` | rtf_profile_min_malware_score_0 | ok | 0.9978 | 0.9924 | 0.9918 | 10 | [log](out/autocollie/runs/2026-10-30T16-50-10_20261030T164710-filetypes-rtf_rtf_profile_min_malware_score_0.log) |
+| `d0dea6c7a7a7aabd` | rtf_training_max_delta_step_5 | ok | 0.9978 | 0.9924 | 0.9918 | 10 | [log](out/autocollie/runs/2026-10-30T16-50-22_20261030T164710-filetypes-rtf_rtf_training_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_fee8fe57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=fee8fe5717e658a4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_profile_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 recovers low-severity RTF malware to improve L25 recall@1FP, which was 0.9962 in the best historical run, by increasing the training malware cohort without changing features.
+- **`rtf_training_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if setting max_delta_step to 5 improves L25 recall@1FP over the 0.9962 baseline by allowing larger leaf updates to better fit the minority malware class, reusing the existing feature matrix.
+
+</details>
+

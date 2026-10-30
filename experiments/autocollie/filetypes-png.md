@@ -1202,3 +1202,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261029T025733-filetypes-png` — 2026-10-29T02:57:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5f56619674ea710` | inherit_from_filetypes_chm_b86f0748 | ok | 0.2175 | 0.6236 | 0.1265 | 8 | [log](out/autocollie/runs/2026-10-29T02-59-33_20261029T025733-filetypes-png_inherit_from_filetypes_chm_b86f0748.log) |
+| `d987c412e85be163` | png_coverage_cutoff0 | ok | 0.9617 | 0.9898 | 0.9236 | 9 | [log](out/autocollie/runs/2026-10-29T02-59-44_20261029T025733-filetypes-png_png_coverage_cutoff0.log) |
+| `883bdc5b1a53c89d` | png_training_posweight025 | ok | 0.2118 | 0.7050 | 0.1266 | 7 | [log](out/autocollie/runs/2026-10-29T02-59-54_20261029T025733-filetypes-png_png_training_posweight025.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_coverage_cutoff0`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_MIN_MALWARE_SCORE=0 EXP_NUM_LEAVES=96 …` — Tests if min_malware_score=0 improves measured L25 recall by retaining more labeled malware for training, addressing the low 0.0572 baseline caused by potential label exclusion.
+- **`png_training_posweight025`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_MIN_MALWARE_SCORE=4 EXP_NUM_LEAVES=96 …` — Tests if scale_pos_weight_mult=0.25 improves measured L25 recall by down-weighting positives to reduce false positives and allow the threshold to capture more true positives within the 1-FP budget.
+
+</details>
+
+## Cycle `20261030T132951-filetypes-png` — 2026-10-30T13:29:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `412c0bd9419cb5bc` | inherit_from_filetypes_chm_b86f0748 | ok | 0.3524 | 0.7973 | 0.1194 | 22 | [log](out/autocollie/runs/2026-10-30T13-33-25_20261030T132951-filetypes-png_inherit_from_filetypes_chm_b86f0748.log) |
+| `ff5f7a457cc216c2` | png_depth4_trait_specificity | ok | 0.2802 | 0.7493 | 0.1212 | 21 | [log](out/autocollie/runs/2026-10-30T13-33-57_20261030T132951-filetypes-png_png_depth4_trait_specificity.log) |
+| `e1712d42d3e16337` | png_training_max_delta_step_5 | ok | 0.3703 | 0.7827 | 0.1194 | 18 | [log](out/autocollie/runs/2026-10-30T13-34-23_20261030T132951-filetypes-png_png_training_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_depth4_trait_specificity`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP by capturing more specific finding prefixes for PNG malware, building on the 0.7201 baseline from the seed-search run.
+- **`png_training_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Investigates if max_delta_step=5 improves L25 recall@1FP by allowing larger leaf updates to better fit the minority class, reusing the existing feature matrix from the best historical run.
+
+</details>
+

@@ -1396,3 +1396,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T170841-filetypes-batch` — 2026-10-30T17:08:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8cc570f3418ca0d` | inherit_from_filetypes_iso_fec2c64b | ok | 0.9770 | 0.8655 | 0.3027 | 24 | [log](out/autocollie/runs/2026-10-30T17-10-45_20261030T170841-filetypes-batch_inherit_from_filetypes_iso_fec2c64b.log) |
+| `53c0b527a262ef13` | batch_min_malware_score_0 | ok | 1.0000 | 0.9996 | 0.9965 | 17 | [log](out/autocollie/runs/2026-10-30T17-11-11_20261030T170841-filetypes-batch_batch_min_malware_score_0.log) |
+| `95cbbbc118aa4a80` | batch_max_delta_step_5 | ok | 1.0000 | 0.9996 | 0.9965 | 3 | [log](out/autocollie/runs/2026-10-30T17-11-29_20261030T170841-filetypes-batch_batch_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_malware_score=4 cutoff is suppressing low-severity batch malware that contributes to the 0.1759 L25 recall, by training on the full malware population while keeping evaluation rows fixed.
+- **`batch_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates potential score saturation or constant models by capping leaf outputs with max_delta_step=5 to improve gradient flow and potentially lift the 0.1759 L25 recall without changing features.
+
+</details>
+

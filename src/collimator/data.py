@@ -362,6 +362,10 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
     SQLite read-only connections are already snapshot-isolated, so the
     flag is a no-op there.
 
+    A COLLIMATOR_PG_SNAPSHOT supplied by the research-pass owner is imported
+    before any reads, including on worker connections. All such connections
+    are read-only and use the same view while ingestion continues.
+
     Connection establishment is retried with exponential backoff for
     transient PostgreSQL errors (OperationalError: server unreachable,
     connection refused, etc.). Once a connection is open, mid-stream
@@ -379,7 +383,10 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
         # libpq `options` is space-separated, so a literal space inside a value
         # has to be backslash-escaped (hence "repeatable\\ read").
         opts = [f"-c max_parallel_workers_per_gather={PG_PARALLEL_WORKERS}"]
-        if repeatable_read:
+        snapshot = os.environ.get("COLLIMATOR_PG_SNAPSHOT", "")
+        if snapshot and os.environ.get("COLLIMATOR_PG_SNAPSHOT_DATABASE") != str(dsn):
+            raise ValueError("corpus snapshot belongs to a different database")
+        if repeatable_read or snapshot:
             opts.append("-c default_transaction_isolation=repeatable\\ read")
         conn = _retry_pg_connect(
             str(dsn),
@@ -387,6 +394,10 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             options=" ".join(opts),
         )
         try:
+            if snapshot:
+                from psycopg import sql
+                conn.execute(sql.SQL("SET TRANSACTION SNAPSHOT {}").format(sql.Literal(snapshot)))
+                conn.execute("SET TRANSACTION READ ONLY")
             yield conn
         finally:
             conn.close()
@@ -826,6 +837,7 @@ def stream_labeled_samples_full(
 
 def _metadata_full_query(
     where: str, *, postgres: bool, path_predicate: str = "", limit: int = 0,
+    compact: bool = False, ordered: bool = True,
 ) -> str:
     """Select the indexed sample before fetching uncovered file paths.
 
@@ -833,7 +845,17 @@ def _metadata_full_query(
     cohort scan into a heap scan of every row in a file type. Path filtering
     and limits still apply before yielding rows, in ID order.
     """
-    if postgres and SAMPLE_PREDICATE:
+    if compact:
+        # Score-only caches need identities and labels, not display paths or
+        # severity. Avoid transferring and sorting long archive paths.
+        query = ("SELECT id, '' AS sha256, '' AS path, 0 AS score, label, "
+                 "COALESCE(NULLIF(canonical_sha256, ''), sha256) FROM samples"
+                 f" WHERE {where}")
+        if path_predicate:
+            query += f" AND {path_predicate}"
+        if ordered or limit > 0:
+            query += " ORDER BY id"
+    elif postgres and SAMPLE_PREDICATE:
         query = (
             "WITH cohort AS MATERIALIZED ("
             "SELECT id, sha256, score, label, canonical_sha256 FROM samples"
@@ -843,7 +865,8 @@ def _metadata_full_query(
         )
         if path_predicate:
             query += f" WHERE {path_predicate}"
-        query += " ORDER BY c.id"
+        if ordered or limit > 0:
+            query += " ORDER BY c.id"
     else:
         query = (
             "SELECT id, sha256, path, score, label, canonical_sha256 FROM samples"
@@ -851,7 +874,8 @@ def _metadata_full_query(
         )
         if path_predicate:
             query += f" AND {path_predicate}"
-        query += " ORDER BY id"
+        if ordered or limit > 0:
+            query += " ORDER BY id"
     if limit > 0:
         query += f" LIMIT {int(limit)}"
     return query
@@ -866,6 +890,8 @@ def stream_labeled_metadata_full(
     limit: int = 0,
     max_id: int = 0,
     partition: str | None = None,
+    compact: bool = False,
+    ordered: bool = True,
 ) -> Iterator[tuple[int, str, str, int, int, str]]:
     """Yield labeled, non-skipped sample metadata without loading JSON reports.
 
@@ -874,6 +900,10 @@ def stream_labeled_metadata_full(
     If ``partition`` is set ("train", "dev", or "test"), only rows in that
     partition are yielded. Filtering happens in Python after the row is
     fetched (canonical_sha256 isn't indexed for byte-range queries in hopper).
+
+    ``compact`` omits display-only SHA/path/score values, preserving canonical
+    identities and labels. ``ordered=False`` avoids sorting a full scan; a
+    positive limit still selects the same first IDs as the ordered call.
     """
     with _connect(db_path, repeatable_read=True) as conn:
         params: list[Any] = []
@@ -894,10 +924,21 @@ def stream_labeled_metadata_full(
         query = _metadata_full_query(
             where, postgres=not isinstance(conn, sqlite3.Connection),
             path_predicate=path_predicate, limit=limit,
+            compact=compact, ordered=ordered,
         )
 
         _read_table_in_order(conn)
-        for row_id, sha256, path, score, label, canonical in _execute(conn, query, params):
+        def rows():
+            if isinstance(conn, sqlite3.Connection):
+                yield from _execute(conn, query, params)
+            else:
+                # A client cursor first buffers all 21M rows in libpq, then
+                # duplicates them into Python metadata. Bound that buffer.
+                with conn.cursor(name="collimator_labeled_metadata") as cursor:
+                    cursor.itersize = 10000
+                    cursor.execute(query, params)
+                    yield from cursor
+        for row_id, sha256, path, score, label, canonical in rows():
             split_key = canonical or sha256
             if partition is not None and partition_of(split_key) != partition:
                 continue

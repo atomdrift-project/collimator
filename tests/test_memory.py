@@ -11,7 +11,7 @@ from collimator import features, memory
 
 @pytest.fixture
 def memory_files(monkeypatch):
-    monkeypatch.setattr(features, "cgroup_headroom_gb", lambda: None)
+    monkeypatch.setattr(features, "cgroup_headroom_gb", lambda **kw: None)
     files = {
         "/proc/meminfo": f"MemTotal: {251 * 2**20} kB\nMemAvailable: {52 * 2**20} kB\n",
         "/proc/spl/kstat/zfs/arcstats": (
@@ -127,7 +127,10 @@ def test_cgroup_headroom_includes_parent_and_soft_limit(tmp_path, monkeypatch):
 
 def test_worker_admission_honors_actual_cgroup_without_env_ceiling(memory_files, monkeypatch):
     monkeypatch.delenv('COLLIMATOR_MEM_CEILING_GB', raising=False)
-    monkeypatch.setattr(features, 'cgroup_headroom_gb', lambda: 3)
+    def headroom(*, reclaim_file=False):
+        assert reclaim_file, 'clean matrix pages must not prevent extraction admission'
+        return 3
+    monkeypatch.setattr(features, 'cgroup_headroom_gb', headroom)
     assert features.ram_headroom_gb(48) == 3
 
 

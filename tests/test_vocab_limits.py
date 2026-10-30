@@ -207,19 +207,26 @@ def test_extended_metric_frequency_counts_reports(monkeypatch):
     assert "custom_rare_count" not in spec.metric_vocab
 
 
-def test_extended_metrics_on_reduced_reports_stay_within_the_fact_profile(monkeypatch):
+@pytest.mark.parametrize("profiles", ["old", "new", "mixed"])
+def test_reduced_reports_do_not_veto_metrics_observed_in_other_reports(monkeypatch, profiles):
     monkeypatch.setenv("COLLIMATOR_EXTENDED_METRICS", "1")
     profile = json.loads(features.FACT_PROFILE_MANIFEST.read_text())["id"]
-    retained, dropped = "pe_image_size", "custom_common_count"
+    common, newer = "pe_image_size", "custom_common_count"
     entry = {"type": "pe", "ms": {"pe": {"image_size": 4096}, "custom": {"common_count": 1}}}
     report = {"v": "9", "fp": profile, "fs": [entry]}
     reports = {rid: {"cleave_result": report} for rid in range(1, 21)}
+    if profiles != "new":
+        old = {"v": "9", "fp": "azoth-1fbfcdb8a8ed5902", "fs": [
+            {"type": "pe", "ms": {"pe": {"image_size": 4096}}},
+        ]}
+        for rid in range(1, 21 if profiles == "old" else 11):
+            reports[rid] = {"cleave_result": old}
     monkeypatch.setattr(
         data, "fetch_cleave_results", lambda _db, ids: {rid: reports[rid] for rid in ids}
     )
     spec = features.build_vocab_from_db("unused", [(rid, rid % 2) for rid in reports], n_workers=1)
-    assert retained in spec.metric_vocab
-    assert dropped not in spec.metric_vocab
+    assert common in spec.metric_vocab
+    assert (newer in spec.metric_vocab) == (profiles != "old")
 
 
 def test_benign_trigram_scan_matches_candidates_without_cross_file_mixing(monkeypatch):

@@ -665,6 +665,8 @@ def main() -> None:
     p_exp.add_argument("--min-child-weight", type=int, default=5, help="Minimum child weight")
     p_exp.add_argument("--min-child-samples", type=int, default=None, help="LightGBM minimum samples per leaf")
     p_exp.add_argument("--num-leaves", type=int, default=None, help="LightGBM leaves per tree")
+    p_exp.add_argument("--max-delta-step", type=float, default=0.0,
+                       help="LightGBM leaf-output cap before learning-rate scaling (0 = uncapped)")
     p_exp.add_argument("--colsample-bytree", type=float, default=0.8, help="Subsample ratio of columns")
     p_exp.add_argument("--subsample", type=float, default=0.8, help="Subsample ratio of training instances")
     p_exp.add_argument("--gamma", type=float, default=0.0, help="Minimum loss reduction to make a further partition")
@@ -933,6 +935,7 @@ def main() -> None:
             hard_negative_weight=args.hard_negative_weight,
             benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
             scale_pos_weight_mult=args.scale_pos_weight_mult,
+            max_delta_step=args.max_delta_step,
             boosting_type=args.boosting_type,
             extra_trees=args.extra_trees,
             seed_search_k=args.seed_search_k,

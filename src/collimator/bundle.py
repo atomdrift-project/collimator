@@ -223,6 +223,8 @@ class Ensemble:
         files = model_files(bundle_dir)
         if not files:
             raise FileNotFoundError(f"no model file found in {bundle_dir}")
+        if all(p.suffix == '.onnx' for p in files):
+            return cls(_model.load_onnx_models(files))
         return cls([_model.load_model(p) for p in files])
 
     @property
@@ -243,9 +245,34 @@ class Ensemble:
         the single member.  K>1 path averages in f64 then casts back to f32.
         """
         from collimator.model import predict_proba as _predict_proba  # noqa: PLC0415
+        from collimator.model import OnnxModel
 
         if len(self._members) == 1:
             return _predict_proba(self._members[0], X)
+        first = self._members[0]
+        if (all(isinstance(m, OnnxModel) for m in self._members)
+                and all(first.shares_input_layout(m) for m in self._members)):
+            import scipy.sparse as sp
+
+            # Densify each bounded input once for the whole ensemble. Doing
+            # this independently per seed repeats large allocations and CSR
+            # conversion for wide layouts (general currently has 127k columns).
+            out = np.empty(X.shape[0], dtype=np.float32)
+            first.validate_input(X)
+            # Keep the original batch boundaries as well as tree arithmetic:
+            # ORT's reduction order can differ on short final batches.
+            chunk_rows = OnnxModel.dense_chunk_rows(X.shape[1])
+            for start in range(0, X.shape[0], chunk_rows):
+                end = min(start + chunk_rows, X.shape[0])
+                chunk = first.project_input(X[start:end])
+                if sp.issparse(chunk):
+                    chunk = chunk.toarray()
+                chunk = np.ascontiguousarray(chunk, dtype=np.float32)
+                accumulator = np.zeros(end-start, dtype=np.float64)
+                for member in self._members:
+                    accumulator += member._predict_dense(chunk)[:, 1].astype(np.float64)
+                out[start:end] = accumulator / len(self._members)
+            return out
         accumulator = np.zeros(X.shape[0], dtype=np.float64)
         for m in self._members:
             accumulator += _predict_proba(m, X).astype(np.float64)

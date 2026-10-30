@@ -31,6 +31,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+from collimator import model_config
 from collimator import bundle, cache_identity, data, export, features, model, thresholds, train
 from collimator.autocollie_selection import (
     replay_feature_env,
@@ -156,6 +157,49 @@ def _seed_health_failure(
             f"{min_roc_auc:.4f}"
         )
     return None
+
+
+def _initial_split_blocker(
+    config: train.TrainConfig, *, n_benign: int, n_malware: int,
+) -> dict[str, Any] | None:
+    """Prove that every seed's final fit must be constant, when possible.
+
+    For our unweighted binary GBDT, p=M/N is the initial probability and
+    scale_pos_weight=(B/M)*mult. Total initial Hessian is therefore
+    p*(1-p)*B*(1+mult) <= B**2*(1+mult)/N. B cannot exceed the whole
+    corpus's benign count, even after the holdout and row bagging. Both
+    children require min_child_weight, so a strict upper bound below twice
+    that threshold rules out every root split, independently of features
+    and random seed. Leave weighted refits and other objectives untouched.
+    """
+    if (config.learner != "azoth" or config.boosting_type != "gbdt"
+            or config.benign_filetype_weights
+            or (config.hard_negative_fraction > 0 and config.hard_negative_weight > 1)
+            or not getattr(config, "boost_from_average", True)
+            or min(n_benign, n_malware) <= 0):
+        return None
+    minimum = float(config.min_child_weight)
+    multiplier = max(float(config.scale_pos_weight_mult), 0.0)
+    fraction = config.holdout_fraction
+    if not math.isfinite(minimum) or not math.isfinite(multiplier) or minimum <= 0:
+        return None
+    if not math.isfinite(fraction) or fraction >= 1:
+        return None  # Leave invalid configuration reporting to training.
+    fit_rows = n_benign + n_malware
+    if fraction > 0 and min(n_benign, n_malware) >= train.MIN_HOLDOUT_CLASS_SIZE:
+        fit_rows -= math.ceil(fit_rows * fraction)
+    if fit_rows <= 0:
+        return None
+    upper = n_benign ** 2 * (1 + multiplier) / fit_rows
+    required = 2 * minimum
+    # Stay well clear of floating-point boundary cases in the C++ learner.
+    if upper >= required * (1 - 1e-6):
+        return None
+    return {"initial_hessian_upper_bound": upper,
+            "two_leaf_hessian_minimum": required,
+            "minimum_fit_rows": fit_rows,
+            "reason": "initial Hessian cannot support two leaves for any seed; "
+                      "revisit class weighting, initialization, or min_child_weight"}
 
 
 def _train_healthy_seed_ensemble(
@@ -1053,6 +1097,7 @@ def _coerce_train_override(field_name: str, raw: str) -> Any:
         "threshold_fpr_target",
         "hard_negative_fraction",
         "hard_negative_weight",
+        "max_delta_step",
     }
     json_fields = {"monotone_constraints", "benign_filetype_weights"}
     if field_name in int_fields:
@@ -1102,6 +1147,14 @@ def _route_train_config(
     overrides: dict[str, Any] = {}
     for key in _target_override_keys(target):
         overrides.update(train_overrides.get(key, {}))
+    # Historical model settings cannot raise this run's CPU budget. Keep a
+    # smaller route limit, but treat None/0/negative (unbounded) as the cap.
+    if base_config.num_threads is not None and base_config.num_threads > 0:
+        route_threads = overrides.get("num_threads")
+        if "num_threads" in overrides and (
+            route_threads is None or route_threads <= 0 or route_threads > base_config.num_threads
+        ):
+            overrides["num_threads"] = base_config.num_threads
     if not overrides:
         return base_config
     LOG.info("%s: using route train overrides %s", target["name"], dict(sorted(overrides.items())))
@@ -1378,6 +1431,24 @@ def _train_one(
 
     target_seed_members = 1 + max(0, int(n_seed_extras))
 
+    blocker = _initial_split_blocker(
+        config, n_benign=int((y_train == 0).sum()), n_malware=n_malware,
+    )
+    if blocker is not None:
+        LOG.warning(
+            "%s: skipping all seed attempts: initial Hessian <= %.6g, "
+            "but two leaves require %.6g; using filegroup/general fallback",
+            name, blocker["initial_hessian_upper_bound"],
+            blocker["two_leaf_hessian_minimum"],
+        )
+        return {"name": name, "kind": kind, "file_types": list(file_types),
+                "error": True, "skip_reason": "unsplittable_initial_hessian",
+                "preflight": blocker,
+                "seed_health": {"target_members": target_seed_members,
+                                "retry_budget": seed_retry_budget,
+                                "min_roc_auc": seed_health_min_roc_auc,
+                                "accepted_seeds": [], "attempts": []}}
+
     def _fit_seed(seed: int) -> train.TrainResult:
         return train.train(
             x_train,
@@ -1534,6 +1605,11 @@ def _train_one(
     }
     with open(output_dir / "benchmark.json", "w") as f:
         json.dump(_strip_nan(payload), f, indent=2, allow_nan=False)
+    bundle.atomic_write_json(output_dir/'training_config.json', {
+        'schema':model_config.SCHEMA, 'route':('filegroups/' if kind=='filegroup' else 'filetypes/')+name,
+        'updated_at':datetime.now(UTC).isoformat(), 'train_config':payload['train_config'],
+        'feature_env':payload['feature_env'], 'min_malware_training_score':int(min_malware_score or 0),
+        'provenance':{'kind':'effective_training_configuration','includes_explicit_overrides':True}})
     cache_identity.write_training_provenance(output_dir)
     return payload
 
@@ -2007,6 +2083,26 @@ def main() -> int:
             LOG.info("autocollie-best: no historical runs found in %s for any target route",
                      args.autocollie_best_runs_dir)
 
+    # Current accepted knobs supersede historical selection. Explicit CLI
+    # overrides remain the final layer; operational thread caps still apply.
+    accepted_train, accepted_env = {}, {}
+    explicit_train = _parse_train_overrides(args.train_override)
+    explicit_env = _parse_feature_envs(args.feature_env)
+    for target in targets:
+        route = _route_key_for_target(target)
+        accepted = model_config.load(route)
+        if accepted is not None:
+            accepted_train[route] = dict(accepted['train_config'])
+            accepted_env[route] = dict(accepted['feature_env'])
+            for key in _target_override_keys(target):
+                accepted_train[route].update(explicit_train.get(key, {}))
+                accepted_env[route].update(explicit_env.get(key, {}))
+            malware_cutoffs[route] = accepted['min_malware_training_score']
+    train_overrides = _merge_route_overrides(_parse_train_overrides(args.train_override),
+                        _merge_route_overrides(accepted_train, train_overrides))
+    feature_envs = _merge_route_overrides(_parse_feature_envs(args.feature_env),
+                      _merge_route_overrides(accepted_env, feature_envs))
+
     # Small-route defaults for COLLIMATOR_MIN_SAMPLE_SCORE.
     #
     # The global default is 3 (data.py:_default_min) — keeps the training
@@ -2082,7 +2178,7 @@ def main() -> int:
     if lgbm_threads is None and args.parallelism > 1:
         lgbm_threads = max(1, (os.cpu_count() or 1) // (concurrent_suites * args.parallelism))
     LOG.info(
-        "each fit: %d extraction workers, %s LightGBM threads; up to %d fits at once",
+        "each fit: %d extraction workers, up to %s LightGBM threads; up to %d fits at once",
         extract_workers, lgbm_threads or "all", args.parallelism,
     )
     fit_mem_file = args.fit_mem_file or Path("out/cache/fit-mem") / f"{args.output_root.name}.json"

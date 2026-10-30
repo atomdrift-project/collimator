@@ -158,43 +158,46 @@ def _score_labeled_corpus(
         "on",
     }
     if size_aware_batches:
-        row_metadata = list(data.stream_labeled_metadata_full_with_size(
+        metadata_stream = data.stream_labeled_metadata_full_with_size(
             db_path,
             path_substr=path_substr,
             min_score=min_score,
             max_score=max_score,
             limit=limit,
             max_id=max_id,
-        ))
+        )
     else:
-        row_metadata = list(data.stream_labeled_metadata_full(
+        metadata_stream = data.stream_labeled_metadata_full(
             db_path,
             path_substr=path_substr,
             min_score=min_score,
             max_score=max_score,
             limit=limit,
             max_id=max_id,
-        ))
+            compact=not include_samples,
+            ordered=False,
+        )
+    metadata_started = metadata_progress = time.monotonic()
+    row_metadata = []
+    for row in metadata_stream:
+        row_metadata.append(row)
+        if len(row_metadata) % 100_000 == 0:
+            now = time.monotonic()
+            if now - metadata_progress >= 30:
+                log.info("threshold metadata progress: %d rows, %.1fs elapsed",
+                         len(row_metadata), now - metadata_started)
+                metadata_progress = now
     if size_aware_batches:
         log.info("threshold scoring uses size-aware batch packing")
     # Tuple shape:
     #   stream_labeled_metadata_full      -> (row_id, sha256, path, score, label, canonical)
     #   ..._with_size                     -> (row_id, sha256, path, score, label, json_bytes, canonical)
     # In both cases, canonical_sha256 is the LAST element.
-    samples = [
-        ScoredSample(
-            row_id=row[0],
-            sha256=row[1],
-            path=row[2],
-            score=row[3],
-            label=row[4],
-            canonical_sha256=row[-1],
-        )
-        for row in row_metadata
-    ]
-    if not samples:
+    expected_samples = len(row_metadata)
+    if not expected_samples:
         raise ValueError("no samples matched the requested filters")
-    log.info("threshold scoring metadata: %d labeled rows", len(samples))
+    log.info("threshold scoring metadata: %d labeled rows in %.1fs",
+             expected_samples, time.monotonic() - metadata_started)
     scored_samples: list[ScoredSample] = []
     pred_batches: list[np.ndarray] = []
     label_batches: list[np.ndarray] = []
@@ -248,15 +251,18 @@ def _score_labeled_corpus(
         del slow_batches[5:]
         scored_rows += len(y_batch)
         now = time.monotonic()
-        if scored_rows == len(samples) or scored_rows - last_rows_logged >= 100_000 or now - last_progress >= 60.0:
+        if scored_rows == expected_samples or scored_rows - last_rows_logged >= 100_000 or now - last_progress >= 60.0:
             elapsed = max(now - score_started, 1e-9)
             log.info(
                 "threshold scoring progress: %d/%d rows (%.1f%%, %.0f rows/sec)",
                 scored_rows,
-                len(samples),
-                100.0 * scored_rows / len(samples),
+                expected_samples,
+                100.0 * scored_rows / expected_samples,
                 scored_rows / elapsed,
             )
+            log.info("threshold stage totals: worker fetch=%.1fs extract=%.1fs; parent matrix=%.1fs predict=%.1fs",
+                     stage_totals['fetch_sec'], stage_totals['extract_sec'],
+                     stage_totals['matrix_sec'], stage_totals['predict_sec'])
             last_progress = now
             last_rows_logged = scored_rows
 
@@ -290,7 +296,6 @@ def _score_labeled_corpus(
             for row in slow_batches
         )
         log.info("slowest threshold scoring batches: %s", slow_summary)
-    expected_samples = len(samples)
     if len(probs) != expected_samples:
         raise ValueError(f"scored sample count mismatch: expected {expected_samples}, got {len(probs)}")
     if len(scored_samples) != expected_samples:

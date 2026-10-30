@@ -1268,3 +1268,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261029T022221-filegroups-portable` — 2026-10-29T02:22:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `754ddb1faef2bcdd` | inherit_from_filetypes_rtf_320ae377 | ok | 0.8209 | 0.9314 | 0.7951 | 191 | [log](out/autocollie/runs/2026-10-29T02-29-20_20261029T022221-filegroups-portable_inherit_from_filetypes_rtf_320ae377.log) |
+| `fe37384723bfae53` | portable_coverage_cutoff0 | ok | 0.9412 | 0.9847 | 0.9040 | 64 | [log](out/autocollie/runs/2026-10-29T02-32-46_20261029T022221-filegroups-portable_portable_coverage_cutoff0.log) |
+| `9a9c051ec23cf54b` | portable_training_leaves128_reg2 | ok | 0.9438 | 0.9856 | 0.9092 | 58 | [log](out/autocollie/runs/2026-10-29T02-33-53_20261029T022221-filegroups-portable_portable_training_leaves128_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_320ae377`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=320ae377e6757db4, recall_at_50_per_100M=0.9962). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_coverage_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 improves measured L25 recall by retaining low-severity malware samples that the current cutoff excludes, addressing the coverage gap identified in research lessons.
+- **`portable_training_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing model capacity (num_leaves 96->128) and regularization (reg_lambda 1->2) improves measured L25 recall by better capturing complex patterns in the retained malware set while controlling overfitting.
+
+</details>
+
+## Cycle `20261030T140952-filegroups-portable` — 2026-10-30T14:09:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `18f62d6b4d7e4f96` | inherit_from_filetypes_chm_b86f0748 | ok | 0.7587 | 0.8751 | 0.7994 | 472 | [log](out/autocollie/runs/2026-10-30T14-19-30_20261030T140952-filegroups-portable_inherit_from_filetypes_chm_b86f0748.log) |
+| `608cb6cc0dca75b1` | portable_training_leaves128_reg2_depth4 | ok | 0.9516 | 0.9886 | 0.9097 | 822 | [log](out/autocollie/runs/2026-10-30T14-33-37_20261030T140952-filegroups-portable_portable_training_leaves128_reg2_depth4.log) |
+| `c5b6c22af9560003` | portable_training_leaves128_reg2_mds5 | ok | 0.9558 | 0.9903 | 0.9097 | 53 | [log](out/autocollie/runs/2026-10-30T14-37-22_20261030T140952-filegroups-portable_portable_training_leaves128_reg2_mds5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_training_leaves128_reg2_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves the 0.7341 L25 recall of the current best by capturing more specific finding prefixes without changing the training matrix.
+- **`portable_training_leaves128_reg2_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if max_delta_step=5 improves the 0.7341 L25 recall by allowing larger leaf updates to better fit the minority class, reusing the existing feature matrix.
+
+</details>
+

@@ -2118,3 +2118,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T152506-filetypes-python` — 2026-10-30T15:25:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12f8aa890128ca97` | inherit_from_filetypes_chm_b86f0748 | ok | 0.8988 | 0.9404 | 0.8291 | 92 | [log](out/autocollie/runs/2026-10-30T15-26-27_20261030T152506-filetypes-python_inherit_from_filetypes_chm_b86f0748.log) |
+| `66b395ecaf93a42e` | python_kv_vocab_depth4 | ok | 0.9881 | 0.9950 | 0.9494 | 112 | [log](out/autocollie/runs/2026-10-30T15-28-42_20261030T152506-filetypes-python_python_kv_vocab_depth4.log) |
+| `5600b2918e145db7` | python_kv_vocab_malware_cutoff2 | ok | 0.9867 | 0.9941 | 0.9479 | 89 | [log](out/autocollie/runs/2026-10-30T15-30-10_20261030T152506-filetypes-python_python_kv_vocab_malware_cutoff2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_b86f0748`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/chm (key=b86f0748767aa5c6, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_kv_vocab_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP beyond the 0.5945 baseline by capturing more specific finding prefixes for Python malware, while retaining the beneficial kv_vocab features.
+- **`python_kv_vocab_malware_cutoff2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 2 improves L25 recall@1FP by including lower-severity Python malware in training, potentially increasing class balance and recall without sacrificing the 1-FP budget.
+
+</details>
+

@@ -17,7 +17,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import bundle  # noqa: E402
+from collimator import bundle, thresholds  # noqa: E402
 
 
 def _json_clean(value: Any) -> Any:
@@ -36,9 +36,7 @@ def _json_clean(value: Any) -> Any:
 
 
 def _budget(benign: int, target_per_million: float) -> int:
-    if target_per_million <= 0:
-        return 0
-    return max(1, int(math.floor(benign * target_per_million / 1_000_000.0)))
+    return thresholds.resolution_adjusted_fp_budget(benign, target_per_million * 100.0)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -82,7 +80,11 @@ def _metrics(labels: np.ndarray, hit: np.ndarray, target_per_million: float) -> 
     f1 = 2 * precision * recall / max(precision + recall, 1e-12) if malware_n else math.nan
     return {
         "target_per_100M": target_per_million * 100.0,
+        "benign": benign_n,
+        "malware": malware_n,
         "budget": budget,
+        "nominal_rate_budget": int(math.floor(benign_n * target_per_million / 1_000_000)),
+        "fp_upper_95_per_100M": _fp_upper_95(fp, benign_n),
         "tp": tp,
         "fp": fp,
         "tn": tn,
@@ -93,6 +95,49 @@ def _metrics(labels: np.ndarray, hit: np.ndarray, target_per_million: float) -> 
         "fp_per_100M": fp * 100_000_000.0 / benign_n if benign_n else math.nan,
         "within_budget": fp <= budget,
     }
+
+
+def _fp_upper_95(fp: int, benign: int) -> float | None:
+    """One-sided exact binomial bound, informational rather than an FP allowance."""
+    if not benign:
+        return None
+    if fp == benign:
+        return 1e8
+    from scipy.stats import beta
+    return float(beta.isf(0.05, fp + 1, benign - fp) * 1e8)
+
+
+def _level_metrics(labels, hit, groups, target_per_million, *, multiplier=1.0):
+    """One allowance per final filetype decision pool, never per component model.
+
+    Aggregate FP alone could hide one bad route behind unused allowances on
+    other routes. Each route must pass; totals are a summary of those checks.
+    The literal population-rate bound remains separate from this empirical gate.
+    """
+    result = _metrics(labels, hit, target_per_million)
+    routes = {}
+    for route, indices in groups.items():
+        m = _metrics(labels[indices], hit[indices], target_per_million)
+        m["scaled_budget"] = int(math.floor(m["budget"] * multiplier))
+        m["within_scaled_budget"] = m["fp"] <= m["scaled_budget"]
+        m["status"] = ("insufficient_benign_data" if not m["benign"] else
+                       "within_adjusted_budget" if m["within_scaled_budget"] else
+                       "exceeds_adjusted_budget")
+        routes[route] = m
+    result.update(
+        routes=routes,
+        budget=sum(m["budget"] for m in routes.values()),
+        scaled_budget=sum(m["scaled_budget"] for m in routes.values()),
+        scaled_budget_multiplier=multiplier,
+        within_budget=all(m["within_budget"] for m in routes.values()),
+        within_scaled_budget=all(m["within_scaled_budget"] for m in routes.values()),
+        exceeded_routes=[route for route, m in routes.items() if not m["within_scaled_budget"]],
+        route_hits={route: m["tp"] + m["fp"] for route, m in routes.items()},
+    )
+    result["status"] = ("insufficient_benign_data" if not result["benign"] else
+                        "within_adjusted_budget" if result["within_scaled_budget"] else
+                        "exceeds_adjusted_budget")
+    return result
 
 
 def _decisions(
@@ -118,8 +163,22 @@ def _decisions(
     return hit, policy_hits
 
 
-def _pct(value: float) -> str:
-    return "-" if math.isnan(value) else f"{100 * value:.2f}%"
+def _pct(value: float | None) -> str:
+    return "-" if value is None or math.isnan(value) else f"{100 * value:.2f}%"
+
+
+def _first_decisions(file_types, route_names, scores, config, policy, *, severity="hostile"):
+    """Evaluate each policy once instead of replaying stricter levels repeatedly."""
+    from collimator.policy import first_firing_level, routing_levels
+    first = np.full(len(file_types), np.iinfo(np.int64).max, dtype=np.int64)
+    groups = {}
+    for filetype in np.unique(file_types):
+        indices = np.flatnonzero(file_types == filetype)
+        subset = {route: scores[index, indices] for index, route in enumerate(route_names)}
+        levels = routing_levels(subset, config, policy, str(filetype), severity=severity)
+        first[indices], _ = first_firing_level(subset, levels, len(indices), -1, severity=severity)
+        groups[f"filetypes/{filetype}"] = indices
+    return first, groups
 
 
 def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
@@ -128,8 +187,10 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         "",
         f"- Rows: {payload['rows']} ({payload['malware']} malware, {payload['benign']} benign)",
         f"- Calibration snapshot: `{payload.get('calibration_snapshot_id')}`",
+        "- Budget: one resolution-adjusted allowance per filetype's final swept decision.",
+        "- Passing this empirical gate does not certify the nominal population FP rate.",
         "",
-        "| L | Severity | Target/100M | Budget | Recall | Precision | F1 | FP | FP/100M | Within budget |",
+        "| L | Severity | Nominal level | Sum of allowances | Recall | Precision | F1 | FP | Observed FP/100M | Status |",
         "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for item in payload["levels"]:
@@ -139,10 +200,22 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
                 "| "
                 f"{item['level']} | {severity} | "
                 f"{float(m['target_per_100M']):.1f} | {m['budget']} | "
-                f"{_pct(float(m['recall']))} | {_pct(float(m['precision']))} | {_pct(float(m['f1']))} | "
-                f"{m['fp']} | {float(m['fp_per_100M']):.2f} | "
-                f"{'yes' if m['within_budget'] else 'NO'} |"
+                f"{_pct(m['recall'])} | {_pct(m['precision'])} | {_pct(m['f1'])} | "
+                f"{m['fp']} | {m['fp_per_100M'] if m['fp_per_100M'] is not None else '-'} | "
+                f"{m['status']} |"
             )
+    deployed = next(item["hostile"] for item in payload["levels"]
+                    if int(item["level"]) == payload["operating_level"])
+    lines.extend(["", f"At L{payload['operating_level']}, the one-sided 95% upper "
+                  f"bound is {deployed['fp_upper_95_per_100M']} FP/100M (informational)."])
+    lines.extend(["", "## Routes exceeding their allowance", "",
+                  "| L | Route | Benign | FP | Allowance | Effective gate allowance |",
+                  "| ---: | --- | ---: | ---: | ---: | ---: |"])
+    for item in payload["levels"]:
+        for route in item["hostile"]["exceeded_routes"]:
+            m = item["hostile"]["routes"][route]
+            lines.append(f"| {item['level']} | {route} | {m['benign']} | {m['fp']} | "
+                         f"{m['budget']} | {m['scaled_budget']} |")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n")
 
@@ -156,57 +229,45 @@ def main() -> int:
     parser.add_argument("--markdown", type=Path, default=Path("out/models/azoth/global_policy_metrics.md"))
     parser.add_argument("--fail-on-budget", action="store_true")
     parser.add_argument(
+        "--budget-gate-level", type=int, default=thresholds.DEFAULT_SEVERITY_LEVEL,
+        help="Deployment operating point to gate (default: canonical L25); other levels are reported.",
+    )
+    parser.add_argument(
         "--max-budget-multiplier",
         type=float,
         default=1.0,
         help=(
-            "Scale the strict corpus-wide FP budget by this factor before "
-            "the --fail-on-budget check. Default 1.0 = legacy strict "
-            "semantic (deploy fails if aggregate FP > target_per_million × "
-            "corpus_benign / 1e6). Per-pool deploy semantics naturally "
-            "produce aggregate FPRs ~10-20× higher than the strict cap "
-            "because each filetype is calibrated to its own slice's 3 "
-            "FP/M; pass --max-budget-multiplier 30 to keep the deploy-time "
-            "sanity check (would catch a 30× regression) while accepting "
-            "the expected per-pool aggregate overshoot."
+            "Explicit waiver: multiply each filetype's resolution-adjusted allowance. "
+            "Default 1.0 enforces the documented level contract."
         ),
     )
     parser.add_argument(
         "--budget-gate-max-level",
         type=int,
-        default=1000,
+        default=None,
         help=(
-            "Only let --fail-on-budget gate levels <= this. Levels above "
-            "are still measured and written to the report but excluded from "
-            "the pass/fail decision — they exist for chart headroom and "
-            "consumer-side suspicious coverage, and the calibrator can't "
-            "always hit a per-budget threshold up there (the model's "
-            "lowest probability bucket may be coarser than the budget). "
-            "Default 1000 matches the previous grid ceiling so deploy gating "
-            "behavior is unchanged for everything that was already deploy-relevant."
+            "Opt in to gating every level <= this, including zero-FP L0, "
+            "instead of just --budget-gate-level. Not the default: a zero-FP "
+            "L0 test gate would impose a stricter objective than L25."
         ),
     )
     parser.add_argument(
         "--budget-gate-min-fp-resolution",
         type=int,
-        default=5,
-        help=(
-            "Skip --fail-on-budget for levels whose UNSCALED budget rounds "
-            "below this many absolute FPs on the evaluation corpus. The "
-            "minimum-resolvable level is corpus-size dependent: a level "
-            "with budget N means we need a benign corpus of size N×1e8/N = "
-            "1e8 just to see one FP, and below this floor the calibrator's "
-            "strict levels all collapse to the 1-FP ceiling (~1 FP regardless "
-            "of target), so they don't reflect any empirical FP count. Gating "
-            "on those is checking the resolution floor, not the model. Default 5 "
-            "treats anything with <5 expected FPs as informational. "
-            "Set to 0 to disable the resolution floor and gate every level "
-            "≤ --budget-gate-max-level."
-        ),
+        default=0,
+        help=("Deprecated resolution waiver. Only 0 is supported: small pools already "
+              "receive their one-FP allowance and must not silently escape the gate."),
     )
     args = parser.parse_args()
+    if not math.isfinite(args.max_budget_multiplier) or args.max_budget_multiplier < 1:
+        parser.error("--max-budget-multiplier must be finite and >= 1")
+    if args.budget_gate_min_fp_resolution != 0:
+        parser.error("resolution skipping is incompatible with the adjusted count gate; use 0")
 
     config = _load_json(args.config)
+    if not any(int(item["level"]) == args.budget_gate_level
+               for item in config.get("levels", [])):
+        raise ValueError("config is missing the deployment operating level")
     policy = _load_json(args.policy)
     from collimator import policy as frozen_policy
     with np.load(args.score_table) as table:
@@ -219,54 +280,28 @@ def main() -> int:
     levels: list[dict[str, Any]] = []
     failed = False
     multiplier = max(1.0, float(args.max_budget_multiplier))
-    gate_max_level = int(args.budget_gate_max_level)
-    min_fp_resolution = max(0, int(args.budget_gate_min_fp_resolution))
+    gate_max_level = args.budget_gate_max_level
+    first, groups = _first_decisions(file_types, route_names, scores, config, policy)
     for level_item in config.get("levels", []):
         level = int(level_item["level"])
         out: dict[str, Any] = {"level": level}
         for severity in ("hostile",):
             target = float(level_item[severity]["target_per_million"])
-            hit, route_hits = _decisions(
-                labels=labels,
-                file_types=file_types,
-                route_names=route_names,
-                scores=scores,
-                config=config,
-                policy=policy,
-                level=level,
-                severity=severity,
-            )
-            m = _metrics(labels, hit, target)
-            m["route_hits"] = route_hits
-            # Strict within_budget vs slack version. The strict flag
-            # stays on the per-level record for observability; the
-            # slack flag is what --fail-on-budget gates on.
-            scaled_budget = int(math.floor(int(m["budget"]) * multiplier))
-            m["scaled_budget"] = scaled_budget
-            m["scaled_budget_multiplier"] = multiplier
-            m["within_scaled_budget"] = bool(int(m["fp"]) <= scaled_budget)
-            # Three reasons to drop a level out of the pass/fail gate while
-            # still measuring it for the report:
-            #   1. Above --budget-gate-max-level: loose tail kept for chart
-            #      headroom; calibrator can't always hit a target up there.
-            #   2. Below empirical FP resolution: corpus too small to see
-            #      `target_per_million × corpus_benign / 1e6` FPs reliably,
-            #      so strict levels collapse to the ~1-FP ceiling and gating
-            #      fires on the resolution floor, not the model.
-            #   3. (Implicit) level isn't in the policy at all — `_decisions`
-            #      returns no hits, which passes by default; tracked elsewhere.
-            below_resolution = int(m["budget"]) < min_fp_resolution
-            level_in_gate_window = level <= gate_max_level
-            gated = level_in_gate_window and not below_resolution
-            m["budget_gated"] = gated
-            m["budget_below_resolution"] = below_resolution
-            if gated:
-                failed = failed or not bool(m["within_scaled_budget"])
+            hit = first <= level
+            m = _level_metrics(labels, hit, groups, target, multiplier=multiplier)
+            m["budget_gated"] = (level <= gate_max_level if gate_max_level is not None
+                                 else level == args.budget_gate_level)
+            if m["budget_gated"]:
+                failed = failed or m["status"] != "within_adjusted_budget"
             out[severity] = m
         levels.append(out)
 
     payload = {
-        "schema": "azoth.global_policy_metrics.v1",
+        "schema": "azoth.global_policy_metrics.v2",
+        "budget_semantics": "resolution_adjusted_per_filetype_v1",
+        "decision_rule": "saved_policy_sweep",
+        "operating_level": args.budget_gate_level,
+        "confidence_note": "FP allowances are empirical; confidence bounds assume representative independent benign samples.",
         "calibration_snapshot_id": config.get("calibration_snapshot_id"),
         "rows": int(len(labels)),
         "evaluated_on": "test_bucket_only",
@@ -280,7 +315,12 @@ def main() -> int:
     print(f"wrote {args.output}")
     print(f"wrote {args.markdown}")
     if args.fail_on_budget and failed:
-        print("error: one or more levels exceed the configured FP budget")
+        for item in levels:
+            m = item["hostile"]
+            if m["budget_gated"] and m["status"] != "within_adjusted_budget":
+                print(f"L{item['level']}: {m['status']}; routes: "
+                      + ", ".join(m["exceeded_routes"]))
+        print("error: resolution-adjusted filetype FP gate failed")
         return 1
     return 0
 

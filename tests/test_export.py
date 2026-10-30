@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from collimator.export import (
     is_constant_predictor,
@@ -16,6 +17,63 @@ from collimator.export import (
 class _FakeOutput:
     def __init__(self, name: str) -> None:
         self.name = name
+
+
+@pytest.mark.parametrize("lower,upper", [
+    (np.nextafter(np.float32(1), np.float32(np.inf)),
+     np.nextafter(np.nextafter(np.float32(1), np.float32(np.inf)), np.float32(np.inf))),
+    (np.nextafter(np.float32(-1.5), np.float32(-np.inf)), np.float32(-1.5)),
+    (np.float32(0), np.float32(1)),
+])
+def test_lightgbm_onnx_preserves_float32_split_boundaries(tmp_path, lower, upper):
+    lgb = pytest.importorskip("lightgbm")
+    ort = pytest.importorskip("onnxruntime")
+    pytest.importorskip("onnxmltools")
+    from collimator.export import export_lightgbm_onnx
+
+    X = np.repeat(np.array([[lower], [upper]], dtype=np.float32), 50, axis=0)
+    y = np.repeat([0, 1], 50)
+    classifier = lgb.LGBMClassifier(n_estimators=3, num_leaves=2, min_child_samples=1,
+                                   min_data_in_bin=1, n_jobs=1, verbosity=-1)
+    classifier.fit(X, y)
+    path = tmp_path / "model.onnx"
+    assert export_lightgbm_onnx(classifier.booster_, 1, path)
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 1
+    session = ort.InferenceSession(str(path), options, providers=["CPUExecutionProvider"])
+    points = np.array([[np.nextafter(lower, np.float32(-np.inf))], [lower], [upper],
+                       [np.nextafter(upper, np.float32(np.inf))], [np.nan]], dtype=np.float32)
+    actual = session.run(["probabilities"], {session.get_inputs()[0].name: points})[0][:, 1]
+    expected = classifier.booster_.predict(points, num_threads=1)
+    np.testing.assert_allclose(actual, expected, atol=1e-6, rtol=1e-6)
+
+
+def test_lightgbm_split_correction_handles_deep_and_categorical_trees(tmp_path):
+    lgb = pytest.importorskip("lightgbm")
+    ort = pytest.importorskip("onnxruntime")
+    pytest.importorskip("onnxmltools")
+    from collimator.export import export_lightgbm_onnx
+
+    lower = np.nextafter(np.float32(1), np.float32(np.inf))
+    upper = np.nextafter(lower, np.float32(np.inf))
+    points = np.array([[category, value] for category in range(8)
+                       for value in (lower, upper)], dtype=np.float32)
+    X = np.repeat(points, 50, axis=0)
+    y = np.array([int(c in (2, 4) or (c in (1, 3) and v == upper)) for c, v in X])
+    classifier = lgb.LGBMClassifier(n_estimators=3, num_leaves=6, min_child_samples=1,
+                                   min_data_in_bin=1, max_cat_to_onehot=1, cat_l2=0,
+                                   cat_smooth=0, min_data_per_group=1, n_jobs=1, verbosity=-1)
+    classifier.fit(X, y, categorical_feature=[0])
+    trees = str(classifier.booster_.dump_model()["tree_info"])
+    assert "||" in trees and "'decision_type': '<='" in trees
+    path = tmp_path / "model.onnx"
+    assert export_lightgbm_onnx(classifier.booster_, 2, path)
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 1
+    session = ort.InferenceSession(str(path), options, providers=["CPUExecutionProvider"])
+    actual = session.run(["probabilities"], {session.get_inputs()[0].name: points})[0][:, 1]
+    np.testing.assert_allclose(actual, classifier.booster_.predict(points, num_threads=1),
+                               atol=1e-6, rtol=1e-6)
 
 
 class _FakeSession:

@@ -217,6 +217,73 @@ def route_model_is_degenerate(route_dir: Path) -> bool:
     return all(is_constant_predictor(b) for b in boosters)
 
 
+def _preserve_lightgbm_float32_splits(onnx_model: object, booster: object) -> None:
+    """Keep float32 inputs on the same side of LightGBM's float64 splits.
+
+    onnxmltools <1.17 rounds thresholds to nearest float32 (upstream #806).
+    A <= comparison instead needs rounding toward negative infinity. Match
+    numeric nodes in the converter's preorder traversal, checking features and
+    thresholds before modifying anything. Categorical equality nodes are left
+    alone, including the converter's expansion of category sets.
+    """
+    native = getattr(booster, "booster_", booster).dump_model()
+    expected = {}
+    for tree_id, tree in enumerate(native["tree_info"]):
+        nodes = []
+        stack = [tree["tree_structure"]]
+        while stack:
+            node = stack.pop()
+            if "split_index" not in node:
+                continue
+            if node["decision_type"] == "<=":
+                nodes.append((node["split_feature"], float(node["threshold"])))
+            stack.extend((node["right_child"], node["left_child"]))
+        expected[tree_id] = iter(nodes)
+
+    for operator in onnx_model.graph.node:
+        if operator.op_type != "TreeEnsembleClassifier":
+            continue
+        attrs = {attr.name: attr for attr in operator.attribute}
+        indexes = {
+            (tree_id, node_id): index for index, (tree_id, node_id) in enumerate(zip(
+                attrs["nodes_treeids"].ints, attrs["nodes_nodeids"].ints,
+            ))
+        }
+        # Node IDs are sorted in the graph, not stored in traversal order.
+        pending = [(tree_id, 0) for tree_id in sorted(expected, reverse=True)]
+        visited = set()
+        while pending:
+            key = pending.pop()
+            if key in visited:  # Category-set branches can share subtrees.
+                continue
+            visited.add(key)
+            tree_id, _ = key
+            index = indexes[key]
+            mode = attrs["nodes_modes"].strings[index]
+            if mode != b"LEAF":
+                pending.extend((
+                    (tree_id, attrs["nodes_falsenodeids"].ints[index]),
+                    (tree_id, attrs["nodes_truenodeids"].ints[index]),
+                ))
+            if mode != b"BRANCH_LEQ":
+                continue
+            source = next(expected[tree_id], None)
+            if source is None:
+                raise ValueError("ONNX contains an unmatched LightGBM split")
+            feature, threshold = source
+            with np.errstate(over="ignore"):
+                rounded = np.float32(threshold)
+            safe = rounded
+            if float(rounded) > threshold:
+                safe = np.nextafter(rounded, np.float32(-np.inf))
+            if (attrs["nodes_featureids"].ints[index] != feature
+                    or attrs["nodes_values"].floats[index] not in (float(rounded), float(safe))):
+                raise ValueError("ONNX numeric splits do not match LightGBM traversal")
+            attrs["nodes_values"].floats[index] = float(safe)
+    if any(next(nodes, None) is not None for nodes in expected.values()):
+        raise ValueError("ONNX is missing LightGBM numeric splits")
+
+
 def export_lightgbm_onnx(
     booster: object,
     n_features: int,
@@ -260,6 +327,7 @@ def export_lightgbm_onnx(
         zipmap=False,
         target_opset=15,
     )
+    _preserve_lightgbm_float32_splits(onnx_model, booster)
     # onnxmltools' LightGBM converter declares the output shapes
     # with a fixed first dim ({1}) even when the INPUT batch was
     # declared dynamic ([None, n_features]). ONNX Runtime then logs

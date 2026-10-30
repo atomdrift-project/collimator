@@ -42,7 +42,8 @@ def decision(level=25, threshold=.727):
 
 def config_and_policy():
     config = {"fit_partition": "dev", "score_space": "raw", "levels": [
-        {"level": 25, "hostile": {"thresholds": {"general": .7, "filetypes/vsix": .727}}},
+        {"level": 25, "hostile": {"target_per_million": .25,
+                                  "thresholds": {"general": .7, "filetypes/vsix": .727}}},
     ]}
     policies = {"fit_partition": "dev", "score_space": "raw",
                 "routes": {"filetypes/vsix": {"levels": [decision()]}}}
@@ -107,6 +108,30 @@ def test_blend_and_global_gate_use_runtime_decisions_including_missing_inputs():
     assert counts["filetypes/vsix"] == 1
     del scores["general"]
     assert not (policy.margin(scores, {"blend": blend}, 3) >= 0).any()
+
+
+def test_first_decision_budget_gate_matches_repeated_runtime_sweeps():
+    rng = np.random.default_rng(12)
+    file_types = np.array(['vsix'] * 80 + ['fallback'] * 40)
+    scores = rng.random((2, len(file_types))).astype(np.float32)
+    scores[1, ::9] = np.nan
+    config, policies = config_and_policy()
+    config['levels'] = [{'level': level, 'hostile': {'thresholds': {'general': threshold}}}
+                        for level, threshold in [(0,.95),(25,.8),(50,.5)]]
+    policies['routes']['filetypes/vsix']['levels'] = [
+        {'level':0,'hostile':{'best':{'thresholds':{'general':.8}}}},
+        {'level':25,'hostile':{'best':{'blend':{'routes':['general','filetypes/vsix'],
+            'weights':[.5,.5],'intercept':0.,'threshold':.9}}}},
+        {'level':50,'hostile':{'best':{'thresholds':{'filetypes/vsix':.4}}}},
+    ]
+    names = ['general', 'filetypes/vsix']
+    first, groups = global_metrics._first_decisions(file_types, names, scores, config, policies)
+    for level in [0, 12, 25, 50, 100]:
+        expected, counts = global_metrics._decisions(labels=np.zeros(len(file_types)),
+            file_types=file_types, route_names=names, scores=scores, config=config,
+            policy=policies, level=level, severity='hostile')
+        np.testing.assert_array_equal(first <= level, expected)
+        assert {name:int(np.sum(first[indices] <= level)) for name,indices in groups.items()} == counts
 
 
 def test_selected_blend_scores_and_counts_survive_runtime_float_roundtrip():
@@ -474,6 +499,41 @@ def test_specialist_cache_invalidates_changed_row_positions(tmp_path, monkeypatc
     result = calibrate._score_route("unused", route, row_index={1: 1, 2: 0}, **options)
     assert result["indices"].tolist() == [1, 0]
     assert len(calls) == 2
+
+
+def test_specialist_replays_feature_settings_and_invalidates_cached_values(tmp_path, monkeypatch):
+    monkeypatch.setenv("COLLIMATOR_TEXT_METRICS_FULL", "0")
+    monkeypatch.setenv("COLLIMATOR_EXTENDED_METRICS", "1")
+    features.feature_config_from_env.cache_clear()
+    (tmp_path / "model.onnx").write_bytes(b"model")
+    spec = features.FeatureSpec(metric_vocab=["text_max_inline_whitespace_run"],
+        feature_names=["metrics:text_max_inline_whitespace_run"], total_features=1)
+    spec.save(tmp_path / "feature_spec.json")
+    benchmark = tmp_path / "benchmark.json"
+    monkeypatch.setattr(calibrate, "_fetch_rows", lambda *a, **kw: [(1, 1)])
+    monkeypatch.setattr(bundle.Ensemble, "load_bundle", lambda p: SimpleNamespace(
+        predict_proba=lambda x: x.toarray()[:, 0] / 10))
+    report = {"v": "9", "files": [{"id": 0, "type": "text", "size": 100,
+        "facts": {"metrics": {"text": {"max_whitespace_run": 9}}}, "traits": []}]}
+    extractions = []
+
+    def extract(*args, **kwargs):
+        extractions.append(features.feature_config_from_env().include_text_metrics_full)
+        yield sp.csr_matrix(features.extract(report, spec).reshape(1, -1)), np.array([1])
+
+    monkeypatch.setattr(features, "extract_labeled_from_db_batches", extract)
+    route = {"output_dir": str(tmp_path), "route": "filetypes/text", "name": "text",
+             "kind": "filetype", "file_types": ["text"]}
+    options = dict(row_index={1: 0}, max_id=1, workers=1, refresh=False,
+                   refresh_routes=set(), feature_cache_dir=tmp_path / "cache",
+                   cache_context="same-corpus-and-model")
+    for enabled, expected in [("1", np.log1p(9) / 10), ("0", .9)]:
+        benchmark.write_text(json.dumps({"feature_env": {"COLLIMATOR_TEXT_METRICS_FULL": enabled}}))
+        for _ in range(2):
+            result = calibrate._score_route("unused", route, **options)
+            np.testing.assert_allclose(result["probs"], [expected])
+            assert not features.feature_config_from_env().include_text_metrics_full
+    assert extractions == [True, False]
 
 
 def test_explicit_route_pruning_invalidates_calibration_before_publication(tmp_path):

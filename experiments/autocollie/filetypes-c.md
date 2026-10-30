@@ -1540,3 +1540,145 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261029T004921-filetypes-c` — 2026-10-29T00:49:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `47731fe2257ba6a6` | c_coverage_cutoff0 | ok | 0.9935 | 0.9978 | 0.9533 | 93 | [log](out/autocollie/runs/2026-10-29T00-50-45_20261029T004921-filetypes-c_c_coverage_cutoff0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_coverage_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if retaining all labeled malware (min_malware_score=0) instead of filtering to score>=4 improves PR_AUC and recall@3FPM by increasing training coverage of low-severity C malware, addressing the 'very low detection' guidance to test coverage before feature expansion.
+
+</details>
+
+## Cycle `20261029T005228-filetypes-c` — 2026-10-29T00:52:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7dce36ed81f8636f` | c_coverage_cutoff0_spw025 | ok | 0.9916 | 0.9969 | 0.9457 | 47 | [log](out/autocollie/runs/2026-10-29T00-52-51_20261029T005228-filetypes-c_c_coverage_cutoff0_spw025.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_coverage_cutoff0_spw025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if down-weighting positives (scale_pos_weight_mult=0.25) on the full-coverage corpus (min_malware_score=0) improves recall@3FPM by sharpening the score distribution at the strict-FP tail, leveraging the high PR_AUC baseline of the cutoff-0 run.
+
+</details>
+
+## Cycle `20261029T005348-filetypes-c` — 2026-10-29T00:53:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `850b338442451e82` | c_kv_vocab_transfer | ok | 0.9934 | 0.9979 | 0.9369 | 93 | [log](out/autocollie/runs/2026-10-29T00-53-59_20261029T005348-filetypes-c_c_kv_vocab_transfer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_kv_vocab_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab to add key-value rank signal for PR_AUC, transferring a successful feature family from sister routes like cargo.toml and chm while maintaining the high-coverage cutoff0 profile.
+
+</details>
+
+## Cycle `20261029T011549-filetypes-c` — 2026-10-29T01:15:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `05086a3ba2bd130a` | try_trait_path_depth_3 | ok | 0.9935 | 0.9978 | 0.9533 | 126 | [log](out/autocollie/runs/2026-10-29T01-15-56_20261029T011549-filetypes-c_try_trait_path_depth_3.log) |
+| `a5bd7ab4747e32ed` | try_trait_path_depth_2 | ok | 0.9920 | 0.9973 | 0.9359 | 182 | [log](out/autocollie/runs/2026-10-29T01-18-19_20261029T011549-filetypes-c_try_trait_path_depth_2.log) |
+| `1ae76435073756c9` | try_trait_path_depth_4 | ok | 0.9926 | 0.9974 | 0.9367 | 121 | [log](out/autocollie/runs/2026-10-29T01-21-24_20261029T011549-filetypes-c_try_trait_path_depth_4.log) |
+| `d3c5c9c14ed189c5` | try_trait_path_depth_5 | ok | 0.9932 | 0.9976 | 0.9351 | 67 | [log](out/autocollie/runs/2026-10-29T01-23-29_20261029T011549-filetypes-c_try_trait_path_depth_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_trait_path_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=3): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_trait_path_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=2): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=4): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=5): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20261029T012545-filetypes-c` — 2026-10-29T01:25:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ad2b5e7008a7c53` | c_depth3_hardneg_weight10 | ok | 0.9918 | 0.9971 | 0.9355 | 33 | [log](out/autocollie/runs/2026-10-29T01-26-36_20261029T012545-filetypes-c_c_depth3_hardneg_weight10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_depth3_hardneg_weight10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases hard_negative_weight to 10 to sharpen the decision boundary and improve L25 recall@1FP by better separating the top-ranked malware from the benign tail, building on the best-performing trait_path_depth=3 baseline.
+
+</details>
+
+## Cycle `20261029T012712-filetypes-c` — 2026-10-29T01:27:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6bc2c773217ea8ad` | c_depth3_spw025 | ok | 0.9916 | 0.9969 | 0.9457 | 30 | [log](out/autocollie/runs/2026-10-29T01-27-20_20261029T012712-filetypes-c_c_depth3_spw025.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_depth3_spw025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if down-weighting positives (scale_pos_weight_mult=0.25) improves L25 recall@1FP by reducing benign false positives, leveraging the strong PR_AUC (0.9935) of the depth-3 baseline to maintain ranking quality while shifting the operating point.
+
+</details>
+
+## Cycle `20261029T012752-filetypes-c` — 2026-10-29T01:27:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `00f35b8597bb36bd` | c_depth3_leaves128 | ok | 0.9926 | 0.9974 | 0.9355 | 26 | [log](out/autocollie/runs/2026-10-29T01-28-08_20261029T012752-filetypes-c_c_depth3_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_depth3_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increase model capacity from 96 to 128 leaves to better capture complex C malware patterns, aiming to improve measured L25 recall@1FP beyond the current 0.6465 baseline.
+
+</details>
+
+## Cycle `20261029T013321-filetypes-c` — 2026-10-29T01:33:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eb3856c2665530ff` | try_max_delta_step_2 | ok | 0.9934 | 0.9978 | 0.9174 | 37 | [log](out/autocollie/runs/2026-10-29T01-33-26_20261029T013321-filetypes-c_try_max_delta_step_2.log) |
+| `4777112a6ca707f0` | try_max_delta_step_5 | ok | 0.9935 | 0.9978 | 0.9533 | 41 | [log](out/autocollie/runs/2026-10-29T01-34-06_20261029T013321-filetypes-c_try_max_delta_step_5.log) |
+| `bb6f814bc46311e3` | try_max_delta_step_10 | ok | 0.9935 | 0.9978 | 0.9533 | 34 | [log](out/autocollie/runs/2026-10-29T01-34-50_20261029T013321-filetypes-c_try_max_delta_step_10.log) |
+| `3e2d9b42491576d9` | try_max_delta_step_20 | ok | 0.9935 | 0.9978 | 0.9533 | 41 | [log](out/autocollie/runs/2026-10-29T01-35-29_20261029T013321-filetypes-c_try_max_delta_step_20.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=max_delta_step=2): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=max_delta_step=5): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_max_delta_step_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=max_delta_step=10): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_max_delta_step_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=max_delta_step=20): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20261029T013733-filetypes-c` — 2026-10-29T01:37:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dbb2e73c054e24f5` | try_hard_negative_fraction_0.2_seed_search_k_3_save_all_seeds_true | ok | 0.9937 | 0.9979 | 0.9690 | 119 | [log](out/autocollie/runs/2026-10-29T01-37-41_20261029T013733-filetypes-c_try_hard_negative_fraction_0_2_seed_search_k_3_save_all_seeds_true.log) |
+| `69be0786c95ea964` | try_hard_negative_fraction_0.05_seed_search_k_3_save_all_seeds_true | ok | 0.9934 | 0.9978 | 0.9702 | 73 | [log](out/autocollie/runs/2026-10-29T01-39-45_20261029T013733-filetypes-c_try_hard_negative_fraction_0_05_seed_search_k_3_save_all_seeds_true.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_hard_negative_fraction_0.2_seed_search_k_3_save_all_seeds_true`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=hard_negative_fraction=0.2,seed_search_k=3,save_all_seeds=true): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_hard_negative_fraction_0.05_seed_search_k_3_save_all_seeds_true`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=hard_negative_fraction=0.05,seed_search_k=3,save_all_seeds=true): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Guided frozen-cohort research — 2026-10-28
+
+Thirteen trials used one frozen screening corpus: 29,332 train rows and 12,461 development rows (10,000 benign, 2,461 malware). No locked test rows were used.
+
+Trait-path depths 2/3/4/5 gave measured L25 one-FP recalls of 40.19% / 64.65% / 40.55% / 60.02%. Keep depth 3. HNM weight 10, positive weight 0.25, 128 leaves and max_delta_step 2 did not improve the control. Caps 5/10/20 reproduced the uncapped fit.
+
+The three-seed control improved the small-screen recall to 66.03%, versus 64.65% for seed 42. Its seeds individually gave 64.65%, 61.44%, 60.63%. Lower HNM fraction 0.05 averaged 59.61% on that screen.
+
+An expanded frozen development snapshot (221,641 benign, 2,461 malware) reversed the ensemble ranking. Thresholds were refitted to one FP on this larger development pool:
+
+| Candidate | Key | Recall at one FP | FPs using small-screen threshold |
+|---|---|---:|---:|
+| Single-seed control | `05086a3ba2bd130a` | 28.16% | 14 |
+| Three-seed control, HNM 0.2 | `dbb2e73c054e24f5` | 28.57% | 17 |
+| Three-seed HNM 0.05 | `69be0786c95ea964` | 29.91% | 13 |
+
+Decision: retain HNM 0.05 with three seeds as the next research starting point; do not promote on these measurements alone. Next compare more training coverage and HNM settings on this larger benign development pool before independent confirmation. Current accepted model-configs remain unchanged. The paired screen baseline was out/models/azoth, not necessarily ../azoth.
+
+Canonical run JSONs retain these larger-cohort results in research_evaluations, which autocollie includes in subsequent prompts without replacing its paired promotion metrics. Detailed artifacts: out/experiments/autocollie-c-guided-20261028/results.json and larger-development-results.json.
+

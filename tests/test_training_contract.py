@@ -189,13 +189,14 @@ def test_lightgbm_knobs_reach_fitted_booster():
     y = (X[:, 0] - X[:, 1] > 0).astype(int)
     clf = model.create_classifier(
         150, 150, learner="azoth", device="cpu", num_threads=1,
-        n_estimators=8, subsample=.7, gamma=.3, monotone_constraints=(1, -1),
+        n_estimators=8, subsample=.7, gamma=.3, monotone_constraints=(1, -1), max_delta_step=2,
     )
     clf.fit(X, y)
     params = clf.booster_.params
     assert params["subsample_freq"] == 1
     assert params["subsample"] == .7
     assert params["min_split_gain"] == .3
+    assert params["max_delta_step"] == 2
     assert tuple(params["monotone_constraints"]) == (1, -1)
     grid = np.column_stack([np.linspace(-2, 2, 100), np.zeros(100)])
     assert np.all(np.diff(model.predict_proba(clf, grid)) >= -1e-10)
@@ -236,9 +237,11 @@ def test_experiment_artifacts_cache_and_database_mutation(tmp_path, monkeypatch,
         output_dir=output, cache_dir=tmp_path / "cache", n_workers=1,
         learner="azoth", model_name="azoth", device="cpu", n_estimators=5,
         n_folds=0, holdout_fraction=.2, train_samples=200, max_test_samples=40,
-        seed_search_k=seeds, save_all_seeds=seeds > 1,
+        seed_search_k=seeds, save_all_seeds=seeds > 1, max_delta_step=5,
     )
     first = experiment.run_experiment(db_path, **options)
+    assert first["train_config"]["max_delta_step"] == 5
+    assert first["experiment_spec"]["train_config"]["max_delta_step"] == 5
     revision = cache_identity.model_revision(output)
     proof = json.loads((output / "training_provenance.json").read_text())
     assert proof["training_partitions"] == ["train"]
@@ -280,6 +283,38 @@ def test_experiment_artifacts_cache_and_database_mutation(tmp_path, monkeypatch,
     assert third["experiment_key"] != first["experiment_key"]
     assert third["evaluation_revision"] != first["evaluation_revision"]
     assert third["test_sample_row_ids"] == first["test_sample_row_ids"]
+    capped_differently = experiment.run_experiment(db_path, **{**options, "max_delta_step": 2})
+    assert capped_differently["experiment_key"] != third["experiment_key"]
+
+
+def test_leaf_update_cap_reaches_cv_and_hard_negative_refits(monkeypatch):
+    rng = np.random.default_rng(19)
+    X = rng.normal(size=(1200, 4)).astype(np.float32)
+    y = (X[:, 0] + .3 * rng.normal(size=1200) > 0).astype(np.float32)
+    original = train._fit_model
+    observed = []
+
+    def fit(estimator, *args, **kwargs):
+        assert estimator.get_params()["max_delta_step"] == 2
+        original(estimator, *args, **kwargs)
+        observed.append(estimator.booster_.params["max_delta_step"])
+
+    monkeypatch.setattr(train, "_fit_model", fit)
+    cfg = train.TrainConfig(learner="azoth", device="cpu", num_threads=1,
+                            n_estimators=5, n_folds=2, holdout_fraction=.2,
+                            hard_negative_fraction=.2, hard_negative_weight=5,
+                            max_delta_step=2)
+    result = train.train(X, y, cfg)
+    assert observed == [2] * 6  # Two fits for each CV fold and the final model.
+    assert result.model.booster_.params["max_delta_step"] == 2
+
+
+@pytest.mark.parametrize("value", [-1, float("nan"), float("inf")])
+def test_invalid_leaf_update_cap_is_rejected(value):
+    with pytest.raises(ValueError, match="max_delta_step"):
+        train.TrainConfig(max_delta_step=value)
+    with pytest.raises(ValueError, match="max_delta_step"):
+        model.create_classifier(100, 10, learner="azoth", max_delta_step=value)
 
 
 @pytest.mark.parametrize("partition", ["train", "evaluation"])
