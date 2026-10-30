@@ -1250,3 +1250,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T184352-filetypes-csharp` — 2026-10-30T18:43:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f5b261b3273c7a3` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9735 | 0.9983 | 0.9251 | 18 | [log](out/autocollie/runs/2026-10-30T18-45-02_20261030T184352-filetypes-csharp_inherit_from_filetypes_mp3_76e40111.log) |
+| `d311bc6c9fe25e32` | csharp_cutoff0_depth4 | ok | 0.9637 | 0.9977 | 0.8960 | 18 | [log](out/autocollie/runs/2026-10-30T18-45-24_20261030T184352-filetypes-csharp_csharp_cutoff0_depth4.log) |
+| `a04066973b1438f6` | csharp_hardneg0_depth3 | ok | 0.9334 | 0.9962 | 0.8379 | 16 | [log](out/autocollie/runs/2026-10-30T18-45-43_20261030T184352-filetypes-csharp_csharp_hardneg0_depth3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_cutoff0_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if removing the min_malware_score=4 filter and increasing trait_path_depth to 4 improves L25 recall@1FP by capturing low-severity malware signals with higher specificity, addressing the 0.2220 baseline.
+- **`csharp_hardneg0_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if disabling hard_negative_fraction (setting to 0) improves L25 recall@1FP by preventing the model from over-penalizing benign patterns that might share features with malware, using the current depth 3 baseline.
+
+</details>
+

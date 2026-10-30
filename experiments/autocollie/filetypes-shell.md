@@ -1828,3 +1828,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T183841-filetypes-shell` — 2026-10-30T18:38:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9c4f731d95591238` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9934 | 0.9976 | 0.9353 | 41 | [log](out/autocollie/runs/2026-10-30T18-41-16_20261030T183841-filetypes-shell_inherit_from_filetypes_mp3_76e40111.log) |
+| `1c6b1bafa670d241` | shell_kv_vocab_depth4 | ok | 0.9887 | 0.9956 | 0.9570 | 47 | [log](out/autocollie/runs/2026-10-30T18-42-03_20261030T183841-filetypes-shell_shell_kv_vocab_depth4.log) |
+| `ded5736954166d28` | shell_kv_vocab_cutoff0 | ok | 0.9880 | 0.9950 | 0.9532 | 40 | [log](out/autocollie/runs/2026-10-30T18-42-52_20261030T183841-filetypes-shell_shell_kv_vocab_cutoff0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_vocab_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8069 L25 recall of the kv_vocab winner by testing if deeper trait prefixes (depth 4) capture more specific shell script attack patterns without increasing false positives.
+- **`shell_kv_vocab_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8069 L25 recall by testing if lowering the malware training cutoff to 0 recovers low-severity shell malware samples that were previously filtered out, potentially boosting recall at the 1-FP budget.
+
+</details>
+

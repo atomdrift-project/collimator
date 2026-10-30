@@ -1682,3 +1682,19 @@ Decision: retain HNM 0.05 with three seeds as the next research starting point; 
 
 Canonical run JSONs retain these larger-cohort results in research_evaluations, which autocollie includes in subsequent prompts without replacing its paired promotion metrics. Detailed artifacts: out/experiments/autocollie-c-guided-20261028/results.json and larger-development-results.json.
 
+## Cycle `20261030T183308-filetypes-c` — 2026-10-30T18:33:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `389f82bebc3c3ecd` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9934 | 0.9975 | 0.9129 | 52 | [log](out/autocollie/runs/2026-10-30T18-36-34_20261030T183308-filetypes-c_inherit_from_filetypes_mp3_76e40111.log) |
+| `71cfaf05c936827d` | c_hnf02_spw05 | ok | 0.9346 | 0.9754 | 0.8336 | 53 | [log](out/autocollie/runs/2026-10-30T18-37-42_20261030T183308-filetypes-c_c_hnf02_spw05.log) |
+| `7e79858e15bb9904` | c_hnf02_mds5 | ok | 0.9353 | 0.9750 | 0.8396 | 22 | [log](out/autocollie/runs/2026-10-30T18-38-30_20261030T183308-filetypes-c_c_hnf02_mds5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_hnf02_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.6603 L25 recall of the hard_negative_fraction=0.2 winner by reducing benign class weight via scale_pos_weight_mult=0.5 to sharpen the decision boundary and potentially capture more malware within the 1-FP budget.
+- **`c_hnf02_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.6603 L25 recall of the hard_negative_fraction=0.2 winner by constraining leaf outputs with max_delta_step=5 to prevent score saturation and improve ranking stability, as suggested by the 0.6465 recall of max_delta_step=20.
+
+</details>
+

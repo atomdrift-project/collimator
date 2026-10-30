@@ -143,6 +143,15 @@ def test_resolve_env_maps_train_config_to_exp_vars() -> None:
     assert "monotone_constraints" not in env
 
 
+def test_keyword_settings_survive_full_training_make_replay() -> None:
+    values = {"RULE_KEYWORDS": "0", "DESCRIPTION_KEYWORDS": "1",
+              "KEYWORD_VOCAB_MAX": "50000", "KEYWORD_MIN_FREQ": "2"}
+    run = {"feature_env": {f"COLLIMATOR_{key}": value for key, value in values.items()}}
+    env = _mod._translate_env_for_make(_mod._resolve_env(run, {}))
+    for key, value in values.items():
+        assert env[f"EXP_{key}"] == value
+
+
 def test_resolve_env_caller_extras_override_run() -> None:
     run = {
         "train_config": {"n_estimators": 400},

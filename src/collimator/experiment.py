@@ -1426,6 +1426,7 @@ def run_experiment(
         "train_rows": int(X_train.shape[0]),
         "test_rows": int(X_test.shape[0]),
         "n_features": int(spec.total_features),
+        "keyword_vocab_sizes": {source: len(words) for source, words in spec.keyword_vocabs.items()},
         "drop_feature_prefixes": list(drop_feature_prefixes or []),
         "feature_config": _feature_config_dict(feature_cfg),
         "feature_env": feature_env,

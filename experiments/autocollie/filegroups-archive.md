@@ -334,3 +334,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T175138-filegroups-archive` — 2026-10-30T17:51:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f4e4da7a97bfcfa4` | inherit_from_filetypes_iso_fec2c64b | ok | 0.9539 | 0.9385 | 0.8832 | 535 | [log](out/autocollie/runs/2026-10-30T17-54-04_20261030T175138-filegroups-archive_inherit_from_filetypes_iso_fec2c64b.log) |
+| `bdf47bb81ac884a4` | archive_min_malware_score_2 | ok | 0.9784 | 0.9718 | 0.9277 | 921 | [log](out/autocollie/runs/2026-10-30T18-04-42_20261030T175138-filegroups-archive_archive_min_malware_score_2.log) |
+| `be5698c62f2c9b55` | archive_max_delta_step_5 | ok | 0.9539 | 0.9385 | 0.8832 | 466 | [log](out/autocollie/runs/2026-10-30T18-21-18_20261030T175138-filegroups-archive_archive_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`archive_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests if lowering the malware training cutoff from 4 to 2 recovers low-severity archive malware to improve the 0.6381 L25 recall@1FP, addressing potential class-weight inflation from the high cutoff.
+- **`archive_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if capping leaf outputs via max_delta_step=5 stabilizes training and improves the 0.6381 L25 recall@1FP by preventing saturated scores or uneven seed quality in the current configuration.
+
+</details>
+

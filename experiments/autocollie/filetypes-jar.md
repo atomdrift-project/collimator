@@ -1100,3 +1100,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T175322-filetypes-jar` — 2026-10-30T17:53:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ef78f06b7384e101` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9878 | 0.9982 | 0.8751 | 519 | [log](out/autocollie/runs/2026-10-30T18-02-59_20261030T175322-filetypes-jar_inherit_from_filetypes_mp3_76e40111.log) |
+| `7312ba02ca00ce32` | jar_hard_neg_sweep_0015_12 | ok | 0.9877 | 0.9979 | 0.9263 | 958 | [log](out/autocollie/runs/2026-10-30T18-19-51_20261030T175322-filetypes-jar_jar_hard_neg_sweep_0015_12.log) |
+| `8f68f2beacd418f4` | jar_min_malware_score_0 | ok | 0.9874 | 0.9979 | 0.9495 | 468 | [log](out/autocollie/runs/2026-10-30T18-28-58_20261030T175322-filetypes-jar_jar_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_hard_neg_sweep_0015_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.7439 L25 recall ceiling by testing a tighter hard-negative fraction (0.015) and higher weight (12) to sharpen the decision boundary and reduce the combiner threshold gap without altering the feature matrix.
+- **`jar_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_training_score from 4 to 0 recovers low-severity malware signals that were previously filtered, aiming to improve the 0.7439 L25 recall by increasing the effective positive class size for the learner.
+
+</details>
+

@@ -1852,3 +1852,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T185248-filetypes-elf` — 2026-10-30T18:52:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8edd0e70d2ef48e` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9999 | 0.9999 | 0.9967 | 69 | [log](out/autocollie/runs/2026-10-30T18-56-31_20261030T185248-filetypes-elf_inherit_from_filetypes_mp3_76e40111.log) |
+| `e1e7dfe3fc0e1186` | elf_hardneg_sweep_low_frac_high_weight | ok | 0.9998 | 0.9997 | 0.9952 | 74 | [log](out/autocollie/runs/2026-10-30T18-57-59_20261030T185248-filetypes-elf_elf_hardneg_sweep_low_frac_high_weight.log) |
+| `83cc9e60959d815b` | elf_threshold_max_recall_at_fpr | ok | 0.9997 | 0.9996 | 0.9946 | 25 | [log](out/autocollie/runs/2026-10-30T18-59-19_20261030T185248-filetypes-elf_elf_threshold_max_recall_at_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_hardneg_sweep_low_frac_high_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the or_loses diagnostic where PR_AUC is saturated but L25 recall is capped by threshold; reducing hard_negative_fraction to 0.015 and increasing weight to 16 sharpens the decision boundary to improve recall@1FP without inflating FPs.
+- **`elf_threshold_max_recall_at_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directly optimizes the deployed operating point by switching to max_recall_at_fpr with a target of 2.5e-07 to maximize L25 recall within the strict false-positive budget, addressing the gap between ranking quality and threshold placement.
+
+</details>
+

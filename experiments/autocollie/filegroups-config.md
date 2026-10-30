@@ -1728,3 +1728,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T184738-filegroups-config` — 2026-10-30T18:47:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `753f5c4746923fd9` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9945 | 0.9974 | 0.9103 | 38 | [log](out/autocollie/runs/2026-10-30T18-52-19_20261030T184738-filegroups-config_inherit_from_filetypes_mp3_76e40111.log) |
+| `e2ac8e1a5086d7cc` | config_relaxed_malware_cutoff | ok | 0.9725 | 0.9796 | 0.5703 | 30 | [log](out/autocollie/runs/2026-10-30T18-52-53_20261030T184738-filegroups-config_config_relaxed_malware_cutoff.log) |
+| `f039cbc26cac1fbc` | config_depth4_kv_vocab | ok | 0.9680 | 0.9767 | 0.5052 | 27 | [log](out/autocollie/runs/2026-10-30T18-53-24_20261030T184738-filegroups-config_config_depth4_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_relaxed_malware_cutoff`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 0 recovers low-severity config malware to improve the 0.7708 L25 recall, as the high cutoff may be discarding valid training signal.
+- **`config_depth4_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves finding-prefix specificity for config files to boost the 0.7708 L25 recall, while retaining the kv_vocab feature that showed marginal gains in prior runs.
+
+</details>
+

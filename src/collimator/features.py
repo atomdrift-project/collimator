@@ -179,6 +179,9 @@ TOP_K_RISK_FILES = 1
 # `feature_layout_hash` written into every spec records the exact layout so
 # such a change is detectable even when this number is forgotten.
 MODEL_ABI_VERSION = 20
+# Keyword extensions retain an explicit base contract: Scan's v21 changed
+# existing metric/structure semantics, which these v20-trained models do not use.
+KEYWORD_MODEL_ABI_VERSION = 22
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -596,7 +599,7 @@ EXPECTED_GHOSTS = {
     ],
 }
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "tiered_trigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space", "symbols", "kv", "textenc")
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "tiered_trigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space", "symbols", "kv", "textenc", "ruleword", "descword")
 
 FORMAT_GROUPS: dict[str, frozenset[str]] = {
     "script": frozenset({
@@ -770,6 +773,10 @@ class FeatureConfig:
     # min_crit gate (e.g. `capability=4,metadata=2`). Branches not listed
     # fall back to tiered_bigram_min_crit. Empty = current behavior (uniform).
     tiered_bigram_branch_min_crit: tuple[str, ...]
+    include_rule_keywords: bool = False
+    include_description_keywords: bool = False
+    keyword_vocab_max: int = 10000
+    keyword_min_freq: int = 5
 
 
 @lru_cache(maxsize=1)
@@ -1005,6 +1012,10 @@ def feature_config_from_env() -> FeatureConfig:
             p.strip() for p in os.getenv("COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT", "").split(",")
             if p.strip()
         ),
+        include_rule_keywords=os.getenv("COLLIMATOR_RULE_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
+        include_description_keywords=os.getenv("COLLIMATOR_DESCRIPTION_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
+        keyword_vocab_max=max(0, int(os.getenv("COLLIMATOR_KEYWORD_VOCAB_MAX", "10000"))),
+        keyword_min_freq=max(1, int(os.getenv("COLLIMATOR_KEYWORD_MIN_FREQ", "5"))),
     )
 
 
@@ -1609,6 +1620,9 @@ class FeatureSpec:
     trait_path_depth: int = DEFAULT_TRAIT_PATH_DEPTH
     tiered_min_crit: tuple[int, int, int] = (3, 3, 3)
     tiered_branch_min_crit: dict[str, int] = field(default_factory=dict)
+    # v22 extends the declared base ABI with source-specific keyword columns.
+    base_feature_abi: int | None = None
+    keyword_vocabs: dict[str, list[str]] = field(default_factory=dict)
 
     def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
         """Return the presence/bigram/trigram vocabs litmus reconstructs the
@@ -1678,6 +1692,8 @@ class FeatureSpec:
             "trait_path_depth": self.trait_path_depth,
             "tiered_min_crit": list(self.tiered_min_crit),
             "tiered_branch_min_crit": self.tiered_branch_min_crit,
+            "keyword_vocabs": self.keyword_vocabs,
+            "base_feature_abi": self.base_feature_abi,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -1737,6 +1753,8 @@ class FeatureSpec:
             trait_path_depth=data.get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH),
             tiered_min_crit=tuple(data.get("tiered_min_crit", [3, 3, 3])),
             tiered_branch_min_crit=data.get("tiered_branch_min_crit", {}),
+            keyword_vocabs=data.get("keyword_vocabs", {}),
+            base_feature_abi=data.get("base_feature_abi"),
         )
 
 
@@ -1795,6 +1813,10 @@ def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
     uncovered: list[str] = []
     for name in feature_names:
         family, _, key = name.partition(":")
+        if family in {"ruleword", "descword"}:
+            # These read findings, never the facts pruned by this manifest.
+            # Missing descriptions are checked separately during extraction.
+            continue
         if family not in families:
             uncovered.append(f"{name} (family {family!r} not in profile)")
         elif family == "metrics":
@@ -2334,6 +2356,80 @@ def _allowed_with_pair(name: str, allowed: "frozenset[str]") -> bool:
     return False
 
 
+@lru_cache(maxsize=32768)
+def _keyword_words(text: str) -> frozenset[str]:
+    """Shared ID/description tokenizer, without stemming or label-derived rules."""
+    return frozenset(word for word in re.findall(r"[a-z0-9]+", text.lower())
+                     if len(word) >= 2 and not word.isdecimal())
+
+
+def _report_keywords(files, sources):
+    tokens = {source: set() for source in sources}
+    missing = set()
+    for file_entry in files:
+        for finding in file_findings(file_entry):
+            fid = finding_id(finding)
+            if not fid or _float(finding_conf(finding), MISSING_CONF) < MIN_CONFIDENCE:
+                continue
+            if "ruleword" in tokens:
+                # Modern IDs use path::relative-id; older slash-only IDs use
+                # their leaf. Never mix taxonomy directory words into this test.
+                relative = fid.split("::", 1)[1] if "::" in fid else fid.rsplit("/", 1)[-1]
+                tokens["ruleword"].update(_keyword_words(relative))
+            if "descword" in tokens:
+                desc = _alias(finding, "desc", "d", "description")
+                if not isinstance(desc, str) or not desc.strip():
+                    missing.add(fid)
+                else:
+                    tokens["descword"].update(_keyword_words(desc))
+    if missing:
+        raise ValueError(
+            f"description keywords require descriptions: {len(missing)} rule IDs "
+            f"missing descriptions in report; examples: {', '.join(sorted(missing)[:5])}"
+        )
+    return tokens
+
+
+def _keyword_sources():
+    config = feature_config_from_env()
+    disabled = os.getenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "").split(",")
+    return tuple(source for source, enabled in (
+        ("ruleword", config.include_rule_keywords),
+        ("descword", config.include_description_keywords),
+    ) if enabled and source not in {group.strip() for group in disabled})
+
+
+def _count_keyword_reports(reports, counters):
+    """Tap a bounded report stream, counting once per report across all files."""
+    for item in reports:
+        raw = item.get("cleave_result") if isinstance(item, dict) and "cleave_result" in item else item
+        report = _coerce_report(raw)
+        if report is not None:
+            for source, words in _report_keywords(report_files(report), counters).items():
+                counters[source].update(words)
+        yield item
+
+
+def _add_keyword_vocab(spec, counters):
+    if not counters:
+        return spec
+    config = feature_config_from_env()
+    allowed = allowed_features()
+    vocabs = {}
+    for source, counts in counters.items():
+        ranked = sorted((word for word, n in counts.items() if n >= config.keyword_min_freq),
+                        key=lambda word: (-counts[word], word))[:config.keyword_vocab_max]
+        vocabs[source] = sorted(word for word in ranked
+                                if allowed is None or f"{source}:{word}" in allowed)
+        log.info("%s: %d distinct words, %d selected (document frequency >= %d, cap %d)",
+                 source, len(counts), len(vocabs[source]), config.keyword_min_freq,
+                 config.keyword_vocab_max)
+    names = spec.feature_names + [f"{source}:{word}" for source, words in vocabs.items() for word in words]
+    return replace(spec, version=KEYWORD_MODEL_ABI_VERSION, abi_version=KEYWORD_MODEL_ABI_VERSION,
+                   base_feature_abi=spec.base_feature_abi or spec.abi_version, keyword_vocabs=vocabs,
+                   feature_names=names, total_features=len(names))
+
+
 def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:
     """Unlabeled helper: count the supplied reports without class selection.
 
@@ -2341,7 +2437,11 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     and combinations from malware.
     """
     with _vocabulary_counts() as (counts, scratch):
-        return _build_vocab(reports, n_workers, counts, scratch)
+        keywords = {source: collections.Counter() for source in _keyword_sources()}
+        if keywords:
+            reports = _count_keyword_reports(reports, keywords)
+        spec = _build_vocab(reports, n_workers, counts, scratch)
+        return _add_keyword_vocab(spec, keywords)
 
 
 def _build_vocab(reports, n_workers, counts, scratch) -> FeatureSpec:
@@ -2453,13 +2553,14 @@ class _ExtractContext:
         "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple", "trigrams_by_first",
         "trait_path_depth", "ranked_ngrams", "tiered_slots", "fact_profiles",
         "bigrams_by_first", "tiered_by_first",
+        "keyword_lookups",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
         config = feature_config_from_env()
         self.blindfold = config.include_blindfold
         self.trait_path_depth = max(1, spec.trait_path_depth)
-        self.ranked_ngrams = spec.abi_version >= 20
+        self.ranked_ngrams = (spec.base_feature_abi or spec.abi_version) >= 20
         self.total_features = spec.total_features
         self.tiered_min_crit = spec.tiered_min_crit
         self.tiered_branch_min_crit = spec.tiered_branch_min_crit
@@ -2467,6 +2568,12 @@ class _ExtractContext:
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
         self.absolute_lookup = name_to_idx
+        self.keyword_lookups = {}
+        for source, words in spec.keyword_vocabs.items():
+            lookup = {word: name_to_idx[f"{source}:{word}"] for word in words
+                      if f"{source}:{word}" in name_to_idx}
+            if lookup:
+                self.keyword_lookups[source] = lookup
         # Fact profiles already checked or warned about for this layout.
         self.fact_profiles: set[str] = set()
 
@@ -4440,6 +4547,10 @@ def _extract_into_at_depth(
     files = report_files(report)
     if not files:
         files = [{}]
+    if ctx.keyword_lookups:
+        for source, words in _report_keywords(files, ctx.keyword_lookups).items():
+            for word in words:
+                _assign(vec, ctx.keyword_lookups[source].get(word), 1.0)
     summary = _summarize_report_files(files)
     metrics = _merge_metric_values(files)
 
@@ -6240,6 +6351,17 @@ def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int
             return FeatureSpec.load(spec_path)
         spec = _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch,
                                    shared_cache_dir=shared_cache_dir, row_folds=row_folds)
+        keywords = {source: collections.Counter() for source in _keyword_sources()}
+        if keywords:
+            # Full training cohort, both classes. Evaluation rows never enter
+            # discovery. Keep the extra read opt-in and bounded to 500 reports.
+            from . import data
+            def reports():
+                for batch in _batched(row_ids_labels, 500):
+                    yield from data.fetch_cleave_results(db_path, [rid for rid, _ in batch]).values()
+            for _ in _count_keyword_reports(reports(), keywords):
+                pass
+            spec = _add_keyword_vocab(spec, keywords)
         if spec_path is not None:
             temporary = spec_path.with_suffix(".tmp")
             spec.save(temporary)

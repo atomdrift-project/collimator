@@ -156,8 +156,19 @@ Small-cohort gains need confirmation across seeds and more benign data.
 If measured L25 recall ties on the same cohort, a PR AUC gain greater than
 0.0002 qualifies for confirmation provided measured zero-FP recall does not
 regress. Missing zero-FP evidence does not qualify for this tie-breaker.
-PR AUC cannot compensate for lower L25 recall. Candidate selection applies
-the same tie-breaker, and confirmation must preserve measured L25 recall.
+A bounded exception applies at the actual L25 allowance: a candidate may
+qualify with at most a 0.2 percentage-point L25 recall loss only when BOTH
+L0 recall and PR AUC improve by more than 0.1 percentage points on the same
+cohort. There is no separate one-example cap. Eligible L25 improvements are
+preferred over tradeoffs; existing tied-L25 rules remain unchanged.
+Confirmation must preserve screened L25 recall and, for a tradeoff candidate,
+retain both minimum gains against the deployed model. Full validation still
+applies. No cooldown is imposed.
+Each screen also records `screen-shadow-policy` in the event log and a shadow
+verdict in the outcome log. This independently audits the now-active policy:
+current and audit eligibility should agree. The event includes metric deltas,
+cohort sizes, the actual FP allowance, and malware-example equivalents. It
+covers screening eligibility, not selection, confirmation or deployment.
 Autocollie admits small filetype routes using the same support floors as
 specialist training: `AZOTH_SPECIALIST_MIN_BAD` and
 `AZOTH_SPECIALIST_MIN_GOOD` (both 50 by default). These are research admission

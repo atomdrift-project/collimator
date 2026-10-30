@@ -2580,3 +2580,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T184339-filegroups-documents` — 2026-10-30T18:43:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3357fdbec96c0b3c` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9995 | 0.9994 | 0.9901 | 41 | [log](out/autocollie/runs/2026-10-30T18-45-59_20261030T184339-filegroups-documents_inherit_from_filetypes_mp3_76e40111.log) |
+| `61e2da944310501a` | hard_negative_sweep_low_frac_high_weight | ok | 0.9922 | 0.9921 | 0.9133 | 32 | [log](out/autocollie/runs/2026-10-30T18-46-39_20261030T184339-filegroups-documents_hard_negative_sweep_low_frac_high_weight.log) |
+| `659b0d2bee210c31` | relax_malware_cutoff_to_2 | ok | 0.9945 | 0.9945 | 0.9588 | 21 | [log](out/autocollie/runs/2026-10-30T18-47-12_20261030T184339-filegroups-documents_relax_malware_cutoff_to_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_negative_sweep_low_frac_high_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.7280 L25 recall ceiling by testing if a lower hard_negative_fraction (0.01) with higher weight (16) sharpens the decision boundary to push recall above 0.7280 without exceeding the 1 FP budget, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+- **`relax_malware_cutoff_to_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score from 4 to 2 recovers low-severity document malware signals that were previously filtered, aiming to improve the 0.7280 L25 recall by increasing the effective positive class size and diversity without inflating false positives.
+
+</details>
+

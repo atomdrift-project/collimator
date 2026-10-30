@@ -1234,3 +1234,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T172651-filegroups-source` — 2026-10-30T17:26:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2503c756b7d92742` | inherit_from_filetypes_iso_fec2c64b | ok | 0.8869 | 0.9135 | 0.5347 | 165 | [log](out/autocollie/runs/2026-10-30T17-30-26_20261030T172651-filegroups-source_inherit_from_filetypes_iso_fec2c64b.log) |
+| `c4f3b3b111e8e678` | source_depth4_training | ok | 0.9842 | 0.9834 | 0.9383 | 247 | [log](out/autocollie/runs/2026-10-30T17-42-48_20261030T172651-filegroups-source_source_depth4_training.log) |
+| `ed78e8a0fbc9dbbd` | source_training_leaves160_reg3 | ok | 0.9859 | 0.9854 | 0.9387 | 47 | [log](out/autocollie/runs/2026-10-30T17-48-53_20261030T172651-filegroups-source_source_training_leaves160_reg3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_depth4_training`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP beyond the 0.6103 baseline by capturing more specific finding prefixes for source code, reusing the current feature matrix.
+- **`source_training_leaves160_reg3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores if increasing model capacity to 160 leaves with stronger L2 regularization (3.0) improves L25 recall@1FP by allowing more complex decision boundaries while preventing overfitting on the 8289 malware samples.
+
+</details>
+

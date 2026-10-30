@@ -1877,3 +1877,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T172601-filetypes-javascript` — 2026-10-30T17:26:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fd4bf74190795b77` | inherit_from_filetypes_iso_fec2c64b | ok | 0.9696 | 0.9607 | 0.9139 | 639 | [log](out/autocollie/runs/2026-10-30T17-33-11_20261030T172601-filetypes-javascript_inherit_from_filetypes_iso_fec2c64b.log) |
+| `dfc875d6706168bc` | js_hardneg8_kv_vocab | ok | 0.9959 | 0.9949 | 0.9635 | 347 | [log](out/autocollie/runs/2026-10-30T17-42-53_20261030T172601-filetypes-javascript_js_hardneg8_kv_vocab.log) |
+| `1b9cddc793fd58ff` | js_hardneg8_text_metrics | ok | 0.9958 | 0.9948 | 0.9643 | 161 | [log](out/autocollie/runs/2026-10-30T17-49-28_20261030T172601-filetypes-javascript_js_hardneg8_text_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_fec2c64b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=fec2c64bc79f0d60, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_hardneg8_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the strongest measured training lever (hard_negative_weight=8 from js_control_hardneg8) with the kv_vocab feature family to improve L25 recall@1FP beyond the 0.7119 baseline by capturing key-value signals missed by the control.
+- **`js_hardneg8_text_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests the text_metrics_full feature family alongside the hard_negative_weight=8 training configuration to improve L25 recall@1FP by leveraging text structural features that may distinguish JavaScript malware from benign scripts.
+
+</details>
+

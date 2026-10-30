@@ -413,3 +413,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T191128-filetypes-npm` — 2026-10-30T19:11:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d22a63c99179c92c` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9856 | 0.9918 | 0.9001 | 370 | [log](out/autocollie/runs/2026-10-30T19-13-11_20261030T191128-filetypes-npm_inherit_from_filetypes_mp3_76e40111.log) |
+| `55ff243ca9404e04` | npm_min_malware_score_zero | ok | 0.9856 | 0.9920 | 0.9110 | 372 | [log](out/autocollie/runs/2026-10-30T19-19-21_20261030T191128-filetypes-npm_npm_min_malware_score_zero.log) |
+| `1329cf1563658c9d` | npm_max_delta_step_5 | ok | 0.9856 | 0.9920 | 0.9110 | 35 | [log](out/autocollie/runs/2026-10-30T19-25-54_20261030T191128-filetypes-npm_npm_max_delta_step_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`npm_min_malware_score_zero`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Tests if removing the min_malware_score=4 cutoff improves L25 recall@1FP by retaining low-severity malware samples that the current filter excludes, addressing potential coverage gaps in the training set.
+- **`npm_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Investigates if max_delta_step=5 improves L25 recall@1FP by allowing larger leaf output updates, potentially resolving score saturation or constant model issues observed in the current configuration.
+
+</details>
+

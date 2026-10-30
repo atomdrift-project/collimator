@@ -330,3 +330,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T185931-filetypes-lua` — 2026-10-30T18:59:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc04687695ad9269` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9000 | 0.9996 | 0.9091 | 15 | [log](out/autocollie/runs/2026-10-30T19-00-20_20261030T185931-filetypes-lua_inherit_from_filetypes_mp3_76e40111.log) |
+| `8654d86a8cbe42aa` | hard_negative_sweep | ok | 0.8965 | 0.9997 | 0.7143 | 18 | [log](out/autocollie/runs/2026-10-30T19-01-12_20261030T185931-filetypes-lua_hard_negative_sweep.log) |
+| `1a73b84d81d22920` | relaxed_malware_cutoff | ok | 0.8889 | 0.9997 | 0.6250 | 15 | [log](out/autocollie/runs/2026-10-30T19-01-59_20261030T185931-filetypes-lua_relaxed_malware_cutoff.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_negative_sweep`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Addresses the 'or_loses' diagnostic where strong ranking (PR_AUC 0.75) fails to translate to L25 recall by upweighting hard negatives to push the decision boundary past the current threshold.
+- **`relaxed_malware_cutoff`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if the archived min_sample_score=3 cutoff is discarding low-severity malware signals that are necessary to achieve full recall at the L25 budget, by setting min_malware_score to 0 to include all training malware.
+
+</details>
+

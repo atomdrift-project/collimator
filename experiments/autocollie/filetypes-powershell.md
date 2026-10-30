@@ -1269,3 +1269,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T185940-filetypes-powershell` — 2026-10-30T18:59:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f20bd75116f6af1d` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9954 | 0.9954 | 0.9563 | 44 | [log](out/autocollie/runs/2026-10-30T19-00-35_20261030T185940-filetypes-powershell_inherit_from_filetypes_mp3_76e40111.log) |
+| `7f4d1ba99bb0016a` | ps_hardneg_weight_tune | ok | 0.9949 | 0.9951 | 0.9689 | 45 | [log](out/autocollie/runs/2026-10-30T19-01-28_20261030T185940-filetypes-powershell_ps_hardneg_weight_tune.log) |
+
+Rejected before run:
+
+- `ps_relaxed_cutoff_depth4` — profile.min_malware_training_score: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_hardneg_weight_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.7604 L25 recall of the recent kv/textmetrics run by reducing hard_negative_weight from 8 to 5 to prevent over-suppression of benign patterns, reusing the existing feature matrix.
+
+</details>
+

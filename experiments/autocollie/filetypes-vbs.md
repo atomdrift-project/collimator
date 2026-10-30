@@ -1272,3 +1272,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T183055-filetypes-vbs` — 2026-10-30T18:30:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `beef50015a58feac` | inherit_from_filetypes_mp3_76e40111 | ok | 0.9998 | 0.9993 | 0.9926 | 33 | [log](out/autocollie/runs/2026-10-30T18-31-52_20261030T183055-filetypes-vbs_inherit_from_filetypes_mp3_76e40111.log) |
+| `f5dfc685e115e62d` | vbs_hardneg_fraction_sweep | ok | 0.9998 | 0.9993 | 0.9936 | 37 | [log](out/autocollie/runs/2026-10-30T18-32-38_20261030T183055-filetypes-vbs_vbs_hardneg_fraction_sweep.log) |
+| `a39a511540864a79` | vbs_min_malware_score_0 | ok | 0.9998 | 0.9992 | 0.9908 | 8 | [log](out/autocollie/runs/2026-10-30T18-33-02_20261030T183055-filetypes-vbs_vbs_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_76e40111`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/mp3 (key=76e40111297194e3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_hardneg_fraction_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8479 L25 recall by testing if a lower hard_negative_fraction (0.01) with higher weight (12) better isolates the specific benign VBS patterns causing the single FP, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+- **`vbs_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8479 L25 recall by setting min_malware_score to 0 to include low-severity malware in training, hypothesizing that the current cutoff of 4 removes weak signals that help distinguish the borderline benign VBS files currently causing FPs.
+
+</details>
+

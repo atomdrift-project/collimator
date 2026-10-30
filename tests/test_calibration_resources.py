@@ -69,6 +69,9 @@ def test_native_thread_limits_restore_environment(monkeypatch):
 
 def test_spawn_workers_share_index_and_reuse_verified_scores(tmp_path, monkeypatch):
     """Actual spawned processes must find the maps without serializing a dict."""
+    # Earlier tests temporarily change feature env vars. Spawn reads the real
+    # environment, so build the parent fixture with that same configuration.
+    features.feature_config_from_env.cache_clear()
     monkeypatch.setenv('COLLIMATOR_MATRIX_DISK_DIR', str(tmp_path / 'scratch'))
     # Another legacy test loads this script manually under the same name.
     monkeypatch.setitem(sys.modules, 'azoth_calibrate_ensemble', calibrate)
