@@ -1300,3 +1300,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261030T211847-filegroups-portable` — 2026-10-30T21:18:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f4d492d553aa6f1` | try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.9688 | 0.9939 | 0.9128 | 29 | [log](out/autocollie/runs/2026-10-30T21-23-03_20261030T211847-filegroups-portable_try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `46e4ccb1981b8eb3` | try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.9686 | 0.9940 | 0.9242 | 23 | [log](out/autocollie/runs/2026-10-30T21-23-37_20261030T211847-filegroups-portable_try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `5ffd591bcc40d92e` | try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.9695 | 0.9943 | 0.9193 | 18 | [log](out/autocollie/runs/2026-10-30T21-24-01_20261030T211847-filegroups-portable_try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `64f72ddf595998d3` | try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.9682 | 0.9941 | 0.9180 | 18 | [log](out/autocollie/runs/2026-10-30T21-24-20_20261030T211847-filegroups-portable_try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

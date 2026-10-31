@@ -346,3 +346,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T224313-filetypes-lua` — 2026-10-30T22:43:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `781426a879c78cbe` | try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8433 | 0.9996 | 0.7143 | 14 | [log](out/autocollie/runs/2026-10-30T22-43-21_20261030T224313-filetypes-lua_try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `acf358c72b7b0b33` | try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8631 | 0.9997 | 0.7692 | 20 | [log](out/autocollie/runs/2026-10-30T22-43-45_20261030T224313-filetypes-lua_try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `b5687f20fb9aff28` | try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8433 | 0.9996 | 0.7692 | 22 | [log](out/autocollie/runs/2026-10-30T22-44-07_20261030T224313-filetypes-lua_try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `2fc524517648c132` | try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8965 | 0.9997 | 0.8333 | 14 | [log](out/autocollie/runs/2026-10-30T22-44-23_20261030T224313-filetypes-lua_try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=0 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=0 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=0 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=0 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

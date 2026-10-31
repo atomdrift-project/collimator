@@ -378,3 +378,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T214456-filetypes-applescript` — 2026-10-30T21:44:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `867f4ff7292445b7` | try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8940 | 0.9401 | 0.8333 | 16 | [log](out/autocollie/runs/2026-10-30T21-45-12_20261030T214456-filetypes-applescript_try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `b740e658126dc6e1` | try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.9036 | 0.9412 | 0.8333 | 4 | [log](out/autocollie/runs/2026-10-30T21-45-17_20261030T214456-filetypes-applescript_try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `50dabe4e3ceca465` | try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8457 | 0.9363 | 0.8333 | 4 | [log](out/autocollie/runs/2026-10-30T21-45-22_20261030T214456-filetypes-applescript_try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `0dcac675241cf11e` | try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8940 | 0.9401 | 0.8333 | 4 | [log](out/autocollie/runs/2026-10-30T21-45-27_20261030T214456-filetypes-applescript_try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_DESCRIPTION_KEYWORDS=0 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_DESCRIPTION_KEYWORDS=1 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_DESCRIPTION_KEYWORDS=0 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_DESCRIPTION_KEYWORDS=1 EXP_EARLY_STOPPING=50 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

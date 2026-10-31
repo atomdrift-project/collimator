@@ -40,6 +40,51 @@ def test_retained_tree_count_handles_xgboost_best_iteration_zero():
         get_booster=lambda: SimpleNamespace(num_boosted_rounds=lambda: 17))) == 17
 
 
+@pytest.mark.parametrize('sparse', [False, True])
+@pytest.mark.parametrize('validation_count', [1, 2])
+def test_lightgbm_validation_api_preserves_predictions_and_early_stopping(sparse, validation_count):
+    import warnings
+    import lightgbm as lgb
+    from collimator.train import _fit_model
+
+    rng = np.random.default_rng(19)
+    X = rng.normal(size=(600, 5)).astype(np.float32)
+    y = (X[:, 0] + rng.normal(size=600) > 0).astype(np.float32)
+    if sparse:
+        X = sp.csr_matrix(X)
+    validation = [(X[300:450], y[300:450]), (X[450:], y[450:])][:validation_count]
+    params = dict(n_estimators=40, n_jobs=1, verbosity=-1, random_state=7)
+    reference, updated = lgb.LGBMClassifier(**params), lgb.LGBMClassifier(**params)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message="The argument 'eval_set' is deprecated")
+        reference.fit(X[:300], y[:300], eval_set=validation,
+                      callbacks=[lgb.early_stopping(3, first_metric_only=True, verbose=False)])
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error', message="The argument 'eval_set' is deprecated")
+        _fit_model(updated, X[:300], y[:300], eval_set=validation, early_stopping_rounds=3)
+    assert updated.best_iteration_ == reference.best_iteration_
+    assert 0 < updated.best_iteration_ < params['n_estimators']
+    assert updated.evals_result_ == reference.evals_result_
+    np.testing.assert_array_equal(updated.predict_proba(X), reference.predict_proba(X))
+
+
+def test_older_lightgbm_validation_api_is_supported():
+    from collimator.train import _fit_model
+
+    class LegacyModel:
+        __module__ = 'lightgbm.sklearn'
+
+        def fit(self, X, y, *, sample_weight, eval_set, callbacks):
+            self.validation = eval_set
+
+    X = np.zeros((4, 1))
+    y = np.array([0, 1, 0, 1])
+    validation = [(X, y)]
+    model = LegacyModel()
+    _fit_model(model, X, y, eval_set=validation)
+    assert model.validation is validation
+
+
 @pytest.mark.parametrize('dtype', [np.float32, np.float64, np.int32])
 def test_sparse_moments_are_bounded_and_preserve_input(monkeypatch, dtype):
     import collimator.train as module

@@ -13,6 +13,33 @@ def document(route='filetypes/batch'):
             'feature_env':{'COLLIMATOR_MIN_SAMPLE_SCORE':'0'},'min_malware_training_score':0}
 
 
+def test_relative_allowlist_pin_survives_checkout_relocation(tmp_path, monkeypatch):
+    checkout = tmp_path / 'relocated'
+    configs = checkout / 'model-configs'
+    relative = 'src/collimator/data/allowed.json'
+    allowlist = checkout / relative
+    allowlist.parent.mkdir(parents=True)
+    allowlist.write_text('["present:test"]')
+    d = document()
+    d['feature_env']['COLLIMATOR_ALLOWED_FEATURES_FILE'] = relative
+    model_config.save(configs, d)
+    monkeypatch.setattr(model_config, 'DEFAULT_ROOT', configs)
+    monkeypatch.chdir(tmp_path)
+    loaded = model_config.load(d['route'], configs)
+    pin = loaded['feature_env']['COLLIMATOR_ALLOWED_FEATURES_FILE']
+    assert Path(pin).read_text() == '["present:test"]'
+    assert json.loads(model_config.config_path(configs, d['route']).read_text())['feature_env'][
+        'COLLIMATOR_ALLOWED_FEATURES_FILE'] == relative
+
+
+def test_explicit_absolute_allowlist_pin_is_preserved(tmp_path):
+    d = document()
+    d['feature_env']['COLLIMATOR_ALLOWED_FEATURES_FILE'] = '/custom/missing.json'
+    model_config.save(tmp_path, d)
+    assert model_config.load(d['route'], tmp_path)['feature_env'][
+        'COLLIMATOR_ALLOWED_FEATURES_FILE'] == '/custom/missing.json'
+
+
 def test_editing_one_model_file_changes_the_replay_config(tmp_path):
     d=document();model_config.save(tmp_path,d)
     path=model_config.config_path(tmp_path,d['route'])

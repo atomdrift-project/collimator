@@ -24,6 +24,29 @@ class _FakeModel:
         self.constant = constant
 
 
+def test_missing_route_allowlist_fails_before_discovery_and_restores_env(tmp_path, monkeypatch):
+    key = 'COLLIMATOR_ALLOWED_FEATURES_FILE'
+    monkeypatch.setenv(key, '')
+    with pytest.raises(FileNotFoundError):
+        with suite._temporary_feature_env({key: str(tmp_path / 'missing.json')}):
+            pytest.fail('must reject missing allowlist before vocabulary discovery')
+    assert suite.os.environ[key] == ''
+    assert suite.features.allowed_features() is None
+
+
+def test_each_route_uses_its_own_allowlist(tmp_path, monkeypatch):
+    key = 'COLLIMATOR_ALLOWED_FEATURES_FILE'
+    monkeypatch.delenv(key, raising=False)
+    first, second = tmp_path / 'first.json', tmp_path / 'second.json'
+    first.write_text('["present:first"]')
+    second.write_text('["present:second"]')
+    for path, name in ((first, 'present:first'), (second, 'present:second')):
+        with suite._temporary_feature_env({key: str(path)}):
+            assert suite.features.allowed_features() == frozenset([name])
+    assert key not in suite.os.environ
+    assert suite.features.allowed_features() is None
+
+
 def test_initial_hessian_bound_catches_rar_but_not_deb():
     config = train.TrainConfig(learner="azoth", min_child_weight=5)
     blocked = suite._initial_split_blocker(config, n_benign=47, n_malware=16334)

@@ -165,6 +165,7 @@ class TrainResult:
     # predictions for FPR measurement over the entire database.
     cv_predictions: np.ndarray = field(default_factory=lambda: np.array([]))
     cv_labels: np.ndarray = field(default_factory=lambda: np.array([]))
+    keyword_selection: dict = field(default_factory=dict)
 
 
 def _retained_tree_count(model: Any) -> int:
@@ -378,7 +379,13 @@ def _fit_model(
     sample_weight: np.ndarray | None = None,
     eval_set: list[tuple[np.ndarray | sp.spmatrix, np.ndarray]] | None = None,
     early_stopping_rounds: int | None = None,
+    keyword_feature_names: list[str] | None = None,
 ) -> None:
+    from .keywords import select_for_fit
+    X, keyword_stats = select_for_fit(X, y, keyword_feature_names)
+    model._keyword_selection_stats = keyword_stats
+    if keyword_stats:
+        log.info("keyword selection on fitting rows only: %s", keyword_stats)
     if eval_set and early_stopping_rounds:
         validation_labels = eval_set[-1][1]
         counts = [int(np.sum(validation_labels == label)) for label in (0, 1)]
@@ -393,16 +400,27 @@ def _fit_model(
             if not model.__class__.__module__.startswith("lightgbm"):
                 model.set_params(early_stopping_rounds=None)
     if model.__class__.__module__.startswith("lightgbm"):
+        import inspect
+
         callbacks = []
         if eval_set and early_stopping_rounds:
             import lightgbm as lgb  # noqa: PLC0415
             callbacks.append(lgb.early_stopping(early_stopping_rounds, first_metric_only=True, verbose=False))
+        validation = {}
+        if eval_set:
+            # LightGBM 4.7 renamed validation inputs. Keep the 4.0+ versions
+            # supported by this package working without suppressing warnings.
+            if 'eval_X' in inspect.signature(model.fit).parameters:
+                validation = dict(eval_X=tuple(x for x, _ in eval_set),
+                                  eval_y=tuple(y for _, y in eval_set))
+            else:
+                validation = dict(eval_set=eval_set)
         model.fit(
             X,
             y,
             sample_weight=sample_weight,
-            eval_set=eval_set,
             callbacks=callbacks or None,
+            **validation,
         )
         return
     model.fit(
@@ -610,6 +628,7 @@ def train(
                         fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=fold_base_weight,
+                        keyword_feature_names=feature_names,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
                         early_stopping_rounds=config.early_stopping_rounds,
                     )
@@ -651,6 +670,7 @@ def train(
                         fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=sample_weight,
+                        keyword_feature_names=feature_names,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
                         early_stopping_rounds=config.early_stopping_rounds,
                     )
@@ -659,6 +679,7 @@ def train(
                         fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=fold_base_weight,
+                        keyword_feature_names=feature_names,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
                         early_stopping_rounds=config.early_stopping_rounds,
                     )
@@ -743,6 +764,7 @@ def train(
                 final_model,
                 X_tv, y_tv,
                 sample_weight=final_base_weight,
+                keyword_feature_names=feature_names,
                 eval_set=[(X_calib, y_calib)],
                 early_stopping_rounds=config.early_stopping_rounds,
             )
@@ -784,6 +806,7 @@ def train(
                 final_model,
                 X_tv, y_tv,
                 sample_weight=sample_weight,
+                keyword_feature_names=feature_names,
                 eval_set=[(X_calib, y_calib)],
                 early_stopping_rounds=config.early_stopping_rounds,
             )
@@ -792,6 +815,7 @@ def train(
                 final_model,
                 X_tv, y_tv,
                 sample_weight=final_base_weight,
+                keyword_feature_names=feature_names,
                 eval_set=[(X_calib, y_calib)],
                 early_stopping_rounds=config.early_stopping_rounds,
             )
@@ -812,7 +836,8 @@ def train(
         # No holdout — train without early stopping.
         if hasattr(final_model, "set_params"):
             final_model.set_params(early_stopping_rounds=None)
-        _fit_model(final_model, X_tv, y_tv, sample_weight=final_base_weight)
+        _fit_model(final_model, X_tv, y_tv, sample_weight=final_base_weight,
+                   keyword_feature_names=feature_names)
         log.info("final model: %d retained trees on %s", _retained_tree_count(final_model), booster_device(final_model))
         split_summary = {
             "policy": "train_only",
@@ -923,4 +948,5 @@ def train(
         isotonic_calibrator=iso_calibrator,
         cv_predictions=cv_predictions,
         cv_labels=y_tv,
+        keyword_selection=getattr(final_model, "_keyword_selection_stats", {}),
     )

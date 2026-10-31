@@ -30,6 +30,26 @@ def test_commands_use_all_sampled_rows_and_two_retained_seeds(tmp_path):
         assert f"EXP_DESCRIPTION_KEYWORDS={flags[1]}" in command
 
 
+def test_pooling_and_context_are_independent_experiment_arms(tmp_path):
+    module = script()
+    args = SimpleNamespace(db="unused", seed=43, trees=180)
+    pooled = module.command(args, "python", "pooled", tmp_path)
+    assert "EXP_RULE_DESCRIPTION_KEYWORDS=1" in pooled
+    assert "EXP_CONTEXT_KEYWORDS=0" in pooled
+    context = module.command(args, "python", "context", tmp_path)
+    assert "EXP_CONTEXT_KEYWORDS=1" in context
+    assert "EXP_RULE_DESCRIPTION_KEYWORDS=0" in context
+    assert "EXP_FULL_RULE_KEYWORDS=0" in context
+    separate = module.command(args, "python", "hierarchy_descriptions", tmp_path)
+    assert "EXP_FULL_RULE_KEYWORDS=1" in separate
+    assert "EXP_DESCRIPTION_KEYWORDS=1" in separate
+    assert "EXP_RULE_DESCRIPTION_KEYWORDS=0" in separate
+    assert "EXP_CONTEXT_KEYWORDS=0" in separate
+    args.keyword_vocab_max = 25000
+    larger = module.command(args, "python", "context", tmp_path)
+    assert "EXP_KEYWORD_VOCAB_MAX=25000" in larger
+
+
 def test_digest_matches_equivalent_sparse_storage_and_detects_changes():
     module = script()
     left = sp.csr_matrix([[0., 1.], [2., 0.]])

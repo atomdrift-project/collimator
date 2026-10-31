@@ -182,6 +182,7 @@ MODEL_ABI_VERSION = 20
 # Keyword extensions retain an explicit base contract: Scan's v21 changed
 # existing metric/structure semantics, which these v20-trained models do not use.
 KEYWORD_MODEL_ABI_VERSION = 22
+EXTENDED_KEYWORD_MODEL_ABI_VERSION = 23
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -599,7 +600,7 @@ EXPECTED_GHOSTS = {
     ],
 }
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "tiered_trigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space", "symbols", "kv", "textenc", "ruleword", "descword")
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "tiered_trigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space", "symbols", "kv", "textenc", "ruleword", "descword", "fullword", "ruletextword", "contextword")
 
 FORMAT_GROUPS: dict[str, frozenset[str]] = {
     "script": frozenset({
@@ -775,13 +776,21 @@ class FeatureConfig:
     tiered_bigram_branch_min_crit: tuple[str, ...]
     include_rule_keywords: bool = False
     include_description_keywords: bool = False
+    include_full_rule_keywords: bool = False
+    include_rule_description_keywords: bool = False
+    include_context_keywords: bool = False
     keyword_vocab_max: int = 10000
     keyword_min_freq: int = 5
+    keyword_selection: str = "frequency"
+    keyword_candidate_max: int = 100000
+    keyword_source_settings: dict = field(default_factory=dict)
 
 
 @lru_cache(maxsize=1)
 def feature_config_from_env() -> FeatureConfig:
     """Load experiment feature toggles from environment variables."""
+    from .keywords import settings_from_env
+    keyword_settings = settings_from_env()
     raw_groups = os.getenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "").strip()
     disabled = {part.strip() for part in raw_groups.split(",") if part.strip()}
     unknown = disabled - set(FEATURE_GROUPS)
@@ -1014,8 +1023,14 @@ def feature_config_from_env() -> FeatureConfig:
         ),
         include_rule_keywords=os.getenv("COLLIMATOR_RULE_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
         include_description_keywords=os.getenv("COLLIMATOR_DESCRIPTION_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
+        include_full_rule_keywords=os.getenv("COLLIMATOR_FULL_RULE_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
+        include_rule_description_keywords=os.getenv("COLLIMATOR_RULE_DESCRIPTION_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
+        include_context_keywords=os.getenv("COLLIMATOR_CONTEXT_KEYWORDS", "0").lower() in {"1", "true", "yes", "on"},
         keyword_vocab_max=max(0, int(os.getenv("COLLIMATOR_KEYWORD_VOCAB_MAX", "10000"))),
         keyword_min_freq=max(1, int(os.getenv("COLLIMATOR_KEYWORD_MIN_FREQ", "5"))),
+        keyword_selection=os.getenv("COLLIMATOR_KEYWORD_SELECTION", "frequency"),
+        keyword_candidate_max=int(os.getenv("COLLIMATOR_KEYWORD_CANDIDATE_MAX", "100000")),
+        keyword_source_settings=keyword_settings,
     )
 
 
@@ -1813,7 +1828,7 @@ def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
     uncovered: list[str] = []
     for name in feature_names:
         family, _, key = name.partition(":")
-        if family in {"ruleword", "descword"}:
+        if family in {"ruleword", "descword", "fullword", "ruletextword", "contextword"}:
             # These read findings, never the facts pruned by this manifest.
             # Missing descriptions are checked separately during extraction.
             continue
@@ -2363,10 +2378,60 @@ def _keyword_words(text: str) -> frozenset[str]:
                      if len(word) >= 2 and not word.isdecimal())
 
 
-def _report_keywords(files, sources):
+_Z85_DIGITS = {char: i for i, char in enumerate(
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#")}
+
+
+def _decode_context_window(window):
+    """Read byte text, arbitrary-length Z85, or schema 7's plain text.
+
+    Decode only on demand. Missing windows contribute zero words; malformed
+    encoded windows fail explicitly rather than becoming encoded-text features.
+    """
+    text, legacy, plain = window.get("s"), window.get("b"), window.get("t")
+    if sum(value is not None for value in (text, legacy, plain)) != 1:
+        raise ValueError("context window must contain exactly one of s, b or t")
+    if plain is not None:
+        if not isinstance(plain, str):
+            raise ValueError("legacy context text must be a string")
+        return plain.encode("utf-8", errors="replace")
+    if text is not None:
+        if not isinstance(text, str):
+            raise ValueError("context byte text must be a string")
+        values = [ord(char) for char in text]
+        if any(value == 0 or value > 256 for value in values):
+            raise ValueError("invalid context byte text")
+        return bytes(0 if value == 256 else value for value in values)
+    if not isinstance(legacy, str) or len(legacy) % 5 == 1:
+        raise ValueError("invalid context Z85 input")
+    output = bytearray()
+    for start in range(0, len(legacy), 5):
+        chunk = legacy[start:start + 5]
+        value = 0
+        for char in chunk:
+            if char not in _Z85_DIGITS:
+                raise ValueError("invalid context Z85 digit")
+            value = value * 85 + _Z85_DIGITS[char]
+        for _ in range(5 - len(chunk)):
+            value = value * 85 + 84
+        if value > 0xffffffff:
+            raise ValueError("context Z85 group overflows four bytes")
+        output.extend(value.to_bytes(4, "big")[:4 if len(chunk) == 5 else len(chunk) - 1])
+    return bytes(output)
+
+
+def _report_keywords(files, sources, *, missing_counts=None):
     tokens = {source: set() for source in sources}
-    missing = set()
+    missing = 0
     for file_entry in files:
+        if "contextword" in tokens:
+            for window in file_entry.get("ctx", []):
+                # Context windows are independent: do not invent words across
+                # their boundaries or learn encoded bytes and annotations.
+                text = _decode_context_window(window).decode("utf-8", errors="replace")
+                tokens["contextword"].update(
+                    word for word in re.findall(r"[a-z0-9]+", text.lower())
+                    if len(word) >= 2 and not word.isdecimal())
         for finding in file_findings(file_entry):
             fid = finding_id(finding)
             if not fid or _float(finding_conf(finding), MISSING_CONF) < MIN_CONFIDENCE:
@@ -2376,17 +2441,22 @@ def _report_keywords(files, sources):
                 # their leaf. Never mix taxonomy directory words into this test.
                 relative = fid.split("::", 1)[1] if "::" in fid else fid.rsplit("/", 1)[-1]
                 tokens["ruleword"].update(_keyword_words(relative))
-            if "descword" in tokens:
+            for source in ("fullword", "ruletextword"):
+                if source in tokens:
+                    tokens[source].update(_keyword_words(fid))
+            if "descword" in tokens or "ruletextword" in tokens:
                 desc = _alias(finding, "desc", "d", "description")
                 if not isinstance(desc, str) or not desc.strip():
-                    missing.add(fid)
+                    # Historical and third-party findings may omit descriptions.
+                    # Keep their other features; absent text contributes no words.
+                    missing += 1
                 else:
-                    tokens["descword"].update(_keyword_words(desc))
-    if missing:
-        raise ValueError(
-            f"description keywords require descriptions: {len(missing)} rule IDs "
-            f"missing descriptions in report; examples: {', '.join(sorted(missing)[:5])}"
-        )
+                    for source in ("descword", "ruletextword"):
+                        if source in tokens:
+                            tokens[source].update(_keyword_words(desc))
+    if missing and missing_counts is not None:
+        missing_counts["findings"] += missing
+        missing_counts["reports"] += 1
     return tokens
 
 
@@ -2396,18 +2466,27 @@ def _keyword_sources():
     return tuple(source for source, enabled in (
         ("ruleword", config.include_rule_keywords),
         ("descword", config.include_description_keywords),
+        ("fullword", config.include_full_rule_keywords),
+        ("ruletextword", config.include_rule_description_keywords),
+        ("contextword", config.include_context_keywords),
     ) if enabled and source not in {group.strip() for group in disabled})
 
 
 def _count_keyword_reports(reports, counters):
     """Tap a bounded report stream, counting once per report across all files."""
+    missing = collections.Counter()
     for item in reports:
         raw = item.get("cleave_result") if isinstance(item, dict) and "cleave_result" in item else item
         report = _coerce_report(raw)
         if report is not None:
-            for source, words in _report_keywords(report_files(report), counters).items():
+            for source, words in _report_keywords(
+                    report_files(report), counters, missing_counts=missing).items():
                 counters[source].update(words)
         yield item
+    if missing:
+        log.info("description keywords: skipped missing/invalid description text for "
+                 "%d findings across %d reports; other features retained",
+                 missing["findings"], missing["reports"])
 
 
 def _add_keyword_vocab(spec, counters):
@@ -2417,15 +2496,20 @@ def _add_keyword_vocab(spec, counters):
     allowed = allowed_features()
     vocabs = {}
     for source, counts in counters.items():
-        ranked = sorted((word for word, n in counts.items() if n >= config.keyword_min_freq),
-                        key=lambda word: (-counts[word], word))[:config.keyword_vocab_max]
+        settings = config.keyword_source_settings[source]
+        # Candidate discovery never uses labels: CV folds and seeds share it.
+        # Supervised selection runs inside _fit_model on each fitting split.
+        cap = settings["candidate_max"] if settings["selection"] == "balanced_mi" else settings["vocab_max"]
+        ranked = sorted((word for word, n in counts.items() if n >= settings["min_freq"]),
+                        key=lambda word: (-counts[word], word))[:cap]
         vocabs[source] = sorted(word for word in ranked
                                 if allowed is None or f"{source}:{word}" in allowed)
         log.info("%s: %d distinct words, %d selected (document frequency >= %d, cap %d)",
-                 source, len(counts), len(vocabs[source]), config.keyword_min_freq,
-                 config.keyword_vocab_max)
+                 source, len(counts), len(vocabs[source]), settings["min_freq"], cap)
     names = spec.feature_names + [f"{source}:{word}" for source, words in vocabs.items() for word in words]
-    return replace(spec, version=KEYWORD_MODEL_ABI_VERSION, abi_version=KEYWORD_MODEL_ABI_VERSION,
+    abi = (EXTENDED_KEYWORD_MODEL_ABI_VERSION
+           if set(vocabs) - {"ruleword", "descword"} else KEYWORD_MODEL_ABI_VERSION)
+    return replace(spec, version=abi, abi_version=abi,
                    base_feature_abi=spec.base_feature_abi or spec.abi_version, keyword_vocabs=vocabs,
                    feature_names=names, total_features=len(names))
 

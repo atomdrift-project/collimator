@@ -1329,6 +1329,7 @@ def run_experiment(
             "level_budget_recall": float(attempt_metrics.get("level_budget_recall", 0.0)),
             "recall_at_50_per_100M": float(attempt_metrics.get("recall_at_50_per_100M", 0.0)),
             "wall_s": float(time.perf_counter() - attempt_started),
+            "keyword_selection": getattr(attempt_result, "keyword_selection", {}),
         })
         if seed_search_k > 1:
             log.info(
@@ -1427,6 +1428,10 @@ def run_experiment(
         "test_rows": int(X_test.shape[0]),
         "n_features": int(spec.total_features),
         "keyword_vocab_sizes": {source: len(words) for source, words in spec.keyword_vocabs.items()},
+        "keyword_selection": [
+            {"seed": member_seed, "sources": getattr(member, "_keyword_selection_stats", {})}
+            for member_seed, member in zip(all_attempt_seeds, all_attempt_models, strict=True)
+        ],
         "drop_feature_prefixes": list(drop_feature_prefixes or []),
         "feature_config": _feature_config_dict(feature_cfg),
         "feature_env": feature_env,

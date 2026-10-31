@@ -1195,13 +1195,13 @@ def _route_feature_env(
 
 @contextlib.contextmanager
 def _temporary_feature_env(overrides: dict[str, str]):
-    if not overrides:
-        yield
-        return
     previous = {key: os.environ.get(key) for key in overrides}
     try:
         os.environ.update(overrides)
         features.feature_config_from_env.cache_clear()
+        features.allowed_features.cache_clear()
+        # Validate file pins before starting expensive vocabulary discovery.
+        features.allowed_features()
         yield
     finally:
         for key, value in previous.items():
@@ -1210,6 +1210,7 @@ def _temporary_feature_env(overrides: dict[str, str]):
             else:
                 os.environ[key] = value
         features.feature_config_from_env.cache_clear()
+        features.allowed_features.cache_clear()
 
 
 def _allowed_mask_from_spec(

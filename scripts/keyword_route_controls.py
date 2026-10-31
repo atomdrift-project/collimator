@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Paired keyword controls on a canonical-hash sample of several routes."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Lock
 import hashlib
 import json
 import os
@@ -16,6 +18,12 @@ import scipy.sparse as sp
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 VARIANTS = {"baseline": (0, 0), "ids": (1, 0), "descriptions": (0, 1), "both": (1, 1)}
+EXTENDED_VARIANTS = {
+    "hierarchy": (0, 0, 1, 0, 0),
+    "hierarchy_descriptions": (0, 1, 1, 0, 0),
+    "pooled": (0, 0, 0, 1, 0),
+    "context": (0, 0, 0, 0, 1),
+}
 
 
 def matrix_digest(matrix):
@@ -31,7 +39,8 @@ def matrix_digest(matrix):
 
 
 def command(args, route, variant, directory):
-    ids, descriptions = VARIANTS[variant]
+    flags = (VARIANTS | EXTENDED_VARIANTS)[variant]
+    ids, descriptions, hierarchy, pooled, context = (*flags, *(0 for _ in range(5 - len(flags))))
     return ["make", "experiment", f"DB={args.db}", f"EXP_ROUTE=filetypes/{route}",
             f"SEED={args.seed}", "EXP_TRAIN_SAMPLES=0", "EXP_MAX_TEST_SAMPLES=0",
             "EXP_TOTAL_LIMIT=0", "EXP_FOLDS=0", "EXP_MIN_SAMPLE_SCORE=0",
@@ -39,7 +48,9 @@ def command(args, route, variant, directory):
             "EXP_COLSAMPLE_BYTREE=1", "EXP_WORKERS=4", "EXP_LGBM_THREADS=4",
             "EXP_SEED_SEARCH_K=2", "EXP_SAVE_ALL_SEEDS=1", "EXP_ALLOWED_FEATURES_FILE=",
             f"EXP_RULE_KEYWORDS={ids}", f"EXP_DESCRIPTION_KEYWORDS={descriptions}",
-            "EXP_KEYWORD_VOCAB_MAX=10000", "EXP_KEYWORD_MIN_FREQ=5",
+            f"EXP_FULL_RULE_KEYWORDS={hierarchy}", f"EXP_RULE_DESCRIPTION_KEYWORDS={pooled}",
+            f"EXP_CONTEXT_KEYWORDS={context}",
+            f"EXP_KEYWORD_VOCAB_MAX={getattr(args, 'keyword_vocab_max', 10000)}", "EXP_KEYWORD_MIN_FREQ=5",
             f"EXP_IDEA=keyword_full_columns_{variant}",
             f"EXP_OUT_DIR={directory / variant}", f"EXP_CACHE_DIR={directory / 'cache'}"]
 
@@ -60,7 +71,8 @@ def read_variant(root, cache, seed):
         revision = str(arrays["evaluation_revision"].item())
     matrix = sp.load_npz(stem + "_Xtest.npz")
     names = spec["feature_names"]
-    base_columns = [i for i, name in enumerate(names) if not name.startswith(("ruleword:", "descword:"))]
+    keyword_prefixes = tuple(source + ":" for source in spec.get("keyword_vocabs", {}))
+    base_columns = [i for i, name in enumerate(names) if not name.startswith(keyword_prefixes)]
     base_names = [names[i] for i in base_columns]
     train = sp.load_npz(stem + "_Xtrain.npz")
     train_digest = matrix_digest(train[:, base_columns])
@@ -178,9 +190,16 @@ def main():
     parser.add_argument("--sample-percent", default="10")
     parser.add_argument("--seed", type=int, default=43)
     parser.add_argument("--trees", type=int, default=180)
+    parser.add_argument("--keyword-vocab-max", type=int, default=10000)
     parser.add_argument("--keep-cache", action="store_true")
+    parser.add_argument("--route-jobs", type=int, default=1)
+    parser.add_argument("--variants", nargs="+", choices=list(VARIANTS | EXTENDED_VARIANTS), default=list(VARIANTS))
     parser.add_argument("--audit-missing", help="Audit descriptions only in a completed route's saved train/dev cohort")
     args = parser.parse_args()
+    if args.route_jobs < 1:
+        parser.error("route-jobs must be positive")
+    if args.keyword_vocab_max < 0:
+        parser.error("keyword-vocab-max must be nonnegative")
     if any(not route.replace("_", "").isalnum() for route in args.routes):
         parser.error("provide bare filetype names")
     os.environ["COLLIMATOR_SAMPLE_PERCENT"] = args.sample_percent
@@ -199,49 +218,73 @@ def main():
     summary = dict(sample_percent=args.sample_percent, sample_predicate=sample_predicate,
                    seeds=[args.seed, args.seed + 1], colsample_bytree=1,
                    train_samples=0, max_dev_samples=0, malware_training_floor=0,
-                   tree_budget=args.trees, routes={},
+                   tree_budget=args.trees, keyword_vocab_max=args.keyword_vocab_max,
+                   variants=args.variants, routes={},
                    scope="Natural 10% canonical-group sample; train/dev only. Each seed is reported separately.")
+    write_lock = Lock()
+    stopped = Event()
+
+    def save_route(route, route_result):
+        with write_lock:
+            # Publish an immutable snapshot of this worker's current results.
+            summary["routes"][route] = dict(route_result)
+            atomic_write_json(args.output / "comparison.json", summary)
+
+    def run_route(route):
+        if stopped.is_set():
+            return
+        directory = args.output / route
+        directory.mkdir(exist_ok=True)
+        route_result = {}
+        identity = None
+        for variant in args.variants:
+            if stopped.is_set():
+                return
+            print(f"Starting {route}/{variant}", flush=True)
+            started = time.perf_counter()
+            log_path = directory / f"{variant}.log"
+            with log_path.open("w") as log:
+                process = subprocess.run(command(args, route, variant, directory),
+                                         env=os.environ.copy(), stdout=log, stderr=subprocess.STDOUT)
+            if process.returncode:
+                route_result[variant] = dict(error=log_path.read_text()[-5000:], returncode=process.returncode)
+                print(f"FAILED {route}/{variant}: see {log_path}", flush=True)
+                save_route(route, route_result)
+                continue
+            result, captured = read_variant(directory / variant, directory / "cache", args.seed)
+            if identity is None:
+                identity = captured
+            if captured != identity:
+                raise ValueError(f"base features, selected rows, or report inputs differ in {route}/{variant}")
+            if variant != "baseline" and "seeds" in route_result.get("baseline", {}):
+                paired_changes(directory, route_result["baseline"], variant, result)
+            result["verified_matched_inputs"] = True
+            route_result[variant] = result
+            print(json.dumps(dict(route=route, variant=variant, train=result["train_rows"],
+                                  dev=result["dev_rows"], seeds=result["seeds"],
+                                  elapsed_seconds=time.perf_counter() - started)), flush=True)
+            save_route(route, route_result)
+        if not args.keep_cache and (directory / "cache").exists():
+            cohorts = list((directory / "cache").glob("corpus_*.json"))
+            if len(cohorts) != 1:
+                raise ValueError(f"expected one shared selection in {directory}")
+            shutil.copyfile(cohorts[0], directory / "selected_cohort.json")
+            # Only this run's regenerable matrices/checkpoints are removed;
+            # models, specs, logs, identities and per-row predictions persist.
+            shutil.rmtree(directory / "cache")
+        save_route(route, route_result)
+
     with frozen_corpus(args.db):
         summary["snapshot_max_id"] = data.snapshot_max_id(args.db)
-        for route in args.routes:
-            directory = args.output / route
-            directory.mkdir(exist_ok=True)
-            route_result = summary["routes"].setdefault(route, {})
-            identity = None
-            for variant in VARIANTS:
-                print(f"Starting {route}/{variant}", flush=True)
-                started = time.perf_counter()
-                log_path = directory / f"{variant}.log"
-                with log_path.open("w") as log:
-                    process = subprocess.run(command(args, route, variant, directory),
-                                             env=os.environ.copy(), stdout=log, stderr=subprocess.STDOUT)
-                if process.returncode:
-                    route_result[variant] = dict(error=log_path.read_text()[-5000:], returncode=process.returncode)
-                    print(f"FAILED {route}/{variant}: see {log_path}", flush=True)
-                    atomic_write_json(args.output / "comparison.json", summary)
-                    continue
-                result, captured = read_variant(directory / variant, directory / "cache", args.seed)
-                if identity is None:
-                    identity = captured
-                if captured != identity:
-                    raise ValueError(f"base features, selected rows, or report inputs differ in {route}/{variant}")
-                route_result[variant] = result
-                if variant != "baseline" and "seeds" in route_result.get("baseline", {}):
-                    paired_changes(directory, route_result["baseline"], variant, result)
-                result["verified_matched_inputs"] = True
-                print(json.dumps(dict(route=route, variant=variant, train=result["train_rows"],
-                                      dev=result["dev_rows"], seeds=result["seeds"],
-                                      elapsed_seconds=time.perf_counter() - started)), flush=True)
-                atomic_write_json(args.output / "comparison.json", summary)
-            if not args.keep_cache and (directory / "cache").exists():
-                cohorts = list((directory / "cache").glob("corpus_*.json"))
-                if len(cohorts) != 1:
-                    raise ValueError(f"expected one shared selection in {directory}")
-                shutil.copyfile(cohorts[0], directory / "selected_cohort.json")
-                # Only this run's regenerable matrices/checkpoints are removed;
-                # models, specs, logs, identities and per-row predictions persist.
-                shutil.rmtree(directory / "cache")
-            atomic_write_json(args.output / "comparison.json", summary)
+        summary["routes"] = {route: {} for route in args.routes}
+        with ThreadPoolExecutor(max_workers=args.route_jobs) as pool:
+            try:
+                list(pool.map(run_route, args.routes))
+            except BaseException:
+                # A Ctrl-C or failed invariant must not schedule more fits
+                # while the executor drains its active subprocesses.
+                stopped.set()
+                raise
     print(f"Finished: {args.output / 'comparison.json'}", flush=True)
 
 

@@ -31,7 +31,7 @@
   },
   "feature_env": {
     "COLLIMATOR_AIR_GAP_SIGNAL": "1",
-    "COLLIMATOR_ALLOWED_FEATURES_FILE": "/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json",
+    "COLLIMATOR_ALLOWED_FEATURES_FILE": "src/collimator/data/azoth_allowed_features_importance10k.json",
     "COLLIMATOR_ANACHRONISTIC_INJECTION": "",
     "COLLIMATOR_ATTACK_CODE_NGRAMS": "1",
     "COLLIMATOR_ATTACK_FEATURES": "1",

@@ -97,6 +97,33 @@ def test_unknown_competitor_keeps_conservative_reserve(tmp_path, monkeypatch):
     assert resources.host_reserve_gb() == 48
 
 
+def test_run_reserve_update_admits_waiting_fit_and_env_takes_precedence(tmp_path, monkeypatch):
+    monkeypatch.delenv('COLLIMATOR_MEM_RESERVE_GB', raising=False)
+    monkeypatch.delenv('COLLIMATOR_MEM_CEILING_GB', raising=False)
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setenv('COLLIMATOR_FIT_BOUNDED_CGROUPS', str(tmp_path / 'missing'))
+    monkeypatch.setattr(resources.memory, 'available_memory_gb', lambda **kw: 150)
+    monkeypatch.setattr(resources.memory, 'cgroup_headroom_gb', lambda **kw: 140)
+    assert resources._available() == 102
+    policy = tmp_path / 'host-reserve-gb'
+    monkeypatch.setattr(resources.time, 'sleep', lambda _: policy.write_text('2\n'))
+    with resources.fit_reservation(107.4):
+        assert resources.host_reserve_gb() == 2
+        assert resources._available() == 140
+    assert json.loads((tmp_path / 'fits.json').read_text()) == []
+    monkeypatch.setenv('COLLIMATOR_MEM_RESERVE_GB', '60')
+    assert resources.host_reserve_gb() == 60
+
+
+@pytest.mark.parametrize('value', ['-1', 'nan', 'inf', 'invalid'])
+def test_invalid_run_reserve_is_rejected(tmp_path, monkeypatch, value):
+    monkeypatch.delenv('COLLIMATOR_MEM_RESERVE_GB', raising=False)
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    (tmp_path / 'host-reserve-gb').write_text(value)
+    with pytest.raises(ValueError):
+        resources.host_reserve_gb()
+
+
 def test_adaptive_reserve_still_respects_kernel_and_cgroup_limits(tmp_path, monkeypatch):
     monkeypatch.setattr(resources, 'host_reserve_gb', lambda: 20)
     monkeypatch.setattr(resources.memory, 'available_memory_gb', lambda **kw: 153)

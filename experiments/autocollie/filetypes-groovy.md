@@ -362,3 +362,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261030T222059-filetypes-groovy` — 2026-10-30T22:20:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60b2dff4d15ee2f2` | try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8406 | 0.9939 | 0.8889 | 6 | [log](out/autocollie/runs/2026-10-30T22-21-04_20261030T222059-filetypes-groovy_try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `59c980aea4d5720a` | try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8153 | 0.9742 | 0.8889 | 7 | [log](out/autocollie/runs/2026-10-30T22-21-22_20261030T222059-filetypes-groovy_try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `7e0f0ef3485e619c` | try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8431 | 0.9940 | 0.8889 | 7 | [log](out/autocollie/runs/2026-10-30T22-21-30_20261030T222059-filetypes-groovy_try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+| `1d6e87711997a17e` | try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1 | ok | 0.8221 | 0.9871 | 0.8235 | 7 | [log](out/autocollie/runs/2026-10-30T22-21-38_20261030T222059-filetypes-groovy_try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_rule_keywords_false_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=0 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=0 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_false_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=0 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=false,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_false_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=0 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=false,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+- **`try_rule_keywords_true_description_keywords_true_keyword_vocab_max_10000_keyword_min_freq_1`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=rule_keywords=true,description_keywords=true,keyword_vocab_max=10000,keyword_min_freq=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

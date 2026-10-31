@@ -278,6 +278,71 @@ finishes unless `--keep-cache` is set. `comparison.json` is updated after each
 configuration. Small sampled malware pools are reported explicitly; they can
 make large percentage changes represent only one or two files.
 
+The five-route controls finished on 2026-10-30. Each entry below averages the
+individual-seed recalls for seeds 43 and 44, at one observed FP:
+
+| Route | Baseline | ID words | Description words | Both |
+| --- | ---: | ---: | ---: | ---: |
+| java_class | 22.7% | 36.4% | 25.0% | 43.2% |
+| go | 5.2% | 34.8% | 9.6% | 34.4% |
+| c | 55.2% | 40.2% | 52.6% | 52.6% |
+| python | 71.8% | 71.6% | 71.6% | 74.2% |
+| javascript | 64.0% | 58.7% | 65.2% | 54.0% |
+
+Go's original description runs failed on one malformed training report,
+row `734923629` (a missing Elastic Sliver finding description). The four Go
+variants above were all rerun on a private SQLite copy excluding that one
+training row. Dev IDs, labels, and base feature values match the original
+study exactly. The live corpus was not modified. The initial, unfiltered
+Go ID-only comparison also improved one-FP recall in both seeds, by 9.63 and
+0.74 points; the larger clean-cohort gains demonstrate strong baseline
+sensitivity to a one-row training perturbation, not a stable effect size.
+
+Dev malware counts were 22, 135, 250, 273, and 1,832 in route order.
+`java_class` has insufficient recall resolution for a reliable winner, and
+all its zero-FP recalls were zero. C loses on average. Python has small
+zero-FP gains but inconsistent one-FP changes; its averaged ensembles also
+lose at one FP. JavaScript descriptions improve one-FP recall in both seeds
+but lose zero-FP recall in both. Go ID words are the strongest follow-up at
+the one-FP operating point, subject to confirmation and the usual routed gates.
+
+Selected ID/description vocabulary sizes were 710/906 for Java class,
+2,702/2,904 for Go, 9,004/9,305 for C, 9,821/10,000 for Python, and
+7,421/8,310 for JavaScript. Python descriptions reach the configured cap;
+larger caps are inactive for the other four routes on this cohort.
+
+Regenerate the checked tables from saved predictions:
+
+```sh
+.venv/bin/python scripts/summarize_keyword_controls.py \
+  out/experiments/keyword-controls-10pct-confirm --clean-go
+```
+
+`results_summary.json`, `per_seed.csv`, `means.csv`, and `ensembles.csv` keep
+individual-seed and averaged-probability ensemble results separate. The
+summary verifies all 40 comparable fits' controls, captured inputs, and saved
+metrics. Original failed runs and Go's exclusion manifest remain available.
+
+A separate paired Python description-cap check used a fresh snapshot at the
+same row boundary, with the same 10% selector, 180-tree budget, full column
+sampling, and seeds 43/44. It found 10,263 eligible words. Caps of 25k and
+50k therefore select the same set; only 10k and 25k needed fits. The extra
+263 words were unused in both models, and all 8,833 dev probabilities were
+bit-for-bit identical at the two caps for each seed. The larger vocabulary
+added 12,701 bytes to the spec and 172 nonzeros to the dev matrix; total ONNX
+size was unchanged. Timing differences are cache-sensitive and do not show a
+meaningful performance advantage. Keep the 10k default on this evidence.
+
+The cap check remains separate from the five-route results because it uses a
+fresh database snapshot. Reproduce it with:
+
+```sh
+.venv/bin/python scripts/keyword_python_cap_check.py
+```
+
+Its audit, per-seed models, efficiency measurements and probability-equality
+checks are under `out/experiments/keyword-python-cap-10pct/comparison.json`.
+
 ## Experiment Identity
 
 Experiments are content-addressed. The runner computes an `experiment_key` from
@@ -395,3 +460,15 @@ make experiment EXP_ROUTE=filegroups/scripts EXP_IDEA=scripts_tiered_trigrams ..
 For deployable specialist experiments, record both local route metrics and
 full-corpus routed policy metrics. A strong local specialist is not enough by
 itself; it must improve the calibrated route policy.
+
+## Full hierarchy and context keyword sources
+
+The [full-ID, pooled-description, and context screen](keyword-hierarchy-context.md)
+adds three independent per-model feature settings. Pooling combines description
+and full rule ID; decoded context has a separate vocabulary and experiment arm.
+The protocol includes legacy context decoding, Scan ABI 23 parity checks, and
+matched 10% controls across Java class, Go, C, Python, and JavaScript.
+
+The [Python keyword selection follow-up](keyword-python-selection.md) compares
+frequency and class-aware vocabulary selection at 1k/5k/10k words, then checks
+two regularization changes with paired baseline controls.

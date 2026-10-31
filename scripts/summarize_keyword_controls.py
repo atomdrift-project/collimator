@@ -83,6 +83,8 @@ def main():
                 assert np.array_equal(ids, reference_arrays[0]) and np.array_equal(labels, reference_arrays[1])
                 for item in record["seeds"]:
                     metrics = recall_at_per_100M(labels, arrays[f"seed_{item['seed']}"])
+                    attempt = next(value for value in run["seed_search_results"] if value["seed"] == item["seed"])
+                    assert np.isclose(metrics["level_budget_recall"], attempt["level_budget_recall"])
                     for budget in (0, 1):
                         key = f"recall_at_{budget}fp"
                         assert np.isclose(metrics[key], item[key]), f"metric mismatch: {route}/{variant}"

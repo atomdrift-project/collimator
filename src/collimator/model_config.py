@@ -39,6 +39,12 @@ def load(route, root=DEFAULT_ROOT):
     if d.get('route')!=route:raise ValueError(f'{path}: route mismatch')
     as_run(d)
     if d.get('retired_at'):return None
+    # Accepted configurations travel with the repository. Resolve their file
+    # pins from its root rather than the caller's working directory.
+    value = d['feature_env'].get('COLLIMATOR_ALLOWED_FEATURES_FILE')
+    if value and not Path(value).is_absolute():
+        d['feature_env']['COLLIMATOR_ALLOWED_FEATURES_FILE'] = str(
+            DEFAULT_ROOT.parent / value)
     return d
 
 

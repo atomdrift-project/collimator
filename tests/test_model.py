@@ -140,6 +140,16 @@ def test_pick_device_sparse_is_cpu(_force_cuda_available: None) -> None:
     assert pick_device(6_374, 45_503, 1_080_000) == "cpu"
 
 
+@pytest.mark.parametrize('shape', [
+    (), (6_374, 45_503, 1_080_000), (1_000, 100, 100_000),
+    (100_000, 50_000, 5_000_000_000), (50_000, 100, 5_000_000),
+])
+def test_cpu_shapes_do_not_initialize_cuda(monkeypatch, shape):
+    monkeypatch.setattr(model_mod, 'detect_device',
+                        lambda: pytest.fail('CPU shape must not probe CUDA'))
+    assert pick_device(*shape) == 'cpu'
+
+
 def test_pick_device_small_n_is_cpu(_force_cuda_available: None) -> None:
     assert pick_device(1_000, 100, 100_000) == "cpu"
 

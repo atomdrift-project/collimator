@@ -12,6 +12,7 @@ from collimator import data, features as f
 @pytest.fixture(autouse=True)
 def config(monkeypatch):
     for key in ("RULE_KEYWORDS", "DESCRIPTION_KEYWORDS", "DISABLE_FEATURE_GROUPS",
+                "FULL_RULE_KEYWORDS", "RULE_DESCRIPTION_KEYWORDS", "CONTEXT_KEYWORDS",
                 "ALLOWED_FEATURES_FILE"):
         monkeypatch.delenv(f"COLLIMATOR_{key}", raising=False)
     monkeypatch.setenv("COLLIMATOR_KEYWORD_MIN_FREQ", "1")
@@ -66,23 +67,36 @@ def test_frequency_is_per_document_not_per_finding_or_archive_member(monkeypatch
 
 
 @pytest.mark.parametrize("desc", [None, "", "  ", 7])
-def test_missing_description_is_an_error_only_for_description_source(monkeypatch, desc):
+def test_missing_description_preserves_other_keywords(monkeypatch, desc, caplog):
     monkeypatch.setenv("COLLIMATOR_RULE_KEYWORDS", "1")
-    assert f.build_vocab([report(desc=desc)], 1).keyword_vocabs["ruleword"]
     monkeypatch.setenv("COLLIMATOR_DESCRIPTION_KEYWORDS", "1")
-    f.feature_config_from_env.cache_clear()
-    with pytest.raises(ValueError, match="curl_download_post"):
-        f.build_vocab([report(desc=desc)], 1)
+    mixed = report(desc=desc)
+    mixed["files"][0]["traits"].extend(report("valid_trait", "Valid description")["files"][0]["traits"])
+    with caplog.at_level("INFO", logger="collimator.features"):
+        spec = f.build_vocab([mixed, report(desc=desc)], 1)
+    assert spec.keyword_vocabs == {
+        "ruleword": ["curl", "download", "post", "trait", "valid"],
+        "descword": ["description", "valid"],
+    }
+    assert "2 findings across 2 reports" in caplog.text
     # Below-confidence findings don't contribute either source.
     spec = f.build_vocab([report(desc=desc, conf=0.1)], 1)
     assert spec.keyword_vocabs == {"ruleword": [], "descword": []}
 
 
-def test_missing_description_also_fails_at_prediction(monkeypatch):
+@pytest.mark.parametrize("desc", [None, "", "  ", 7])
+def test_missing_description_is_zero_at_prediction(monkeypatch, tmp_path, desc):
+    monkeypatch.setenv("COLLIMATOR_RULE_KEYWORDS", "1")
     monkeypatch.setenv("COLLIMATOR_DESCRIPTION_KEYWORDS", "1")
     spec = f.build_vocab([report()], 1)
-    with pytest.raises(ValueError, match="missing descriptions"):
-        f.extract(report(desc=None), spec)
+    path = tmp_path / "spec.json"
+    spec.save(path)
+    loaded = f.FeatureSpec.load(path)
+    vec = f.extract(report(desc=desc), loaded)
+    assert vec[loaded.feature_names.index("ruleword:curl")] == 1
+    for i, name in enumerate(loaded.feature_names):
+        if name.startswith("descword:"):
+            assert vec[i] == 0
 
 
 def test_pruning_description_columns_removes_description_dependency(monkeypatch):
@@ -142,4 +156,88 @@ def test_config_identity_and_default_cap(monkeypatch):
 
 def test_keywords_read_findings_independent_of_fact_profile():
     profile = f._fact_profile_manifest()["id"]
-    f.check_fact_profile(profile, ["ruleword:curl", "descword:download"])
+    f.check_fact_profile(profile, ["ruleword:curl", "descword:download", "fullword:network",
+                                 "ruletextword:network", "contextword:curl"])
+
+
+def encode_z85(raw):
+    alphabet = "".join(f._Z85_DIGITS)
+    result = ""
+    for start in range(0, len(raw), 4):
+        chunk = raw[start:start + 4]
+        value = int.from_bytes(chunk.ljust(4, b"\0"), "big")
+        digits = ""
+        for _ in range(5):
+            digits = alphabet[value % 85] + digits
+            value //= 85
+        result += digits[:5 if len(chunk) == 4 else len(chunk) + 1]
+    return result
+
+
+def test_context_decode_matches_cleave_formats_and_partial_tails():
+    assert f._decode_context_window({"a": 56, "l": 7, "t": "café\0"}) == "café\0".encode()
+    assert f._decode_context_window({"b": "HelloWorld"}) == bytes.fromhex("864fd26fb559f75b")
+    for length in range(261):
+        raw = bytes((i * 37 ^ 0xa5) % 256 for i in range(length))
+        assert f._decode_context_window({"b": encode_z85(raw)}) == raw
+        text = "".join(chr(byte or 256) for byte in raw)
+        assert f._decode_context_window({"s": text}) == raw
+
+
+@pytest.mark.parametrize("window", [{}, {"b": "a"}, {"b": "#####"}, {"b": "ab\"cd"},
+    {"s": "x", "b": "aa"}, {"s": "x", "t": "x"}, {"t": 2},
+    {"s": "\0"}, {"s": "\u0101"}, {"s": 2}])
+def test_invalid_context_is_rejected_only_when_used(window):
+    with pytest.raises(ValueError):
+        f._report_keywords([{"ctx": [window]}], ("contextword",))
+    assert f._report_keywords([{"ctx": [window]}], ("fullword",)) == {"fullword": set()}
+
+
+def test_full_hierarchy_pooling_and_decoded_context_roundtrip(monkeypatch, tmp_path):
+    for key in ("FULL_RULE_KEYWORDS", "RULE_DESCRIPTION_KEYWORDS", "CONTEXT_KEYWORDS"):
+        monkeypatch.setenv("COLLIMATOR_" + key, "1")
+    item = report()
+    raw = b"curl FETCH_token 123 x\xff caf\xc3\xa9"
+    item["files"][0]["ctx"] = [{"ln": 0, "s": "".join(chr(b or 256) for b in raw),
+                                "notes": "neverlearnannotation"}]
+    spec = f.build_vocab([item], 1)
+    assert spec.abi_version == 23
+    assert spec.base_feature_abi == 20
+    assert spec.keyword_vocabs == {
+        "fullword": ["behaviors", "curl", "download", "micro", "network", "post"],
+        "ruletextword": ["behaviors", "curl", "download", "http", "micro", "network", "post", "via"],
+        "contextword": ["caf", "curl", "fetch", "token"],
+    }
+    before = f.extract(item, spec)
+    item["files"][0]["ctx"] = [{"ln": 0, "b": encode_z85(raw)}] * 3
+    path = tmp_path / "spec.json"
+    spec.save(path)
+    for key in ("FULL_RULE_KEYWORDS", "RULE_DESCRIPTION_KEYWORDS", "CONTEXT_KEYWORDS"):
+        monkeypatch.delenv("COLLIMATOR_" + key)
+    f.feature_config_from_env.cache_clear()
+    np.testing.assert_array_equal(before, f.extract(item, f.FeatureSpec.load(path)))
+    item["files"][0]["ctx"] = [{"a": 0, "l": 1, "t": raw.decode("utf-8", errors="replace")}]
+    np.testing.assert_array_equal(before, f.extract(item, f.FeatureSpec.load(path)))
+    # Missing descriptions preserve hierarchy words; missing context stays zero.
+    vec = f.extract(report(desc=None), spec)
+    assert vec[spec.feature_names.index("ruletextword:network")] == 1
+    assert vec[spec.feature_names.index("ruletextword:http")] == 0
+    assert vec[spec.feature_names.index("contextword:curl")] == 0
+
+
+@pytest.mark.parametrize("source,flag", [("fullword", "FULL_RULE_KEYWORDS"),
+    ("ruletextword", "RULE_DESCRIPTION_KEYWORDS"), ("contextword", "CONTEXT_KEYWORDS")])
+def test_extended_discovery_uses_only_train_documents(monkeypatch, source, flag):
+    monkeypatch.setenv("COLLIMATOR_" + flag, "1")
+    monkeypatch.setenv("COLLIMATOR_KEYWORD_MIN_FREQ", "2")
+    calls = []
+    def fetch(_db, ids):
+        calls.extend(ids)
+        return {rid: {"cleave_result": {"files": [{"ctx": [{"s": "common rare" if rid == 1 else "common"}],
+            "traits": [{"id": "common::rare" if rid == 1 else "common::common", "conf": 1}]}]}}
+                for rid in ids}
+    monkeypatch.setattr(data, "fetch_cleave_results", fetch)
+    monkeypatch.setattr(f, "_build_vocab_from_db", lambda *a, **kw: f.FeatureSpec())
+    spec = f.build_vocab_from_db("unused", [(1, 0), (2, 1)], n_workers=1)
+    assert calls == [1, 2]
+    assert spec.keyword_vocabs == {source: ["common"]}

@@ -112,10 +112,20 @@ def host_reserve_gb():
     later children of an already-running pipeline pick up the policy. Count
     non-reclaimable usage against the hard limit, not
     their page cache. A 16 GiB floor remains for unrelated host allocations.
-    An explicit host reserve always wins.
+    An explicit host reserve always wins. A run can also set host-reserve-gb
+    in its resource directory, including for children of an existing pipeline.
     """
-    if value := os.getenv('COLLIMATOR_MEM_RESERVE_GB'):
-        return float(value)
+    value = os.getenv('COLLIMATOR_MEM_RESERVE_GB')
+    if not value and (directory := os.getenv('COLLIMATOR_FIT_RESOURCE_DIR')):
+        try:
+            value = (Path(directory) / 'host-reserve-gb').read_text().strip()
+        except FileNotFoundError:
+            pass
+    if value is not None and value != '':
+        reserve = float(value)
+        if not math.isfinite(reserve) or reserve < 0:
+            raise ValueError('host memory reserve must be finite and nonnegative')
+        return reserve
     default = ('/sys/fs/cgroup/system.slice/actions.runner.werewolf-linux.linux-amd64.service'
                if os.getenv('COLLIMATOR_FIT_RESOURCE_DIR') else '')
     competitors = os.getenv('COLLIMATOR_FIT_BOUNDED_CGROUPS', default)

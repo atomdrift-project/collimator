@@ -100,8 +100,6 @@ def pick_device(
     GPU (constant-prediction models, SIGFPE inside fit). Bias toward CPU and
     only opt into CUDA when the workload looks GPU-friendly.
     """
-    if not detect_device().startswith("cuda"):
-        return "cpu"
     if n_rows is None or n_features is None:
         return "cpu"
     cells = n_rows * n_features
@@ -122,6 +120,10 @@ def pick_device(
         return "cpu"
     if cells < 10_000_000:
         log.info("device=cpu (light: %d cells)", cells)
+        return "cpu"
+    # CPU-only shapes need no GPU probe (which initializes XGBoost/CUDA even
+    # when this fit uses LightGBM). Probe only workloads eligible for CUDA.
+    if not detect_device().startswith("cuda"):
         return "cpu"
     log.info(
         "device=cuda (rows=%d feats=%d density=%.3f%%)",

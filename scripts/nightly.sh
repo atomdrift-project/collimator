@@ -193,6 +193,10 @@ fi
 # The most RAM this run may hold. Every memory-aware admission (DB-fetch
 # workers, specialist fits) stops launching work as the run's cgroup nears it,
 # on top of leaving each clamp's reserve free for the rest of the host.
+# PostgreSQL and ZFS usage is already included in measured host availability.
+# Keep a small allowance for further host growth; callers can override it.
+export COLLIMATOR_MEM_RESERVE_GB="${COLLIMATOR_MEM_RESERVE_GB:-2}"
+echo "nightly($mode): host memory reserve $COLLIMATOR_MEM_RESERVE_GB GiB"
 default_ceiling=$([ "$mode" = train ] && echo 144 || echo 48)
 export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-$default_ceiling}"
 echo "nightly($mode): memory ceiling ${COLLIMATOR_MEM_CEILING_GB:-none} GB"
