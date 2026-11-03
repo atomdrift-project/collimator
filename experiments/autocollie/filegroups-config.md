@@ -1762,3 +1762,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T233013-filegroups-config` — 2026-11-02T23:30:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf484498991e9e38` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.9970 | 0.9985 | 0.9697 | 25 | [log](out/autocollie/runs/2026-11-02T23-32-24_20261102T233013-filegroups-config_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `1da6c4a270c66666` | config_kv_vocab_enable | ok | 0.9766 | 0.9813 | 0.8101 | 25 | [log](out/autocollie/runs/2026-11-02T23-32-53_20261102T233013-filegroups-config_config_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8504 L25 recall by enabling the kv feature family, which is currently disabled in the accepted configuration but enabled in the high-performing filetypes/yaml sister route, to capture key-value structural signals specific to config files.
+
+</details>
+

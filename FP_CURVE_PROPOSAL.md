@@ -1,5 +1,10 @@
 # FP-Curve Estimation: Five Experiments Toward Full-Dynamic-Range Level Curves
 
+Historical research: rate labels below describe the experiments as run, including
+literal-rate alternatives. The current shared level definition is [LEVELS.md](LEVELS.md):
+L0 allows zero observed FPs; positive L allows `1 + (L - 1) * N / 100_000_000`.
+These historical results do not redefine the deployed scale.
+
 Status: IMPLEMENTED + RUN (2026-08-03). Owner: t. Prereq reading:
 METHODOLOGY.md ("Severity levels & the operating-point estimator").
 **Results, leaderboard and recommendation: `FP_CURVE_RESULTS.md`.**

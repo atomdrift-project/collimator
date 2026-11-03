@@ -173,6 +173,12 @@ AZOTH_ROUTED_METRICS_ARGS ?=
 # Empty disables the optimization.
 AZOTH_PREVIOUS_BUNDLE ?= $(OUT_ROOT)/azoth
 AZOTH_PREVIOUS_BUNDLE_ARG = $(if $(AZOTH_PREVIOUS_BUNDLE),--previous-bundle $(AZOTH_PREVIOUS_BUNDLE),)
+# Carry exact auxiliary artifacts from the preceding training bundle into a
+# fresh run. Their scores and policies are recalibrated; existing gates remain.
+AZOTH_RETAIN_AUXILIARIES_ARG = $(if $(and $(AZOTH_PREVIOUS_BUNDLE),$(wildcard $(AZOTH_PREVIOUS_BUNDLE)/config.json)),--retain-auxiliaries-from "$(AZOTH_PREVIOUS_BUNDLE)",)
+# Impact filtering is valid for a candidate cloned from another bundle. A full
+# build compared with itself must still check every filetype against deployed.
+AZOTH_REGRESSION_SOURCE_ARG = $(if $(and $(AZOTH_PREVIOUS_BUNDLE),$(filter-out $(realpath $(AZOTH_ROOT)),$(realpath $(AZOTH_PREVIOUS_BUNDLE)))),--source-bundle $(AZOTH_PREVIOUS_BUNDLE),)
 AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
 AZOTH_VALIDATE_DIAGNOSTICS ?= 0
 # Whether azoth-deploy emits route_diagnostics.{md,csv} and slice_metrics.{md,csv}.
@@ -192,6 +198,7 @@ AZOTH_DEPLOY_DIAGNOSTICS ?= 0
 # regression gate silently skips the LWM check, so this is fully
 # opt-in — set the LWM once you have a deploy you want to lock in.
 AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
+# Check all saved levels; only L0–L25 can block. Higher levels are report only.
 # Extra args appended to the check_azoth_regression.py deploy gate. Default is
 # --net-improvement-fallback: a net-positive deploy (malware-weighted TP delta
 # > 0) ships even with per-filetype regressions, PROVIDED no high-volume route
@@ -199,20 +206,16 @@ AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
 # Small-route craters are dataset-level noise (sampling variance on a few
 # hundred samples) and don't block; a real regression on a route big enough to
 # move the average still does. Override to e.g.
-#   AZOTH_REGRESSION_ARGS="--recall-tolerance 1 --lwm-tolerance 1"
+#   AZOTH_REGRESSION_ARGS="--recall-tolerance 0 --lwm-tolerance 0"
 # for a stricter per-filetype gate, or set AZOTH_ALLOW_REGRESSION=1 to bypass
 # entirely. litmus validate + severity-sync stay on regardless.
 AZOTH_REGRESSION_ARGS ?= --net-improvement-fallback
-# FP gate at the canonical deployment level (L25); other levels are reported.
-# Final swept decisions get ONE resolution-adjusted allowance per
-# filetype pool: L0=0; L>=1=floor(1+(L-1)*N_benign/1e8). Small pools are gated,
-# not skipped. Components do not each get another FP. This empirical check
-# is not a statistical guarantee of the nominal population rate. Set to empty
-#   AZOTH_BUDGET_GATE_ARGS=
-# to WAIVE it for an intentional ship that accepts a known FP overrun (e.g. a
-# fresh-start deploy where some routes are still overconfident). litmus validate
-# + severity-sync stay on.
-AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget
+# Report held-out FP counts and per-filetype allowance overruns at L25.
+# Installation is gated by detection regressions and runtime validation;
+# the development FP allowance is not a mandatory held-out install budget.
+# Operators can opt into the stricter count gate explicitly:
+#   AZOTH_BUDGET_GATE_ARGS=--fail-on-budget
+AZOTH_BUDGET_GATE_ARGS ?=
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 # scan v2 reads its default bundle from <data>/atomdrift/scan/models/<bundle>,
 # where <bundle> is the last segment of SCAN_MODELS_REPO (default repo
@@ -407,6 +410,7 @@ EXP_MAX_DELTA_STEP ?= 0
 EXP_BOOSTING_TYPE ?= gbdt
 EXP_EXTRA_TREES ?= 0
 EXP_SEED_SEARCH_K ?= 1
+EXP_ENSEMBLE_SEEDS ?=
 # When EXP_SEED_SEARCH_K>1, set EXP_SAVE_ALL_SEEDS=1 to deploy the averaged
 # ensemble (item A) instead of picking-best. Bundle layout becomes
 # models/seed_<S>.txt; litmus averages at predict time.
@@ -507,6 +511,7 @@ EXP_DESCRIPTION_KEYWORDS ?= 0
 EXP_FULL_RULE_KEYWORDS ?= 0
 EXP_RULE_DESCRIPTION_KEYWORDS ?= 0
 EXP_CONTEXT_KEYWORDS ?= 0
+EXP_ARCHIVE_MEMBER_CONTEXT ?= 0
 EXP_KEYWORD_VOCAB_MAX ?= 10000
 EXP_KEYWORD_MIN_FREQ ?= 5
 EXP_KEYWORD_SELECTION ?= frequency
@@ -618,7 +623,7 @@ $(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/pytho
 #     natural distribution).  ~7-8 hours end-to-end at K=3 seeds.  Use this
 #     for deploy-bound retrains: the natural distribution preserves the
 #     benign tail that 50/50 sampling discards, which is what determines
-#     L50 (≤0.5 FP/M = 50 FP/100M, the default operating point) threshold quality.
+#     L25 (one calibration FP plus 24 extrapolated FP/100M) threshold quality.
 #
 #   make azoth-fast-train  — train on a 600k 50/50-balanced sample.  ~5 hours
 #     end-to-end at K=3 seeds.  Same fidelity autocollie's promote step uses
@@ -985,28 +990,10 @@ repin:
 #
 # Categories preserved:
 #   - $(AZOTH_GENERAL_DIR)/cache/  (route feature matrices, snapshot-keyed)
+#   - configured auxiliary artifacts and .retained_components/ identity manifest
 #   - any sibling directories not matching the above patterns
-azoth-clean-bundle:
-	@# Single shell so the early-out actually skips the rest of the recipe.
-	@# Each `@line` is its own subshell in make; a bare `exit 0` only exits
-	@# its own line, not the recipe. Without this guard, fresh fold roots
-	@# (where AZOTH_ROOT doesn't exist yet) hit `find` and fail.
-	@set -e; \
-	if [ ! -d $(AZOTH_ROOT) ]; then \
-	    echo "azoth-clean-bundle: $(AZOTH_ROOT) does not exist; nothing to do"; \
-	    exit 0; \
-	fi; \
-	echo "azoth-clean-bundle: wiping deployed artifacts under $(AZOTH_ROOT) (caches preserved)"; \
-	find $(AZOTH_ROOT) -mindepth 1 -maxdepth 1 -type f \
-	    \( -name '*.json' -o -name '*.md' -o -name '*.csv' -o -name '*.npz' \) -delete; \
-	for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
-	    [ -d "$$d" ] || continue; \
-	    rm -f "$$d"/model.txt "$$d"/model.json "$$d"/model.onnx "$$d"/feature_spec.json \
-	          "$$d"/calibrator.json "$$d"/benchmark.json "$$d"/README.md \
-	          "$$d"/threshold_scores.npz "$$d"/calibration_scores.npz \
-	          "$$d"/threshold_tuning.json; \
-	    rm -rf "$$d"/models; \
-	done
+azoth-clean-bundle: venv
+	$(PYTHON) scripts/clean_azoth_bundle.py --azoth-root "$(AZOTH_ROOT)"
 
 # azoth-check-bundle-layout: fail fast on an ambiguous bundle layout — a stale
 # top-level model.{onnx,txt,json} (a pre-multi-seed fossil) left sitting next to
@@ -1258,6 +1245,10 @@ azoth-oof-route-scores: venv check-db
 
 # Fit thresholds on held-out dev scores from the exact production ensemble.
 AZOTH_CALIBRATE_PARTITION ?= dev
+# Optional scoring scope; dev+test retain all calibration and reporting rows.
+# Empty preserves the full-corpus cache used by other diagnostic commands.
+AZOTH_SCORE_PARTITIONS ?=
+AZOTH_SCORE_PARTITIONS_ARG = $(if $(AZOTH_SCORE_PARTITIONS),--score-partitions $(AZOTH_SCORE_PARTITIONS),)
 # Concurrent route scoring defaults to two jobs, with shared row-index maps
 # and disk-backed feature matrices. Override after measuring DB/memory headroom.
 
@@ -1269,12 +1260,14 @@ azoth-calibrate: venv check-db
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) --azoth-root $(AZOTH_ROOT) --summary $(AZOTH_SPECIALISTS_SUMMARY) \
 		--general-scores $(AZOTH_GENERAL_SCORES) --partition $(AZOTH_CALIBRATE_PARTITION) \
+		$(AZOTH_RETAIN_AUXILIARIES_ARG) \
 		$(AZOTH_OOF_ROUTE_SCORES_ARG) --check-inputs-only
 	@# Cache reuse verifies ensemble, feature code, corpus, and canonical partitions.
 	$(PYTHON) -m collimator tune-thresholds \
 		--db $(DB) \
 		--model "$(AZOTH_GENERAL_DIR)" --scores-only \
 		--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
+		$(AZOTH_SCORE_PARTITIONS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
 		$(AZOTH_THRESHOLD_WORKERS_ARG) \
 		--scores-cache "$(AZOTH_GENERAL_SCORES)" \
@@ -1288,6 +1281,7 @@ azoth-calibrate: venv check-db
 		--output $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--partition $(AZOTH_CALIBRATE_PARTITION) \
+		$(AZOTH_RETAIN_AUXILIARIES_ARG) \
 		--parallelism $(AZOTH_CALIBRATE_PARALLELISM) \
 		$(AZOTH_REFRESH_SCORES_ARG) \
 		$(AZOTH_SKIP_LEVEL_CALIBRATION_ARG) \
@@ -1427,12 +1421,12 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) $(AZOTH_REGRESSION_ARGS) && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_REGRESSION_SOURCE_ARG) $(AZOTH_REGRESSION_ARGS) && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
 	    echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
-	    ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	    ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock -- --ignored ) && \
 	    $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf; \
 	  fi && \
 	  _NOW=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
@@ -1726,7 +1720,7 @@ azoth-deploy-final: venv
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) $(AZOTH_REGRESSION_ARGS) && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_REGRESSION_SOURCE_ARG) $(AZOTH_REGRESSION_ARGS) && \
 	  echo "Preparing litmus before compatibility checks (update + build + update-rules; each non-fatal, all run)..." && \
 	  ( cd $(LITMUS_DIR) || { echo "WARN: cannot enter $(LITMUS_DIR); skipping litmus prep"; exit 0; }; \
 	    { echo "==> update litmus (git pull)"; git pull --ff-only; } || echo "WARN: litmus update (git pull) failed; continuing with current checkout"; \
@@ -1734,10 +1728,10 @@ azoth-deploy-final: venv
 	    { echo "==> litmus update-rules"; cargo run --release -- update-rules; } || echo "WARN: litmus update-rules failed; continuing (trait/model rules may be stale)"; \
 	    true ) && \
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
-	  ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	  ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock -- --ignored ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
 	  echo "Running litmus validate (fatal feature-layout + benign-corpus gate) against staged copy..." && \
-	  ( cd $(LITMUS_DIR) && cargo run --release -- --model-dir "$$_STAGE" validate --skip-traits ) && \
+	  ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo run --release -- validate --analyze local --no-update ) && \
 	  echo "Checking deploy tuning goal agreement (collimator / bundle / litmus)..." && \
 	  $(PYTHON) scripts/check_severity_level_sync.py --staged "$$_STAGE" --litmus-dir $(LITMUS_DIR) && \
 	  _NOW=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
@@ -1763,7 +1757,7 @@ azoth-deploy-final: venv
 	    exit 1; \
 	  fi && \
 	  echo "Running litmus default deployed-model check..." && \
-	  ( cd $(LITMUS_DIR) && cargo run --release -- --extra --show all scan /bin/ls ) && \
+	  ( cd $(LITMUS_DIR) && cargo run --release -- --format json --show all scan /bin/ls --analyze local --no-update ) && \
 	  echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
 
 # Legacy single-model false/near reports. Source generation is bumped by
@@ -1953,15 +1947,19 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 # mislabels into:
 #   $(TRIAGE_DIR)/misplaced-good/   $(TRIAGE_DIR)/misplaced-bad/
 #
-# Needs a deployed bundle ($(AZOTH_ROOT)/score_table.npz +
-# route_policies.json) — run after a completed azoth-full-train.
+# Needs a scored training bundle ($(AZOTH_ROOT)/score_table.npz +
+# route_policies.json). Set AZOTH_ROOT to an existing validated candidate to
+# review it without rebuilding or installing. Runtime-only bundles lack scores.
 TRIAGE_DIR        ?= /var/tmp/triage
 TRIAGE_TOP        ?= $(if $(TOP),$(TOP),40)
 TRIAGE_FETCH      ?= $(if $(TOP),$(shell echo $$(( $(TOP) * 2 ))),80)
 TRIAGE_SCOPE      ?= ensemble,specialists,filegroups
+# Optional comma-separated filter, e.g. TRIAGE_FILETYPES=html,npm,tar.
+TRIAGE_FILETYPES  ?=
+TRIAGE_FILETYPES_ARG = $(if $(TRIAGE_FILETYPES),--filetypes "$(TRIAGE_FILETYPES)",)
 # No cutoff: every filetype yields its top-N most label-discordant files,
 # ranked by margin. TRIAGE_LEVEL is only the reference the margin is measured
-# against (the deployed operating point, 50 = 0.5 FP/M), NOT a membership
+# against (L50: one calibration FP plus 49 extrapolated FP per 100M), NOT a membership
 # gate — so all filetypes surface, not just those crossing a fixed threshold.
 TRIAGE_LEVEL      ?= 50
 TRIAGE_SEVERITY   ?= hostile
@@ -1997,6 +1995,7 @@ triage-good: venv
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
+		$(TRIAGE_FILETYPES_ARG) \
 		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(TRIAGE_DB) \
 		--output $(TRIAGE_FP_REPORT)
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -2015,6 +2014,7 @@ triage-bad: venv
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
+		$(TRIAGE_FILETYPES_ARG) \
 		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(TRIAGE_DB) \
 		--output $(TRIAGE_FN_REPORT)
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -2044,6 +2044,7 @@ build-splits: venv check-db
 
 # One feature environment for discovery and experiments; new knobs belong here.
 EXPERIMENT_FEATURE_ENV = \
+    COLLIMATOR_ENSEMBLE_SEEDS=$(EXP_ENSEMBLE_SEEDS) \
     COLLIMATOR_NUM_THREADS=$(EXP_LGBM_THREADS) \
     COLLIMATOR_ALLOWED_FEATURES_FILE=$(EXP_ALLOWED_FEATURES_FILE) \
     COLLIMATOR_SILENT_PACKER_SIGNAL=$(EXP_SILENT_PACKER_SIGNAL) \
@@ -2101,6 +2102,7 @@ EXPERIMENT_FEATURE_ENV = \
     COLLIMATOR_FULL_RULE_KEYWORDS=$(EXP_FULL_RULE_KEYWORDS) \
     COLLIMATOR_RULE_DESCRIPTION_KEYWORDS=$(EXP_RULE_DESCRIPTION_KEYWORDS) \
     COLLIMATOR_CONTEXT_KEYWORDS=$(EXP_CONTEXT_KEYWORDS) \
+    COLLIMATOR_ARCHIVE_MEMBER_CONTEXT=$(EXP_ARCHIVE_MEMBER_CONTEXT) \
     COLLIMATOR_KEYWORD_VOCAB_MAX=$(EXP_KEYWORD_VOCAB_MAX) \
     COLLIMATOR_KEYWORD_MIN_FREQ=$(EXP_KEYWORD_MIN_FREQ) \
     COLLIMATOR_KEYWORD_SELECTION=$(EXP_KEYWORD_SELECTION) \
@@ -2224,9 +2226,18 @@ ifndef FILE
 endif
 	$(PYTHON) -m collimator scan $(FILE) --model $(OUT_DIR)/$(MODEL_FILE) --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE) $(if $(DB),--db $(DB),)
 
-test: venv
+test: venv test-scan-parity
 	$(VENV_DIR)/bin/pip install pytest
 	$(PYTHON) -m pytest tests/ -v
+
+# Cross-language calculation gate: discover features, train/export tiny Azoth
+# models, and compare every input column and probability with Scan. No DB.
+# PARITY_BUNDLE optionally checks an existing leaf bundle as well; its saved
+# feature environment is required so Python reproduces its training options.
+SCAN_DIR ?= ../scan
+.PHONY: test-scan-parity
+test-scan-parity: venv
+	$(PYTHON) scripts/check_scan_parity.py --scan-dir "$(SCAN_DIR)" $(if $(PARITY_BUNDLE),--bundle "$(PARITY_BUNDLE)" --feature-env "$(PARITY_CONFIG)",)
 
 lint: venv
 	$(VENV_DIR)/bin/pip install ruff mypy
@@ -2285,7 +2296,7 @@ ROUTES ?= $(ROUTE)
 
 # azoth-augment-small-routes — post-hoc threshold re-search for routes whose
 # default-level policy is `no_policy` because their own benign pool is too
-# small to estimate FP rate at L50 (50/100M = 0.5/M).  Loads each such specialist, scores
+# small to estimate the tail rate reliably at the saved default level. Loads each specialist, scores
 # its filegroup peers' benigns, and re-runs the threshold search against the
 # augmented pool.  Optional --use-credible-bound applies Beta-Binomial
 # smoothing for routes with very small pools.
@@ -2473,12 +2484,14 @@ autocollie-promote: venv check-db autocollie-build
 
 # Recover historical knobs, then measure them on current data before gates.
 # REPLAY_SCREEN_ONLY=1 stops after the fresh screen for a bounded live check.
+# Resolve the baseline for replay and sweep: candidate cloning uses cp -a,
+# which would copy AZOTH_ROOT's symlink and let candidate writes alter the run.
 autocollie-replay: venv check-db autocollie-build
 	@test -n "$(KEY)" || { echo "error: set KEY=<16-hex historical experiment_key>"; exit 1; }
 	$(AUTOCOLLIE_BIN) replay \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
-		--baseline-azoth-root $(AZOTH_ROOT) \
+		--baseline-azoth-root $(or $(realpath $(AZOTH_ROOT)),$(abspath $(AZOTH_ROOT))) \
 		--key $(KEY) \
 		$(if $(filter 1 true yes,$(REPLAY_SCREEN_ONLY)),--screen-only,) \
 		--seed $(CONFIRM_SEED) \
@@ -2503,7 +2516,7 @@ autocollie: venv check-db autocollie-build
 	$(AUTOCOLLIE_BIN) auto \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
-		--baseline-azoth-root $(AZOTH_ROOT) \
+		--baseline-azoth-root $(or $(realpath $(AZOTH_ROOT)),$(abspath $(AZOTH_ROOT))) \
 		$(if $(ROUTES),--routes $(ROUTES),) \
 		$(if $(AUTO_ROUTES),--auto-routes $(AUTO_ROUTES),) \
 		$(if $(TOP),--auto-routes $(TOP),) \

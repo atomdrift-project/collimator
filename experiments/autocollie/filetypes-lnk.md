@@ -1036,3 +1036,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T235649-filetypes-lnk` — 2026-11-02T23:56:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5833aea99fcb4bdb` | inherit_from_filetypes_dex_67099b41 | ok | 0.9989 | 0.9955 | 0.9866 | 5 | [log](out/autocollie/runs/2026-11-02T23-58-37_20261102T235649-filetypes-lnk_inherit_from_filetypes_dex_67099b41.log) |
+| `75208e5b3725af6b` | lnk_kv_vocab_cutoff2_depth2 | ok | 0.9931 | 0.9746 | 0.9581 | 7 | [log](out/autocollie/runs/2026-11-02T23-58-44_20261102T235649-filetypes-lnk_lnk_kv_vocab_cutoff2_depth2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_kv_vocab_cutoff2_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall@1FP over the 0.8506 baseline by increasing finding-prefix specificity for LNK files, which often have shallow, distinct execution paths.
+
+</details>
+

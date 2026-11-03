@@ -1911,3 +1911,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T223108-filetypes-javascript` — 2026-11-02T22:31:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d9a3c0b8d35c29ce` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.9682 | 0.9590 | 0.9059 | 133 | [log](out/autocollie/runs/2026-11-02T22-36-01_20261102T223108-filetypes-javascript_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `1a0274396cd32ced` | js_trait_depth_4_rule_kw | ok | 0.9962 | 0.9955 | 0.9646 | 177 | [log](out/autocollie/runs/2026-11-02T22-39-06_20261102T223108-filetypes-javascript_js_trait_depth_4_rule_kw.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_trait_depth_4_rule_kw`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall over the 0.7921 baseline by capturing more specific finding hierarchy prefixes for JavaScript malware, while retaining the effective rule_keywords feature surface.
+
+</details>
+

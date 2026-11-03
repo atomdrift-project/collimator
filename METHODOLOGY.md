@@ -251,7 +251,12 @@ No daily compute multiplier.
 `make azoth-full-train` bundle's threshold_scores cache. Same model,
 three different evaluation views:
 
-| View         | Rows      | F1     | ROC AUC | Brier  | recall@L50 (0.5 FP/M) |
+This historical study used a literal 0.5 FP/M target, then called L50.
+Its saved measurements below are unchanged. Current level labels instead
+follow [LEVELS.md](LEVELS.md); current L50 allows one calibration FP plus
+an extrapolated 49 FP per 100 million benign files.
+
+| View         | Rows      | F1     | ROC AUC | Brier  | recall at historical 0.5 FP/M |
 |--------------|----------:|-------:|--------:|-------:|--------------:|
 | full corpus  | 1,579,028 | 0.9760 | 0.9893  | 0.0086 | 0.7194        |
 | train only   | 1,185,686 | 0.9766 | 0.9895  | 0.0084 | 0.7885        |
@@ -264,20 +269,20 @@ Two findings worth highlighting:
    +0.0032. The reported headline F1 of the current bundle is mildly
    inflated, not catastrophically. AUC and Brier move similarly.
 2. **Strict-FP/100M precision floor is the bigger issue.** With ~157k
-   benign rows in dev or test, the FP budget at L50 is ~0 events
+   benign rows in dev or test, that historical literal-rate budget was ~0 events
    (`floor(157k × 50 / 1e8) = 0`), so a single false positive moves the
    estimate by ~640 FP/100M (≈ 6.4 FP/M). This is a corpus-volume problem,
    not an allocation problem — k-fold CV on more benigns would help, but
-   only at the cost of compute. For v1 we accept the floor and report
-   wide CIs at L0..L50.
+   only at the cost of compute. That study accepted the floor and reported
+   wide CIs. The current positive-level allowance includes an initial FP;
+   it does not remove uncertainty in the extrapolated rate.
 
 These numbers were computed by applying the dev/test partition
 post-hoc to a model trained on byte ≥ 32 (which includes dev rows in
 the training set). The first fully-honest end-to-end build (model
 trained on byte ≥ 64 only, calibrated on dev only, evaluated on test
-only) is pending — its absolute F1 will be slightly lower because
-the model has 14% less training data and no longer memorizes any
-evaluation rows.
+only) was pending at the time of that study. These historical numbers do
+not establish the quality of a current train/dev/test-isolated bundle.
 
 ## Calibration design
 
@@ -288,10 +293,9 @@ evaluation rows.
   across the full operating range and is robust to the corpus's
   imbalance toward benigns — unlike ROC AUC, which is dominated by
   the easy benign mass on a 24:76 split.
-- **Recall@L50 (50 FP/100M = 0.5 FP/M)** is the deployment-budget
-  headline: the fraction of malware ranked above the threshold at which
-  dev would emit 50 FP per 100M benigns (≡ 0.5 FP/M). Single number,
-  security-engineer-relevant.
+- **Recall@L25** is the deployment-budget headline: detection under the
+  shared one-FP-plus-increment allowance in [LEVELS.md](LEVELS.md), rather
+  than a literal 25-FP/100M population-rate promise.
 - **F-beta=2 threshold pick** at training time. The training step's
   per-route `optimal_threshold` is chosen on dev to maximize F2, biasing
   the deployed cut toward recall (β=2 ≈ recall weighted twice as much
@@ -300,75 +304,20 @@ evaluation rows.
   benign cost; F2 is.
 - **ROC AUC** stays in the table for academic continuity.
 
-### L0..L10000 severity tiers
+### Severity levels
 
-The deployed bundle ships per-route, per-level thresholds for litmus's
-severity grade (L0 strictest … L10000 loosest) on the shared 24-rung grid
-(0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 500,
-1000, 2000, 5000, 7500, 10000). These are *observation*-derived, not
-optimization targets:
+The shared definition is [LEVELS.md](LEVELS.md), which supersedes earlier
+literal-rate and interpolated-quantile descriptions here. L0 allows zero
+observed calibration FPs. For positive L, a pool of N benign files has a
+continuous allowance `1 + (L - 1) * N / 100_000_000`, rounded down for an
+integer count budget. L1 allows one FP; L25 adds an estimated 24 FP/100M beyond
+that initial FP. The deployed default is L25 on the L0..L25000 grid.
 
-For each route and each level Lk's FP/100M target qk, the threshold is the
-**interpolated benign-score quantile**
-
-```
-T = quantile_{1 - qk × 10⁻⁸}(benign_dev_scores_route)   (Type-7, linear)
-```
-
-i.e., the score cut at which roughly qk benigns per 100M sit above it on dev.
-A single shared function — `collimator.thresholds.quantile_severity_threshold`
-— computes this for screening, deploy policy search, deployed-metric reporting,
-and the specialist benchmark, so a candidate is **screened at the exact operating
-point it ships at**.
-
-**Why the interpolated quantile is the most accurate estimator for this goal.**
-The level → threshold map has to satisfy four properties at once, and the
-interpolated quantile is the simplest estimator that gets all four — accurately,
-at any sample size:
-
-- **L0 = 0 FP, always distinct from L1.** (Superseded 2026-08-03 — see
-  `LEVELS.md`. Levels are now resolution-adjusted so that L1 IS each route's
-  first false positive; L0 is one step stricter along the same curve rather
-  than a jump to "above the max benign". The ≥ 1 FP guarantee above L0 is
-  unchanged and now holds on every route regardless of corpus size.)
-- **Distinct per level, even when the difference is subtle.** Below the
-  resolution floor (qk × N_benign / 10⁸ < 1) the empirical FP *count* can only be
-  an integer, so any count-budget rule (floor / ceil / max-1) collapses every
-  strict level onto the same 1-FP cut — L5 and L50 would ship the *identical*
-  threshold. Linear interpolation of the quantile instead places them at
-  different points *within the same FP gap*: L5 sits closer to the max benign
-  than L50, so their thresholds differ and the curve stays strictly monotone at
-  every n. (Their *recall* ties only when no malware actually falls in that score
-  gap — which is the honest answer, not an artifact of the estimator.)
-- **Never overshoots live traffic.** The estimate is always ≤ the max observed
-  benign — it never extrapolates a threshold *above* the data. An above-max
-  threshold is unmeasurable on the dev sample, and if the live benign tail is
-  heavier than a fitted model assumed, it admits more FP than claimed. Staying
-  inside the observed order statistics keeps the ceiling a *measured* one.
-- **Scientifically defensible.** This is textbook order-statistic quantile
-  estimation (numpy Type-7); accuracy improves monotonically with benign volume,
-  and it never claims resolution the sample lacks. The honest *rate claim* for any
-  single observation is the Clopper-Pearson upper bound, reported alongside
-  (`cp_floor_per_100M`) — kept separate from the threshold rather than baked into
-  it.
-
-We previously extrapolated strict-tier thresholds below the resolution floor with
-a **generalized-Pareto tail fit**. We removed it: interpolation *within* the data
-already delivers distinct, monotone levels (L5 ≠ L50) without GPD's failure modes
-— parametric tail mis-fit that overshoots on live traffic, degeneracy below ~500
-tail points, and thresholds extrapolated above the malware distribution. For
-grading severity on finite dev samples, the measured-and-interpolated ceiling is
-both safer and more accurate than a parametric extrapolation beyond the data.
-
-**This is a deployment dial, not a model-quality result.** The headline
-PR AUC and recall@L50 numbers don't change with L; they describe the
-underlying ranking. L is the deploy strictness dial. Default deploy is
-L50 hostile (= 50 FP/100M = 0.5 FP/M). Suspicious is derived
-consumer-side in litmus as `hostile_threshold - 0.10` (clamped to
-[0, hostile]); collimator does not search or report suspicious
-thresholds — separating the deploy-axis search (hostile) from the
-display-axis derivation (suspicious) keeps a single tunable knob and
-avoids double-optimizing a quantity that's purely a UI courtesy.
+General, group, and type models share the final filetype decision allowance.
+Dev selects the frozen policy; test measures it, including the runtime sweep
+across levels. Measured counts, interpolated or extrapolated rate estimates,
+and confidence bounds are separate. Neither a measured threshold nor an
+extrapolated one guarantees that live traffic stays within the target.
 
 ### Per-filetype dimension
 
@@ -431,14 +380,11 @@ These belong in any paper's Limitations section, not hidden:
   packing time, not corpus ingest time. Once hopper logs ingest
   timestamps and the corpus has enough time depth, time-blocked
   evaluation should be reported alongside random-split metrics.
-- **Strict-tier severity thresholds.** (Corrected 2026-08-03. This entry
-  previously said L0..L50 were GPD-extrapolated; that had been untrue since
-  the GPD code was deleted on 2026-06-06, and the shipped estimator was the
-  interpolated quantile.) Levels are now resolution-adjusted (`LEVELS.md`):
-  every level from L1 up is interpolation between observed order statistics,
-  and only L0 is extrapolated — by one unit along the measured FP1→FP2 line.
-  What a level cannot tell you is a *confidence* claim about the deployment
-  FP rate; `cp_floor_per_100M` on each emitted row carries that separately.
+- **Strict-tier severity thresholds.** Follow [LEVELS.md](LEVELS.md).
+  Small pools can share count budgets across levels, and extrapolated rate
+  estimates are uncertain. L0 means zero observed calibration FPs; it does
+  not guarantee zero test or future FPs. Confidence bounds are reported
+  separately from the operating-point allowance.
 - **Inter-route FP correlation is not separately measured.** The
   routed FP budget is owned by the OR over routes; correlated FPs
   across routes inflate the budget conservatively (worst case) but

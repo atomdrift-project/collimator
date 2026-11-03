@@ -472,3 +472,25 @@ matched 10% controls across Java class, Go, C, Python, and JavaScript.
 The [Python keyword selection follow-up](keyword-python-selection.md) compares
 frequency and class-aware vocabulary selection at 1k/5k/10k words, then checks
 two regularization changes with paired baseline controls.
+
+The [Mach-O keyword search](keyword-macho-search.md) tests benign-word signals,
+source combinations, vocabulary budgets, and a context-availability control.
+Its 44-configuration search found no keyword finalist that improved reserved
+confirmation recall at one FP without reducing recall at zero FP.
+
+The [expanded Mach-O follow-up](macho-expanded-search.md) uses 1,376 fitting
+malware and fresh evaluation groups excluded from the earlier study. Thirty
+configurations test keywords, tree size, bigram support, and weighting. Pooled
+text improves zero-FP recall but loses one-FP recall in both confirmation seed
+pairs; the accepted Mach-O defaults remain unchanged. All 76 native models
+were audited, and all four finalists passed Scan feature/inference parity.
+
+The [PE keyword search](keyword-pe-search.md) screened 41 configurations and
+confirmed seven finalists. A combination of descriptions, relative IDs, and
+separate context words improved both recall budgets on reserved development
+data; its settings and full-data validation requirements are recorded there.
+
+The [Scan compatibility check](keyword-scan-compatibility.md) verifies all
+keyword combinations, exported experiment models, and the shared base feature
+calculations. `make test-scan-parity` generates fresh Python references and
+checks Rust extraction and inference; it also runs as part of `make test`.

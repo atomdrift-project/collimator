@@ -1,5 +1,10 @@
 {
 "significant_features": [
+"ruleword:*",
+"descword:*",
+"fullword:*",
+"ruletextword:*",
+"contextword:*",
 "agg:attack_tactic_count",
 "agg:attack_technique_count",
 "agg:category_breadth",

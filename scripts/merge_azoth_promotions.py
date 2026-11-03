@@ -19,11 +19,16 @@ def merge(history, registry, runs, configs):
           'train_config':b['train_config'],'feature_env':b['feature_env'],
           'filters':{'min_sample_score':int(b['feature_env'].get('COLLIMATOR_MIN_SAMPLE_SCORE','0')),
                      'min_malware_training_score':b['min_malware_training_score']}}
+        seeds = b.get('seed_health', {}).get('accepted_seeds')
+        if seeds is not None:
+            spec['ensemble_seeds'] = model_config.validate_ensemble_seeds(seeds)
         key=hashlib.sha256(json.dumps(spec,sort_keys=True).encode()).hexdigest()[:16]
         run={'experiment_key':key,'route':route,'idea':'installed_research','timestamp':research['installed_at'],
              'experiment_spec':spec,'train_config':b['train_config'],'feature_env':b['feature_env'],
              'research_provenance':{'receipt':research['receipt'],'source':research['source'],
                'model_revision':research['model_revision'],'evaluation':'Research metrics are retained in source artifacts, not relabeled as screening metrics.'}}
+        if seeds is not None:
+            run['ensemble_seeds'] = seeds
         bundle.atomic_write_json(runs/f'{key}.json',run)
         if route not in routes or research['installed_at']>=routes[route].get('updated_at',''):
             routes[route]={'route':route,'full_train_key':key,'updated_at':research['installed_at'],
@@ -46,6 +51,8 @@ def merge(history, registry, runs, configs):
           'updated_at':entry['updated_at'],'train_config':r.get('train_config') or spec['train_config'],
           'feature_env':r.get('feature_env') or spec['feature_env'],
           'min_malware_training_score':cutoff,'provenance':{'run':str(path),'acceptance':entry}}
+        if r.get('ensemble_seeds') is not None:
+            d['ensemble_seeds'] = r['ensemble_seeds']
         existing=model_config.load(route,configs)
         # An edited per-model config is already authoritative; merging history
         # never replaces it. Subsequent accepted changes use the shared writer.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Block deploys that regress what litmus actually flags at L50 hostile.
+"""Check detection regressions across saved severity levels; only L0–L25 block.
 
 Reads:
   --staged   <dir>   the staged-but-not-yet-deployed bundle
@@ -12,8 +12,8 @@ which is the ground truth of what litmus produces at scan time.
 
 Per filetype where both bundles have ``n_malware >= --min-mal`` AND
 ``n_benign >= --min-ben`` (default 1/1 — we check every filetype with
-even a single sample of each class), we compare deployed L50 hostile
-recall. A regression triggers only when BOTH:
+even a single sample of each class), we compare deployed hostile recall
+at each saved operating point. Levels above L25 are informational only. A regression triggers only when BOTH:
 
   1. The recall drop exceeds ``--recall-tolerance`` (default 1pp), AND
   2. The drop is statistically significant — the new recall point
@@ -66,7 +66,7 @@ from pathlib import Path
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
-from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
+BLOCKING_MAX_LEVEL = 25
 
 
 def _load(path: Path) -> dict:
@@ -110,7 +110,7 @@ def _clopper_pearson_lower(tp: int, n: int, alpha: float = 0.05) -> float:
         return max(0.0, tp / n - 1.96 * math.sqrt(tp * (n - tp) / (n * n * n)))
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--staged", type=Path, required=True)
     parser.add_argument(
@@ -176,12 +176,10 @@ def main() -> int:
             "attribute the deploy's net effect to specific routes."
         ),
     )
-    parser.add_argument("--level", type=int, default=DEFAULT_SEVERITY_LEVEL,
-                        help=(
-                            f"Severity level on the per-100M scale (default "
-                            f"{DEFAULT_SEVERITY_LEVEL} = {DEFAULT_SEVERITY_LEVEL/100:.2f} FP/M; "
-                            f"sourced from collimator.thresholds.DEFAULT_SEVERITY_LEVEL)."
-                        ))
+    parser.add_argument(
+        "--level", type=int, default=None,
+        help="Check one saved level (default: all saved levels). Only L0–L25 can block.",
+    )
     parser.add_argument("--severity", default="hostile", choices=["hostile"])
     parser.add_argument(
         "--net-improvement-fallback",
@@ -239,7 +237,9 @@ def main() -> int:
             "promote's responsibility. Reports them informationally only."
         ),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if args.level is not None and args.level < 0:
+        parser.error("--level must be nonnegative")
 
     if os.environ.get("AZOTH_ALLOW_REGRESSION", "").strip().lower() in {"1", "true", "yes"}:
         print("AZOTH_ALLOW_REGRESSION set; skipping regression check")
@@ -273,6 +273,36 @@ def main() -> int:
         )
         return 0
 
+    if args.level is not None:
+        levels = [args.level]
+    else:
+        # Include baseline levels so omitting a staged blocking checkpoint
+        # cannot silently turn a regression into a pass. L0 and L25 are required.
+        levels = {0, BLOCKING_MAX_LEVEL}
+        suffix = f"_{args.severity}"
+        for report in (staged_eval, deployed_eval, lwm_eval):
+            for entry in (report.get("filetypes") or {}).values():
+                for key in (entry.get("deployed_or_by_level") or {}):
+                    if key.startswith("L") and key.endswith(suffix):
+                        value = key[1:-len(suffix)]
+                        if value.isdigit():
+                            levels.add(int(value))
+        levels = sorted(levels)
+    results = []
+    for level in levels:
+        level_args = argparse.Namespace(**vars(args))
+        level_args.level = level
+        blocking = level <= BLOCKING_MAX_LEVEL
+        print(f"\nL{level}: {'blocking' if blocking else 'report only'}")
+        result = _check_level(level_args, staged_eval, deployed_eval, lwm_eval, lwm_path_used)
+        if blocking:
+            results.append(result)
+        elif result:
+            print(f"L{level}: diagnostic status {result}; does not block acceptance")
+    return max(results, default=0)
+
+
+def _check_level(args, staged_eval, deployed_eval, lwm_eval, lwm_path_used) -> int:
     staged_ft = (staged_eval.get("filetypes") or {})
     deployed_ft = (deployed_eval.get("filetypes") or {})
     level_key = f"L{args.level}_{args.severity}"
@@ -285,7 +315,7 @@ def main() -> int:
         return False
 
     # Historic eval files predate the per-100M grid change and may not
-    # carry an L50 row. Refuse to run rather than silently treating every
+    # carry the requested level. Refuse to run rather than silently treating every
     # filetype as "missing level" (which would produce a trivial pass).
     if not _has_level(staged_ft, level_key):
         print(
@@ -686,6 +716,9 @@ def main() -> int:
                 f"low-water-mark gate ({len(lwm_regressions)} filetype(s) "
                 f"below LWM beyond the {args.lwm_tolerance*100:.2f}pp tolerance vs {lwm_path_used})"
             )
+        if args.level > BLOCKING_MAX_LEVEL:
+            print(f"report only: {', '.join(reasons)}")
+            return 0
         print(f"blocked by: {', '.join(reasons)}")
         print()
         print(

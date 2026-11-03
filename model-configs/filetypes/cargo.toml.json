@@ -57,5 +57,9 @@
       "source": "verified_research_installation",
       "model_revision": "54fa0073b133250297c0a46f5c30567ea4b4c632288a30496c4a45e430021389"
     }
-  }
+  },
+  "ensemble_seeds": [
+    42,
+    44
+  ]
 }

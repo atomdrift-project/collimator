@@ -403,6 +403,12 @@ def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
     # Caller's last-mile overrides win — used by the Makefile to inject DB,
     # WORKERS, and the multi-seed flags that aren't in the historical spec.
     env.update(extra)
+    pinned_seeds = run.get('ensemble_seeds')
+    if pinned_seeds is not None:
+        model_config.validate_ensemble_seeds(pinned_seeds)
+        env['COLLIMATOR_ENSEMBLE_SEEDS'] = ','.join(map(str,pinned_seeds))
+        env['EXP_SEED_SEARCH_K'] = str(len(pinned_seeds))
+        env['EXP_SAVE_ALL_SEEDS'] = '1' if len(pinned_seeds)>1 else '0'
     return env
 
 

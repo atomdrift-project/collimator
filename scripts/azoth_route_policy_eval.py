@@ -124,10 +124,8 @@ def _deployed_or_metrics(
     the candidate carries fit metadata (weights/intercept/threshold) and
     the OR-rule thresholds map is empty. Keeps the call site uniform.
 
-    A sentinel threshold of 1.0 (or larger) is unreachable for calibrated
-    probabilities and is treated as no-op — consistent with the
-    policy_search writer that uses 1.0 to keep a route "present but
-    inactive" in route_policies.json.
+    Raw probabilities can equal one. Only thresholds outside [0, 1]
+    are inactive, matching the scanner's float32 comparison.
     """
     if blend:
         return _deployed_blend_metrics(probs_by_route, labels, blend)
@@ -135,13 +133,13 @@ def _deployed_or_metrics(
     hit = np.zeros(n_rows, dtype=bool)
     active_routes: list[str] = []
     for route_name, threshold in thresholds.items():
-        if threshold is None or threshold >= 1.0:
+        if threshold is None or not 0 <= np.float32(threshold) <= 1:
             continue
         probs = probs_by_route.get(route_name)
         if probs is None:
             continue
         valid = ~np.isnan(probs)
-        hit |= valid & (probs >= float(threshold))
+        hit |= valid & (probs.astype(np.float32, copy=False) >= np.float32(threshold))
         active_routes.append(route_name)
     malware = labels == 1
     benign = labels == 0
@@ -217,13 +215,22 @@ def _present_route_probs(
     file_type: str,
     file_group: str,
     slice_mask: np.ndarray,
+    policy_payload: dict[str, Any] | None = None,
 ) -> dict[str, np.ndarray]:
-    """Pick the (general, group, specialist) probs that have any data in the slice."""
+    """Include base routes and every retained component used by the policy."""
     out: dict[str, np.ndarray] = {}
     candidates = [("general", "general")]
     if file_group:
         candidates.append((f"filegroups/{file_group}", "group"))
     candidates.append((f"filetypes/{file_type}", "specialist"))
+    policy_payload = policy_payload or {}
+    members = set(policy_payload.get("models") or [])
+    for level in policy_payload.get("levels", []):
+        entry = level.get("hostile") or {}
+        decision = entry.get("best", entry) or {}
+        members.update((decision.get("thresholds") or {}).keys())
+        members.update((decision.get("blend") or {}).get("routes", []))
+    candidates.extend((name, "auxiliary") for name in sorted(members))
     for route_name, _kind in candidates:
         idx = route_name_to_idx.get(route_name)
         if idx is None:
@@ -455,10 +462,10 @@ def main() -> int:
         default=Path("out/models/azoth/route_policy_eval.md"),
     )
     args = parser.parse_args()
-    # Default budgets: 0 (zero-FP strictest), 1 (≈ L50 on a 2M-benign slice =
-    # 0.5 FP/M = the new deploy operating point), 3 (legacy L3 = 3 FP/M, kept
-    # for back-compat with readers like azoth_recall_headroom that still
-    # consume the old budget). Pre-migration JSONs emitted only [0, 3].
+    # These are diagnostic observed-FP counts, not severity levels. Shared
+    # positive levels use 1 + (L - 1) * N / 100M on N benign calibration files.
+    # Keep the 3-FP diagnostic for readers such as azoth_recall_headroom;
+    # older report JSONs emitted only the 0-FP and 3-FP diagnostics.
     fp_budgets = tuple(sorted(set(args.fp_budget or [0, 1, 3])))
 
     score_table = np.load(args.score_table, allow_pickle=False)
@@ -504,6 +511,7 @@ def main() -> int:
         if groups_in_slice:
             file_group = next(iter(groups_in_slice))
 
+        policy_payload = policies_by_filetype.get(file_type)
         probs_by_route = _present_route_probs(
             score_table,
             scores,
@@ -511,6 +519,7 @@ def main() -> int:
             file_type,
             file_group,
             slice_mask,
+            policy_payload,
         )
         if not probs_by_route:
             continue
@@ -519,7 +528,6 @@ def main() -> int:
         # Deployed OR-rule operating points, by (level, severity).
         deployed_or_by_level: dict[tuple[int, str], dict[str, Any]] = {}
         deployed_or_summary: dict[str, Any] | None = None
-        policy_payload = policies_by_filetype.get(file_type)
         if policy_payload:
             for level in policy_payload.get("levels", []):
                 level_no = int(level["level"])

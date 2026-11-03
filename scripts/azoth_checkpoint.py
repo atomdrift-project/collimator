@@ -49,6 +49,23 @@ def fingerprint(command, inputs):
     for path in paths:
         code.update(str(path.relative_to(root)).encode())
         code.update(path.read_bytes())
+    # Per-model defaults are read inside the trainer, not passed on its command
+    # line. Include their file pins too: a resumed nightly must not skip a stage
+    # after an operator/autocollie changes the accepted settings or allowlist.
+    config_paths = set((root / "model-configs").rglob("*.json"))
+    for path in list(config_paths):
+        document = json.loads(path.read_text())
+        if document.get("retired_at"):
+            continue
+        for key in ('COLLIMATOR_ALLOWED_FEATURES_FILE', 'COLLIMATOR_FEATURE_SPEC_FILE'):
+            pin = document.get('feature_env', {}).get(key)
+            if pin:
+                pinned_file = Path(pin)
+                config_paths.add(pinned_file if pinned_file.is_absolute() else root / pinned_file)
+    configuration = {
+        str(path): hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+        for path in sorted(config_paths)
+    }
     # Resource reductions must allow recovery. Training/feature settings must
     # invalidate earlier stages rather than silently reuse different models.
     environment = {
@@ -68,7 +85,7 @@ def fingerprint(command, inputs):
     # learned configuration or row selections.
     semantic_command = [arg for arg in command
                         if not arg.startswith(("WORKERS=", "EXP_LGBM_THREADS="))]
-    return {"code": code.hexdigest(), "environment": environment,
+    return {"code": code.hexdigest(), "configuration": configuration, "environment": environment,
             "command": semantic_command, "inputs": manifest(inputs)}
 
 

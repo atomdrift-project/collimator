@@ -37,3 +37,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T225329-filetypes-yaml` — 2026-11-02T22:53:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5788a1863858dc01` | inherit_from_filetypes_iso_10e59f57 | ok | 0.2005 | 0.9545 | 0.2483 | 182 | [log](out/autocollie/runs/2026-11-02T22-57-34_20261102T225329-filetypes-yaml_inherit_from_filetypes_iso_10e59f57.log) |
+| `39235dcee8e18c8c` | test_min_malware_score_0 | ok | 0.2205 | 0.9541 | 0.2496 | 363 | [log](out/autocollie/runs/2026-11-02T23-03-54_20261102T225329-filetypes-yaml_test_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/yaml/3c5bc00bb7a08e6464d1bf9d3fcd08c73675c67f4c0c5e83c1c0b99a86d544a2.json COLLIMATOR_FEATURE_SPEC_SHA256=3c5bc00bb7a08e6464d1bf9d3fcd08c73675c67f4c0c5e83c1c0b99a86d544a2 EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 …` — Aims to improve the 0.0000 L25 recall by removing the min_malware_score=4 cutoff that likely discards most of the 104 malware samples, thereby increasing training signal and class balance without changing features.
+
+</details>
+

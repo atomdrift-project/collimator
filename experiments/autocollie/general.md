@@ -1353,3 +1353,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T214303-general` — 2026-11-02T21:43:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `57bfbc77ea6da729` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.9564 | 0.9481 | 0.8956 | 497 | [log](out/autocollie/runs/2026-11-02T21-45-45_20261102T214303-general_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `fe9576afe5032d9a` | general_max_delta_step_2 | ok | 0.9779 | 0.9708 | 0.9185 | 321 | [log](out/autocollie/runs/2026-11-02T21-54-12_20261102T214303-general_general_max_delta_step_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_max_delta_step_2`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/general/c09202a81d059f73ca1d473620553098703525f5bdf16360c55bb5c07c87c3a5.json COLLIMATOR_FEATURE_SPEC_SHA256=c09202a81d059f73ca1d473620553098703525f5bdf16360c55bb5c07c87c3a5 EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 …` — Tests max_delta_step=2 to improve the 0.4348 L25 recall of the accepted config by allowing larger leaf updates than the current 0, addressing potential constant models or saturated scores without changing features.
+
+</details>
+

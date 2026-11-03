@@ -2676,3 +2676,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T224949-filetypes-pe` — 2026-11-02T22:49:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c28e7e896bd867c2` | inherit_from_filetypes_iso_10e59f57 | ok | 0.9991 | 0.9991 | 0.9868 | 235 | [log](out/autocollie/runs/2026-11-02T22-53-39_20261102T224949-filetypes-pe_inherit_from_filetypes_iso_10e59f57.log) |
+| `b434844a9d0a7736` | pe_hardneg_fine_sweep_hnf001_hw12 | ok | 0.9992 | 0.9992 | 0.9854 | 362 | [log](out/autocollie/runs/2026-11-02T22-57-55_20261102T224949-filetypes-pe_pe_hardneg_fine_sweep_hnf001_hw12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_hardneg_fine_sweep_hnf001_hw12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.5743 L25 recall ceiling from the recent fine sweep by testing a sparser hard-negative subset (1% vs 1.5%) with the same high weight (12) to see if reducing the number of upweighted benigns improves the combiner threshold without sacrificing ranking, addressing the 'or_loses' diagnostic where strong PR-AUC (0.9992) does not translate to higher recall at the 1-FP budget.
+
+</details>
+

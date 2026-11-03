@@ -1170,3 +1170,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T002047-filetypes-xml` — 2026-11-03T00:20:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4fd12b71879b2948` | inherit_from_filetypes_jsp_1eeb9561 | ok | 0.9384 | 0.9919 | 0.8216 | 10 | [log](out/autocollie/runs/2026-11-03T00-23-05_20261103T002047-filetypes-xml_inherit_from_filetypes_jsp_1eeb9561.log) |
+| `30783eb80793e342` | xml_min_malware_score_4 | ok | 0.5608 | 0.9180 | 0.1858 | 9 | [log](out/autocollie/runs/2026-11-03T00-23-19_20261103T002047-filetypes-xml_xml_min_malware_score_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_1eeb9561`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=1eeb95619a5c5492, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.2475 L25 recall of the min_malware_score=0 control by filtering low-severity noise from training, hypothesizing that the 0.6716 recall of the BMP-inherited config (which used min_malware_score=4) stems from cleaner class separation rather than just feature differences.
+
+</details>
+

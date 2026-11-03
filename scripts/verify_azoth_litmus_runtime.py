@@ -28,6 +28,7 @@ def main() -> int:
 
     env = os.environ.copy()
     env["SCAN_MODELS_DIR"] = str(args.models_dir)
+    env["SCAN_NO_UPDATE"] = "1"
     # Ask for the JSON envelope and read route scores from `ml.mods[].rte`.
     # scan v2 only prints the terminal `models:` line for process scans, so
     # the structured output is the reliable source for per-route presence.
@@ -40,6 +41,9 @@ def main() -> int:
         "json",
         "scan",
         str(args.sample),
+        "--analyze", "local",
+        "--mode", "slow",
+        "--no-update",
     ]
     proc = subprocess.run(
         cmd,

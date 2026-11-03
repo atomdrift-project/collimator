@@ -30,9 +30,12 @@ For real workloads, point at a PostgreSQL `hopper` DSN.
 
 Every change should preserve or improve at least one of:
 
-- **Hostile recall at L50** under the global FP/100M ≤ 50 budget (= 0.5
-  FP/M, the default deployed operating point). Reported in
-  `global_policy_metrics.md` after `make azoth-deploy`.
+- **Hostile recall at L25**, the default operating point, using the
+  [shared level allowance](LEVELS.md): L0 allows zero observed calibration
+  FPs; positive L allows `1 + (L - 1) * N / 100_000_000` for N benign files,
+  rounded down for integer counts. Reported in `global_policy_metrics.md`
+  after `make azoth-deploy`. Detection regressions at L0–L25 block installation;
+  higher levels and empirical test-FP overruns are reported without blocking it.
 - **Per-route ensemble F1/AUC** for the route(s) you touched. Reported in
   `ENSEMBLE_MODEL.md` and the per-route `README.md` under the deployed bundle.
 - **Wall-clock training cost** for the part of the pipeline you touched.
@@ -40,6 +43,43 @@ Every change should preserve or improve at least one of:
 
 If a change improves nothing measurable, it should be a cleanup or
 correctness fix that's clearly explained in the PR.
+
+## Retaining recovery components
+
+Nightly training and autocollie both read accepted recipes from `model-configs/`
+and use `out/models/azoth` as the default previous training bundle. The general
+recipe pins its feature vocabulary, seed membership, and hard-negative settings;
+explicit experiment overrides can still change a candidate. Recovery auxiliaries
+are preserved as trained artifacts, rather than refitted from ordinary route
+recipes. Keep the complete previous training bundle when moving this workflow to
+another machine: copying `model-configs/` alone does not carry those models.
+
+The validated 132-model recovery bundle was copied to
+`out/models/azoth-runs/recovery-default-132-20261101` for this shared baseline,
+including its 52 auxiliary components. Its adoption receipt is under
+`out/experiments/recovery-default-adoption-20261101/`. This changes the training
+baseline, not the installed scanner. Jobs that already loaded their settings
+keep those settings; subsequent jobs read the shared defaults.
+
+`make azoth-calibrate` carries configured auxiliary models forward from
+`AZOTH_PREVIOUS_BUNDLE` into a fresh run. It preserves the exact ensemble members,
+feature spec, recorded feature environment, and train-only provenance. The source
+must be a training bundle with `benchmark.json` and `training_provenance.json`,
+not just a stripped runtime installation. Ordinary model training is unchanged.
+
+`retained_components.json` records identities and routing scopes. Existing local
+auxiliaries also survive recalibration and in-place cleanup. Cleanup preserves
+their route directories and a nested `.retained_components/manifest.json` while
+removing ordinary models for retraining. Conflicting artifacts under one route
+name fail validation; use a distinct alias for a replacement candidate. The
+`--check-inputs-only` preflight validates retention without copying files or
+accessing the database. A first build without a previous bundle needs no import.
+
+Retained models are scored on the new corpus, including their recorded source
+domain for L0 anchoring. Their old score caches, calibrators, and thresholds are
+not imported. Policies are selected again on dev, and normal regression/runtime
+checks still apply. Artifact retention prevents accidental model loss; it does
+not guarantee unchanged quality on a changing corpus.
 
 ## Proposing a feature experiment
 

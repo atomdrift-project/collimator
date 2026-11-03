@@ -526,3 +526,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T220428-filetypes-crx` — 2026-11-02T22:04:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d81d94290be9815a` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.8720 | 0.9793 | 0.7507 | 67 | [log](out/autocollie/runs/2026-11-02T22-04-53_20261102T220428-filetypes-crx_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `b4b1035ee125440a` | crx_hardneg_weight8_mds5_depth4 | ok | 0.8710 | 0.9804 | 0.7877 | 93 | [log](out/autocollie/runs/2026-11-02T22-06-04_20261102T220428-filetypes-crx_crx_hardneg_weight8_mds5_depth4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_hardneg_weight8_mds5_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the best measured L25 recall (0.4233) from max_delta_step=5 with the best PR_AUC (0.8765) from trait_path_depth=4 to test if deeper trait specificity improves ranking and recall at the 1-FP budget.
+
+</details>
+

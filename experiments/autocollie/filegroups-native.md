@@ -1246,3 +1246,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T233248-filegroups-native` — 2026-11-02T23:32:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `011f8da4fa7adf07` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.9994 | 0.9994 | 0.9905 | 252 | [log](out/autocollie/runs/2026-11-02T23-37-04_20261102T233248-filegroups-native_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `50965856fbbd3dd1` | native_hardneg_fraction_002_weight_12 | ok | 0.9995 | 0.9996 | 0.9929 | 380 | [log](out/autocollie/runs/2026-11-02T23-43-56_20261102T233248-filegroups-native_native_hardneg_fraction_002_weight_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_hardneg_fraction_002_weight_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the measured L25 recall of 0.7213 from the best historical run by testing a slightly higher hard-negative fraction (0.02) with a lower weight (12) to better balance the combiner threshold against the saturated PR-AUC ranking.
+
+</details>
+

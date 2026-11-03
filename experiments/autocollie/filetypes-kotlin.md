@@ -1300,3 +1300,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T221904-filetypes-kotlin` — 2026-11-02T22:19:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `478a76981e61280e` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.7531 | 0.8354 | 0.6864 | 20 | [log](out/autocollie/runs/2026-11-02T22-19-46_20261102T221904-filetypes-kotlin_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `6a2ecd82ddef8588` | kotlin_min_malware_score_0_depth_4 | ok | 0.9909 | 0.9954 | 0.9511 | 24 | [log](out/autocollie/runs/2026-11-02T22-20-15_20261102T221904-filetypes-kotlin_kotlin_min_malware_score_0_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_min_malware_score_0_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall beyond the 0.7990 baseline by capturing more specific finding prefixes, while retaining the min_malware_score=0 setting that maximized training data coverage.
+
+</details>
+

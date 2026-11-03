@@ -62,6 +62,48 @@ def test_allowlist_content_hash_tracks_content(tmp_path) -> None:
         _allowlist_content_hash({"COLLIMATOR_ALLOWED_FEATURES_FILE": str(tmp_path / "missing.json")})
 
 
+def test_saved_layout_content_participates_in_matrix_identity(tmp_path):
+    path=tmp_path/'spec.json';path.write_text('{}')
+    env={'COLLIMATOR_FEATURE_SPEC_FILE':str(path)}
+    cfg=features.feature_config_from_env()
+    before=_matrix_cache_key('corpus',cfg,env)
+    path.write_text('{"version":20}')
+    assert _matrix_cache_key('corpus',cfg,env)!=before
+
+
+def test_pinned_layout_bypasses_rediscovery(tmp_path,monkeypatch):
+    from collimator import experiment
+    db=tmp_path/'demo.db';create_demo_db(db,n_benign=32,n_malware=32,seed=7)
+    path=tmp_path/'spec.json'
+    features.FeatureSpec(total_features=1,feature_names=['agg:n_findings']).save(path)
+    monkeypatch.setenv('COLLIMATOR_FEATURE_SPEC_FILE',str(path))
+    monkeypatch.setattr(features,'build_vocab_from_db',lambda *a,**kw:pytest.fail('rediscovered pinned vocabulary'))
+    class ExtractionReached(Exception):pass
+    def extract(db,train,test,spec,**kwargs):
+        assert spec.feature_names==['agg:n_findings']
+        raise ExtractionReached
+    monkeypatch.setattr(features,'extract_partitioned_from_db',extract)
+    with pytest.raises(ExtractionReached):
+        experiment.run_experiment(db,train_samples=40,n_workers=1)
+
+
+def test_experiment_replays_exact_nonconsecutive_ensemble_members(tmp_path, monkeypatch):
+    from collimator import experiment
+    monkeypatch.setenv('COLLIMATOR_ENSEMBLE_SEEDS', '42,44')
+    monkeypatch.setenv('COLLIMATOR_NUM_THREADS', '1')
+    monkeypatch.delenv('AZOTH_CHECKPOINT_DIR', raising=False)
+    db=tmp_path/'demo.db'
+    create_demo_db(db,n_benign=80,n_malware=80,seed=7)
+    result=experiment.run_experiment(db,train_samples=80,max_test_samples=30,
+        n_workers=1,n_folds=0,n_estimators=3,early_stopping_rounds=0,
+        min_child_samples=2,min_child_weight=.001,learner='azoth',device='cpu',
+        seed_search_k=3,save_all_seeds=False)
+    assert [r['seed'] for r in result['seed_search_results']]==[42,44]
+    assert result['experiment_spec']['ensemble_seeds']==[42,44]
+    assert result['ensemble_seeds']==[42,44]
+    assert result['n_seed_models_shipped']==2
+
+
 @pytest.mark.parametrize("nightly", [False, True])
 def test_interrupted_selection_recovery_with_live_ingestion(tmp_path, monkeypatch, nightly):
     from collimator import experiment, cache_identity

@@ -441,3 +441,73 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T004243-filetypes-npm` — 2026-11-02T00:42:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c462de2f249dfeaf` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9813 | 0.9900 | 0.8802 | 331 | [log](out/autocollie/runs/2026-11-02T00-47-05_20261102T004243-filetypes-npm_inherit_from_filetypes_jsp_ceef7938.log) |
+
+Rejected before run:
+
+- `npm_kv_vocab_min_malware_score_zero` — training.estimators: 800 above max 600
+- `npm_kv_vocab_min_malware_score_four` — training.estimators: 800 above max 600
+- `npm_text_metrics_full_min_malware_score_zero` — training.estimators: 800 above max 600
+- `npm_text_metrics_full_min_malware_score_four` — training.estimators: 800 above max 600
+- `npm_hard_negative_transfer` — training.estimators: 800 above max 600
+- `npm_scale_pos_weight_transfer` — training.estimators: 800 above max 600
+- `npm_reg_lambda_transfer` — training.estimators: 800 above max 600
+- `npm_min_child_samples_50` — training.estimators: 800 above max 600
+- `npm_num_leaves_128` — training.estimators: 800 above max 600
+- `npm_max_delta_step_10` — training.estimators: 800 above max 600
+- `npm_severity_fractions` — training.estimators: 800 above max 600
+- `npm_kv_shape_features` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261102T014459-filetypes-npm` — 2026-11-02T01:44:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `abb33c618422af51` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9844 | 0.9918 | 0.9079 | 330 | [log](out/autocollie/runs/2026-11-02T01-54-24_20261102T014459-filetypes-npm_inherit_from_filetypes_jsp_ceef7938.log) |
+
+Rejected before run:
+
+- `npm_min_malware_score_4_mds5` — training.estimators: 800 above max 600
+- `npm_min_malware_score_4_mds0` — training.estimators: 800 above max 600
+- `npm_hard_negative_transfer_mds5` — training.estimators: 800 above max 600
+- `npm_text_metrics_full_mds5` — training.estimators: 800 above max 600
+- `npm_min_sample_score_3_mds5` — training.estimators: 800 above max 600
+- `npm_reg_lambda_1_mds5` — training.estimators: 800 above max 600
+- `npm_scale_pos_weight_0.25_mds5` — training.estimators: 800 above max 600
+- `npm_min_child_samples_10_mds5` — training.estimators: 800 above max 600
+- `npm_num_leaves_128_mds5` — training.estimators: 800 above max 600
+- `npm_severity_fractions_mds5` — training.estimators: 800 above max 600
+- `npm_kv_shape_mds5` — training.estimators: 800 above max 600
+- `npm_max_delta_step_10` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261102T190122-filetypes-npm` — 2026-11-02T19:01:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `21f80e71423d010b` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9825 | 0.9906 | 0.8951 | 350 | [log](out/autocollie/runs/2026-11-02T19-03-08_20261102T190122-filetypes-npm_inherit_from_filetypes_jsp_ceef7938.log) |
+
+Rejected before run:
+
+- `npm_hard_negative_fraction_001_weight_12` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

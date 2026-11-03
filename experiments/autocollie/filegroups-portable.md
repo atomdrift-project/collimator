@@ -1318,3 +1318,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T233443-filegroups-portable` — 2026-11-02T23:34:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5793e567a71700c` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.9947 | 0.9992 | 0.9686 | 383 | [log](out/autocollie/runs/2026-11-02T23-41-16_20261102T233443-filegroups-portable_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `3fdfc81b73a5c64a` | portable_rule_kw_depth2 | ok | 0.9907 | 0.9985 | 0.9642 | 391 | [log](out/autocollie/runs/2026-11-02T23-50-11_20261102T233443-filegroups-portable_portable_rule_kw_depth2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_rule_kw_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall@1FP over the 0.8049 baseline by increasing finding-prefix specificity for the rule keyword features.
+
+</details>
+

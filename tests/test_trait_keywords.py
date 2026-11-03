@@ -66,6 +66,23 @@ def test_frequency_is_per_document_not_per_finding_or_archive_member(monkeypatch
     assert spec.keyword_vocabs["ruleword"] == ["alpha", "common"]
 
 
+def test_keyword_family_allowlist_keeps_discovery_bounded_and_base_filter_exact(monkeypatch, tmp_path):
+    pin = tmp_path / "allow.json"
+    pin.write_text(json.dumps(["agg:notable_findings_log", "ruleword:*", "descword:http", "fullword:*"]))
+    monkeypatch.setenv("COLLIMATOR_ALLOWED_FEATURES_FILE", str(pin))
+    monkeypatch.setenv("COLLIMATOR_RULE_KEYWORDS", "1")
+    monkeypatch.setenv("COLLIMATOR_DESCRIPTION_KEYWORDS", "1")
+    monkeypatch.setenv("COLLIMATOR_RULE_KEYWORD_VOCAB_MAX", "2")
+    monkeypatch.setenv("COLLIMATOR_RULE_KEYWORD_MIN_FREQ", "2")
+    f.feature_config_from_env.cache_clear()
+    spec = f.build_vocab([report("alpha_beta_rare"), report("alpha_beta_gamma")], 1)
+    assert spec.keyword_vocabs == {"ruleword": ["alpha", "beta"], "descword": ["http"]}
+    assert spec.feature_names == ["agg:notable_findings_log", "ruleword:alpha", "ruleword:beta", "descword:http"]
+    # An allowlist wildcard alone cannot enable another keyword source.
+    assert "fullword" not in spec.keyword_vocabs
+    assert all("*" not in name for name in spec.feature_names)
+
+
 @pytest.mark.parametrize("desc", [None, "", "  ", 7])
 def test_missing_description_preserves_other_keywords(monkeypatch, desc, caplog):
     monkeypatch.setenv("COLLIMATOR_RULE_KEYWORDS", "1")

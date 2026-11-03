@@ -380,3 +380,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T235122-filetypes-groovy` — 2026-11-02T23:51:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3757386101ead790` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.9073 | 0.9991 | 0.8333 | 8 | [log](out/autocollie/runs/2026-11-02T23-52-01_20261102T235122-filetypes-groovy_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `665bffb195dc5135` | test_min_malware_score_0 | ok | 0.9024 | 0.9992 | 0.8696 | 4 | [log](out/autocollie/runs/2026-11-02T23-52-12_20261102T235122-filetypes-groovy_test_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/groovy/3fbdb0abf357dffc048e02171fe9deaaced9f6cb8a53ccd2bcf91ffa3e3de83c.json COLLIMATOR_FEATURE_SPEC_SHA256=3fbdb0abf357dffc048e02171fe9deaaced9f6cb8a53ccd2bcf91ffa3e3de83c EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Aims to improve the measured L25 recall of 0.8000 by removing the min_malware_training_score=4 cutoff, which likely discards low-severity malware samples and inflates class weights, thereby allowing the model to learn from the full malware distribution to capture the remaining 20% of missed threats.
+
+</details>
+

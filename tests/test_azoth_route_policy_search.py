@@ -10,10 +10,12 @@ separates is kept even if its standalone ROC is weak.
 """
 
 import importlib.util
+import itertools
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 # ``scripts/`` isn't an installed package; the module imports sibling scripts
 # (azoth_calibrate_ensemble) and the collimator package, so both dirs go on path.
@@ -38,8 +40,148 @@ _NBEN = 2000
 _NMAL = 2000
 
 
+def test_joint_one_fp_search_finds_shared_benign_optimum_in_any_route_order():
+    labels = np.array([0, 0] + [1] * 11)
+    scores = {name: np.zeros(13, dtype=np.float32) for name in ('a', 'b', 'c')}
+    scores['a'][:2] = scores['b'][:2] = [.9, .1]
+    scores['c'][:2] = [.1, .9]
+    scores['a'][2:6] = .8
+    scores['b'][6:10] = .8
+    scores['c'][10:] = .8
+    for routes in itertools.permutations(scores):
+        cuts, hit = _mod._joint_or_search(scores, labels, routes, fp_budget=1)
+        assert int(np.sum(hit & (labels == 1))) == 8
+        assert int(np.sum(hit & (labels == 0))) == 1
+        np.testing.assert_array_equal(
+            hit, _mod.policy.margin(scores, {'thresholds': cuts}, len(labels)) >= 0)
+
+
+@pytest.mark.parametrize('budget', [0, 1])
+def test_joint_small_budget_matches_exhaustive_threshold_search(budget):
+    rng = np.random.default_rng(9127)
+    labels = np.array([0, 0, 1, 1, 1, 1])
+    values = np.array([0, .25, .75, 1, np.nan], dtype=np.float32)
+    for _ in range(25):
+        scores = {name: rng.choice(values, len(labels)) for name in ('a', 'b', 'c')}
+        options = [np.r_[np.unique(p[np.isfinite(p)]), _mod._INACTIVE_THRESHOLD]
+                   for p in scores.values()]
+        optimum = (0, 0)
+        for thresholds in itertools.product(*options):
+            decision = {'thresholds': dict(zip(scores, thresholds, strict=True))}
+            hit = _mod.policy.margin(scores, decision, len(labels)) >= 0
+            fp = int(np.sum(hit & (labels == 0)))
+            if fp <= budget:
+                optimum = max(optimum, (int(np.sum(hit & (labels == 1))), -fp))
+        cuts, hit = _mod._joint_or_search(scores, labels, tuple(scores), fp_budget=budget)
+        assert (int(np.sum(hit & (labels == 1))), -int(np.sum(hit & (labels == 0)))) == optimum
+        np.testing.assert_array_equal(
+            hit, _mod.policy.margin(scores, {'thresholds': cuts}, len(labels)) >= 0)
+
+
+def test_uncalibrated_route_stays_inactive_at_probability_one():
+    labels = np.array([0, 1])
+    scores = {'filetypes/x': np.array([1., 1.], dtype=np.float32)}
+    candidate = _mod._calibrate_policy(
+        labels, scores, policy='filetype_only', primary='filetypes/x',
+        allowed_routes=('filetypes/x',), target_per_million=1., total_benign=1,
+    )
+    deployed_hit = _mod.policy.margin(scores, candidate, len(labels)) >= 0
+    assert not deployed_hit.any()
+    assert candidate['tp'] == candidate['fp'] == 0
+
+
+def test_joint_policy_can_detect_probability_one_without_treating_it_as_disabled():
+    labels = np.array([0, 0, 1, 1])
+    scores = {'general': np.array([.2, .3, 1., .1], dtype=np.float32),
+              'filetypes/x': np.array([.2, .3, .1, 1.], dtype=np.float32)}
+    candidate = _mod._make_joint_or_candidate_at_fp(
+        route_probs=scores, labels=labels, routes=tuple(scores), fp_target=0,
+        target_per_million=1., total_benign=2,
+    )
+    assert candidate is not None
+    deployed_hit = _mod.policy.margin(scores, candidate, len(labels)) >= 0
+    assert deployed_hit.tolist() == [False, False, True, True]
+    assert candidate['tp'] == 2 and candidate['fp'] == 0
+
+
+def test_threshold_budget_cannot_split_equal_probability_rows():
+    labels = np.array([1, 0, 0, 1])
+    scores = np.array([.9, .8, .8, .7], dtype=np.float32)
+    threshold, tp, fp = _mod._specialist_threshold_for_fp(scores, labels, 1)
+    hit = scores >= threshold
+    assert int((hit & (labels == 0)).sum()) == fp <= 1
+    assert int((hit & (labels == 1)).sum()) == tp == 1
+
+
 def _labels() -> np.ndarray:
     return np.concatenate([np.zeros(_NBEN), np.ones(_NMAL)]).astype(int)
+
+
+def test_global_auxiliary_can_recover_complementary_detections(monkeypatch):
+    labels = np.r_[np.zeros(60), np.ones(60)].astype(np.int8)
+    benign = np.linspace(.15, .25, 60)
+    # The models use different raw score scales. A shared max-rule cutoff
+    # cannot recover both halves; their thresholds must be chosen jointly.
+    general = np.r_[benign, np.full(30, .5), np.full(30, .1)].astype(np.float32)
+    auxiliary = np.r_[np.linspace(.7, .8, 60), np.full(30, .7), np.full(30, .9)].astype(np.float32)
+    name = 'filegroups/general_previous'
+    routes = {'general': {'indices': np.arange(120), 'probs': general, 'kind': 'general'},
+              name: {'indices': np.arange(120), 'probs': auxiliary, 'kind': 'filegroup'}}
+    config = {'levels': [{'level': 25, 'hostile': {'target_per_million': .25}}]}
+    state = {'routes': routes, 'labels': labels, 'file_types': np.array(['x']*120),
+             'filetype_to_group': {}, 'config': config, 'total_benign': 60}
+    monkeypatch.setattr(_mod, '_SHARED', state)
+    _, baseline = _mod._process_filetype('x')
+    config['global_auxiliary_routes'] = [name]
+    _, augmented = _mod._process_filetype('x')
+    baseline_hit = _mod.policy.swept_margin({'general': general}, baseline['levels'],25,120) >= 0
+    augmented_hit = _mod.policy.swept_margin({'general': general,name:auxiliary}, augmented['levels'],25,120) >= 0
+    assert baseline['models'] == ['general']
+    assert name in augmented['models']
+    assert (baseline_hit & (labels == 1)).sum() == 30
+    assert (augmented_hit & (labels == 1)).sum() == 60
+    assert (augmented_hit & (labels == 0)).sum() <= (baseline_hit & (labels == 0)).sum()
+
+
+def test_auxiliary_preserves_existing_policy_choices(monkeypatch):
+    import json
+
+    rng = np.random.default_rng(12)
+    labels = np.r_[np.zeros(80), np.ones(80)].astype(np.int8)
+    names = ['general', 'filegroups/base', 'filetypes/x', 'filegroups/alternative']
+    routes = {name: {'indices': np.arange(160),
+                     'probs': rng.uniform(.05, .95, 160).astype(np.float32),
+                     'kind': 'general' if name == 'general' else 'filegroup' if 'filegroups' in name else 'filetype'}
+              for name in names}
+    config = {'levels': [{'level': 25, 'hostile': {'target_per_million': .25}}]}
+    monkeypatch.setattr(_mod, '_SHARED', {
+        'routes': routes, 'labels': labels, 'file_types': np.array(['x'] * 160),
+        'filetype_to_group': {'x': 'base'}, 'config': config, 'total_benign': 80})
+    _, baseline = _mod._process_filetype('x')
+    config['global_auxiliary_routes'] = [names[-1]]
+    _, augmented = _mod._process_filetype('x')
+
+    def choices(result):
+        return {json.dumps({key: item.get(key) for key in
+                           ('policy', 'allowed_routes', 'thresholds', 'blend')}, sort_keys=True)
+                for item in result['levels'][0]['hostile']['candidates']}
+
+    assert choices(baseline) <= choices(augmented)
+    assert augmented['levels'][0]['hostile']['best']['tp'] >= baseline['levels'][0]['hostile']['best']['tp']
+
+    # A scoped alternative must preserve the global-auxiliary families too,
+    # and leave unrelated filetypes' choices unchanged.
+    scoped_name = 'filegroups/scoped_previous'
+    routes[scoped_name] = {**routes[names[-1]], 'probs': rng.uniform(.05, .95, 160).astype(np.float32)}
+    config['filetype_auxiliary_routes'] = {'unrelated': [scoped_name]}
+    _, unrelated = _mod._process_filetype('x')
+    assert choices(unrelated) == choices(augmented)
+    assert scoped_name not in unrelated['models']
+    config['filetype_auxiliary_routes']['x'] = [scoped_name]
+    _, scoped = _mod._process_filetype('x')
+    assert choices(augmented) <= choices(scoped)
+    assert scoped_name in scoped['models']
+    assert scoped['levels'][0]['hostile']['best']['tp'] >= augmented['levels'][0]['hostile']['best']['tp']
 
 
 def _keep(route_probs, type_route="filetypes/x"):
@@ -177,6 +319,71 @@ def test_blend_keeps_all_positive_weight_routes():
     assert fit is not None
     assert set(fit["present_routes"]) == set(routes)
     assert all(w >= -_mod._BLEND_MIN_WEIGHT for w in fit["weights"])
+
+
+def _tail_blend_fixture():
+    rng = np.random.default_rng(71)
+    labels = np.r_[np.zeros(500), np.ones(150)].astype(np.int8)
+    logits = np.column_stack([
+        rng.normal(labels * 3 - 2, 1.3), rng.normal(labels * 2 - 1, 1.2),
+    ])
+    # A rare benign tail makes overall classification loss a different
+    # objective from ranking at a very small false-positive allowance.
+    logits[:10, 0] = 3
+    return {name: (1 / (1 + np.exp(-logits[:, i]))).astype(np.float32)
+            for i, name in enumerate(('general', 'filetypes/x'))}, labels
+
+
+def test_tail_blend_is_additive_scoped_and_respects_swept_budget(monkeypatch):
+    import json
+
+    probs, labels = _tail_blend_fixture()
+    config = {'levels': [{'level': level, 'hostile': {'target_per_million': level / 100}}
+                         for level in (0, 1, 25)]}
+    monkeypatch.setattr(_mod, '_SHARED', {
+        'routes': {name: {'indices': np.arange(len(labels)), 'probs': p,
+                          'kind': 'general' if name == 'general' else 'filetype'}
+                   for name, p in probs.items()},
+        'labels': labels, 'file_types': np.array(['x'] * len(labels)),
+        'filetype_to_group': {}, 'config': config, 'total_benign': 500})
+    _, baseline = _mod._process_filetype('x')
+    options = {'weight': 50, 'fraction': .02}
+    config['tail_weighted_blends'] = {'other': options}
+    assert _mod._process_filetype('x')[1] == baseline
+    config['tail_weighted_blends'] = {'x': options}
+    _, weighted = _mod._process_filetype('x')
+    for before, after in zip(baseline['levels'], weighted['levels'], strict=True):
+        def choices(row):
+            return {json.dumps({key: c.get(key) for key in ('policy', 'thresholds', 'blend')},
+                               sort_keys=True) for c in row['hostile']['candidates']}
+        assert choices(before) <= choices(after)
+        assert any(c['policy'].startswith('tail_weighted_50_')
+                   for c in after['hostile']['candidates'])
+        hit = _mod.policy.swept_margin(probs, weighted['levels'], after['level'], len(labels)) >= 0
+        assert int((hit & (labels == 0)).sum()) <= after['hostile']['budget']
+    config['tail_weighted_blends']['x']['fraction'] = float('nan')
+    with pytest.raises(ValueError, match='tail_weighted_blends'):
+        _mod._process_filetype('x')
+
+
+def test_tail_blend_preserves_runtime_score_contract_and_identity_weight():
+    probs, labels = _tail_blend_fixture()
+    routes = tuple(probs)
+    control = _mod._fit_learned_blend(probs, labels, routes)
+    identity = _mod._fit_tail_weighted_blend(probs, labels, routes, weight=1)
+    weighted = _mod._fit_tail_weighted_blend(probs, labels, routes, weight=50)
+    assert control is not None and identity is not None and weighted is not None
+    np.testing.assert_array_equal(control['blend_score'], identity['blend_score'])
+    assert not np.array_equal(control['blend_score'], weighted['blend_score'])
+    assert np.all(weighted['weights'] >= -_mod._BLEND_MIN_WEIGHT)
+    decision = {'blend': {'routes': weighted['present_routes'], 'weights': weighted['weights'],
+                         'intercept': weighted['intercept'], 'threshold': 0., 'transform': 'logit'}}
+    np.testing.assert_array_equal(weighted['blend_score'], _mod.policy.margin(probs, decision, len(labels)))
+    with pytest.raises(ValueError, match='sample weights'):
+        _mod._fit_learned_blend(probs, labels, routes, sample_weight=np.ones(2))
+    for weight, fraction in [(0, .02), (float('inf'), .02), (50, 0), (50, 1.1)]:
+        with pytest.raises(ValueError, match='tail blend'):
+            _mod._fit_tail_weighted_blend(probs, labels, routes, weight=weight, fraction=fraction)
 
 
 # --- L0 anchor, malware floor, and level-grid monotonicity -------------------

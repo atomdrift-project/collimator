@@ -364,3 +364,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T215527-filegroups-archive` — 2026-11-02T21:55:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bbab9ec66e52359e` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.9513 | 0.9322 | 0.8782 | 392 | [log](out/autocollie/runs/2026-11-02T21-58-32_20261102T215527-filegroups-archive_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `b249792aec9f40f8` | archive_hard_negative_fraction_001_weight_12 | ok | 0.9564 | 0.9396 | 0.8769 | 423 | [log](out/autocollie/runs/2026-11-02T22-05-40_20261102T215527-filegroups-archive_archive_hard_negative_fraction_001_weight_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`archive_hard_negative_fraction_001_weight_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets the 0.6750 L25 recall ceiling by applying hard-negative upweighting (fraction 0.01, weight 12) to sharpen the decision boundary and reduce false positives, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+
+</details>
+

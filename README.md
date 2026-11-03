@@ -18,8 +18,9 @@ Atomdrift Scan instead.
 - Three-seed ensembles for routes where averaging improves stability
 - A 42-point false-positive grid from L0 through L25000
 - A canonical deployment default of L25 on the resolution-adjusted scale:
-  approximately one observed false positive plus 25 per 100 million benign
-  samples in each decision pool (exact formula in [LEVELS.md](LEVELS.md))
+  one observed FP plus an estimated additional 24 per 100 million benign
+  files in each decision pool; L1 allows one FP and L0 allows zero observed
+  FPs (exact formula and uncertainty in [LEVELS.md](LEVELS.md))
 - Deterministic train/test partitioning and per-route evaluation reports
 - ONNX export, bundle validation, and regression gates before publication
 - Autonomous experiment search through
@@ -38,13 +39,29 @@ OOF runs remain useful diagnostics, but cannot set another model's thresholds.
 Policy selection maximizes recall within each filetype's shared FP allowance:
 `floor(1 + (L - 1) * N_benign / 100_000_000)` for L>=1, and zero at L0.
 General, group, and specialist components share that allowance. Selection and
-the deployment gate count the union of detections from all levels up to L,
+the deployment report count the union of detections from all levels up to L,
 matching the runtime sweep; different false-positive files at different levels
-cannot each spend the same allowance. The gate checks each filetype on held-out
+cannot each spend the same allowance. The report checks each filetype on held-out
 test rows, so unused allowances elsewhere cannot hide one route's overrun.
-Small pools are included, and the default no longer applies a 30x multiplier.
-Nightly gates L25 and reports all other levels; requiring an L0 test pass would
-impose a different, zero-observed-FP objective.
+Small pools are included without an allowance multiplier. Nightly reports the
+whole grid, including L25 overruns, and gates installation on detection
+regressions and runtime validation. A mandatory held-out FP-count gate is opt-in
+with `AZOTH_BUDGET_GATE_ARGS=--fail-on-budget`.
+
+Within the OR-threshold policy family, zero- and one-FP budgets are solved
+exactly. Search checks each possible shared benign hit, so changing the model
+order cannot strand it in a worse local solution. Larger FP budgets still use
+coordinate descent, and selection across policy families and the level sweep
+remains heuristic.
+
+Policy search can optionally add a blend that gives difficult benign development
+examples more fitting weight. A bundle configuration such as
+`"tail_weighted_blends": {"go": {"weight": 50, "fraction": 0.02}}` uses the
+ordinary blend to identify the highest-scoring 2% of benign dev examples, then
+refits with 50 times their loss weight. Existing candidates remain available,
+and every candidate still shares the same swept FP allowance. This option is
+off unless configured. Choose its parameters on development data and confirm
+the frozen policy on held-out data; the option changes fitting, not level semantics.
 
 This is an empirical operating-point convention, not a population-rate
 guarantee. Reports separate the nominal level, observed FP count/rate, and
@@ -117,6 +134,32 @@ would be constant. Such routes record `unsplittable_initial_hessian` and use
 the filegroup/general fallback instead of exhausting seed retries. Weighted
 refits and other boosting modes retain the usual training and health checks.
 
+Matching training settings does not make a refit identical to a selected model.
+The recovery screen uses a fixed canonical training holdout, while the normal
+trainer uses seed-dependent stratified holdouts and splits them again for early
+stopping and evaluation. `scripts/refit_regression_recovery.py` therefore compares
+the selected and refitted ONNX ensembles on identical development matrices. It
+records `refit-retention.json` and marks a refit `held_back_after_refit` if any
+target filetype loses recall at one FP. The receipt binds model, feature, selection,
+and development-matrix hashes; missing class support is reported as unavailable.
+If an operating-point assessment admitted a refit without exporting a research
+candidate, the review reconstructs the frozen selected ensemble from its saved
+fit files. This diagnostic export performs no new training or promotion.
+This is a ranking check before test confirmation, not deployment calibration.
+Recovery selection and assessment average member probabilities with float64
+accumulation and cast the result to float32, matching the bundle loader and Scan.
+Float32 accumulation can create artificial ties at probability one and change
+low-FP recall. Previously frozen research receipts retain their original results;
+candidate confirmation must use the deployment arithmetic.
+Recipe acceptance also checks a candidate's recorded training protocol. A custom
+procedure without verified ordinary-trainer equivalence records
+`requires_artifact_preservation` and leaves the existing recipe and vocabulary
+pin untouched. Preserve that candidate's exact weights until its fitting
+procedure can be replayed and verified; exporting its hyperparameters alone
+would discard part of the confirmed model.
+If exact selected weights are retained instead, preserve their actual fitting
+and stopping protocol; ordinary training-config replay may produce another model.
+
 To bootstrap a specialist before one is deployed, screen configurations first:
 
 ```bash
@@ -139,6 +182,28 @@ record decisions; they do not override an existing model configuration.
 Deployment retains `accepted_config.json` beside each model and
 `training_config.json` records effective specialist settings, including CLI
 overrides, on subsequent training runs.
+
+`ensemble_seeds` pins the exact accepted members, such as `[43]` or `[42, 44]`.
+Nightly and experiment replays preserve that list instead of expanding it to
+the global seed count. A pinned member that fails specialist health checks
+rejects the route; it is not silently replaced by another seed. Edit or remove
+the pin explicitly when researching a different ensemble. Effective training
+metadata records the actual members and training score filter. Specialist
+benchmarks also record the effective inherited environment plus route overrides
+(`feature_env_scope: effective_inherited_and_route`). Older override-only records
+need their launch environment to reproduce extraction; treating them as complete
+settings can silently disable columns present in the saved vocabulary.
+
+An accepted fixed vocabulary can be replayed with
+`feature_env.COLLIMATOR_FEATURE_SPEC_FILE` and its
+`COLLIMATOR_FEATURE_SPEC_SHA256` content pin. Relative file paths resolve from
+the checkout root. Both training paths load the saved layout and invalidate
+feature caches on content changes; a mismatched content pin fails before fitting.
+
+An accepted configuration is a replay recipe, not proof that an existing model
+was trained with it. Compare artifact-bound training records, feature layouts,
+corpus filters, and ensemble membership when investigating a regression. Older
+promotion scores do not validate a rebuild with changed inputs.
 
 Recovered history lives in `out/autocollie/history/`: recent experiments and
 older acceptance dependencies are retained together. The original archive is

@@ -535,6 +535,8 @@ def main() -> None:
     p_tune.add_argument("--min-score", type=int, default=None, help="Optional minimum hopper score to include")
     p_tune.add_argument("--max-score", type=int, default=None, help="Optional maximum hopper score to include")
     p_tune.add_argument("--scores-only", action="store_true", help="Build/verify the raw score cache without fitting diagnostic thresholds")
+    p_tune.add_argument("--score-partitions", nargs='+', choices=('train', 'dev', 'test'),
+                        help="Score every row in these canonical partitions (default: all); requires --limit 0")
     p_tune.add_argument("--top-errors", type=int, default=20, help="How many FP/FN paths to show per policy level")
     p_tune.add_argument("--output", default=None, help="Optional JSON output path")
     p_tune.add_argument("--limit", type=int, default=0, help="Optional row cap after filters (0 = no cap)")
@@ -839,6 +841,7 @@ def main() -> None:
             max_score=args.max_score,
             top_errors=args.top_errors,
             scores_only=args.scores_only,
+            score_partitions=tuple(args.score_partitions) if args.score_partitions else None,
             output_path=Path(args.output) if args.output else None,
             limit=args.limit,
             max_id=args.max_id,

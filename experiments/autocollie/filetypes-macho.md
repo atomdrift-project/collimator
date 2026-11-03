@@ -1468,3 +1468,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T190349-filetypes-macho` — 2026-11-02T19:03:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6114331daf5ce807` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9875 | 0.9987 | 0.9423 | 41 | [log](out/autocollie/runs/2026-11-02T19-04-31_20261102T190349-filetypes-macho_inherit_from_filetypes_jsp_ceef7938.log) |
+| `8d7ea96a3a5834d1` | macho_hardneg_fraction_0015_weight_16 | ok | 0.9881 | 0.9988 | 0.9441 | 29 | [log](out/autocollie/runs/2026-11-02T19-05-17_20261102T190349-filetypes-macho_macho_hardneg_fraction_0015_weight_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_hardneg_fraction_0015_weight_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.8005 L25 recall ceiling by testing a tighter hard-negative subset (1.5% vs 20%) with higher weight (16 vs 5) to sharpen the decision boundary for the 376 malware samples without expanding the feature space.
+
+</details>
+
+## Cycle `20261102T233046-filetypes-macho` — 2026-11-02T23:30:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `df3a7616e6efc8cc` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.9830 | 0.9978 | 0.9374 | 29 | [log](out/autocollie/runs/2026-11-02T23-31-36_20261102T233046-filetypes-macho_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `59314cf773c96744` | macho_threshold_max_recall_at_fpr_25e7 | ok | 0.9864 | 0.9985 | 0.9109 | 14 | [log](out/autocollie/runs/2026-11-02T23-32-10_20261102T233046-filetypes-macho_macho_threshold_max_recall_at_fpr_25e7.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_threshold_max_recall_at_fpr_25e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the L25 recall gap (0.8382) by switching threshold_mode to max_recall_at_fpr with a target of 2.5e-07, directly optimizing the deployed operating point for the 1-FP budget rather than relying on F-beta which may leave recall on the floor despite high PR-AUC.
+
+</details>
+

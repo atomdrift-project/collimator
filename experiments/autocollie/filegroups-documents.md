@@ -2614,3 +2614,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T191015-filegroups-documents` — 2026-11-02T19:10:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6d60bd40ffdeb8f7` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9590 | 0.9527 | 0.8658 | 34 | [log](out/autocollie/runs/2026-11-02T19-14-10_20261102T191015-filegroups-documents_inherit_from_filetypes_jsp_ceef7938.log) |
+| `4b560a3ea3987087` | test_trait_path_depth_4 | ok | 0.9950 | 0.9948 | 0.9424 | 35 | [log](out/autocollie/runs/2026-11-02T19-14-49_20261102T191015-filegroups-documents_test_trait_path_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8550 L25 recall of the best historical run by increasing finding-prefix specificity to 4, which may better distinguish document malware traits from benign noise without changing the feature matrix structure.
+
+</details>
+

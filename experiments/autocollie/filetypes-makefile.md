@@ -918,3 +918,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T214848-filetypes-makefile` — 2026-11-02T21:48:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d9d224005a984d3e` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.1775 | 0.9314 | 0.1081 | 7 | [log](out/autocollie/runs/2026-11-02T21-50-16_20261102T214848-filetypes-makefile_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `4a4b876f6772df4a` | makefile_trait_path_depth_2 | ok | 0.1463 | 0.9055 | 0.1062 | 2 | [log](out/autocollie/runs/2026-11-02T21-50-25_20261102T214848-filetypes-makefile_makefile_trait_path_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_trait_path_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if reducing trait_path_depth to 2 improves L25 recall@1FP over the 0.3125 baseline by increasing finding-prefix specificity for the small malware cohort, reusing the existing feature matrix.
+
+</details>
+

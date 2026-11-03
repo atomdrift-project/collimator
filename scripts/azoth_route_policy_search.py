@@ -28,6 +28,11 @@ from azoth_calibrate_ensemble import (
 from collimator import bundle, features, policy
 
 
+# Raw float32 model probabilities can equal one. An inactive route needs a
+# value that remains above one after scanner serialization and conversion.
+_INACTIVE_THRESHOLD = float(np.nextafter(np.float32(1), np.float32(np.inf)))
+
+
 def _json_clean(value: Any) -> Any:
     if isinstance(value, dict):
         return {str(k): _json_clean(v) for k, v in value.items()}
@@ -182,7 +187,7 @@ def _calibrate_policy(
         route_benign_mask = valid & (labels == 0)
         benign_probs = probs[route_benign_mask].astype(np.float64)
         if len(benign_probs) < 50:
-            # Below the resolution floor — leave inactive (sentinel 1.0
+            # Below the resolution floor — leave inactive (sentinel > 1
             # below). Documented presence preserves litmus's
             # contains_route check.
             continue
@@ -192,17 +197,12 @@ def _calibrate_policy(
         selected[route_name] = float(threshold)
         union_hit |= (probs >= threshold) & valid
 
-    # Include EVERY present_route in thresholds_out — with a no-fire
-    # sentinel (1.0) for any route whose threshold was None. Litmus's
-    # contains_route check (model.rs:824) tests for route presence in
-    # route_policies as the signal that the route's specialist should be
-    # loaded; sentinel 1.0 means "score ≥ 1.0 fires" which is unreachable
-    # for calibrated probabilities, so the route formally exists in the
-    # policy but is operationally a no-op until later calibration moves it.
+    # Preserve route references without turning saturated probabilities into
+    # detections. One is a valid firing threshold, not an inactive sentinel.
     thresholds_out: dict[str, float] = {}
     for route_name in present_routes:
         sel = selected.get(route_name)
-        thresholds_out[route_name] = float(sel) if sel is not None else 1.0
+        thresholds_out[route_name] = float(sel) if sel is not None else _INACTIVE_THRESHOLD
 
     out = _metrics(
         labels,
@@ -333,6 +333,51 @@ def _policy_candidates(
     return out
 
 
+def _joint_or_small_budget(
+    route_probs: dict[str, np.ndarray], labels: np.ndarray,
+    routes: tuple[str, ...], fp_budget: int,
+) -> tuple[dict[str, float], np.ndarray]:
+    """Exact OR thresholds for zero or one FP, including shared benign hits.
+
+    With one allowed benign hit, a route can either use its zero-FP cut or
+    admit that same benign row. Every feasible nonzero-FP route's first
+    benign hit must be that row. Enumerating those identities therefore
+    covers every possible OR optimum, without enumerating threshold products.
+    """
+    benign = labels == 0
+    thresholds = {}
+    base = np.zeros(len(labels), dtype=bool)
+    upgrades: dict[int, list[tuple[str, float, np.ndarray]]] = {}
+    for route in sorted(routes):
+        probs = np.asarray(route_probs[route], dtype=np.float32)
+        cut, _, _ = _specialist_threshold_for_fp(probs, labels, 0)
+        thresholds[route] = float(cut) if cut is not None else _INACTIVE_THRESHOLD
+        base |= np.isfinite(probs) & (probs >= thresholds[route])
+        if fp_budget == 0:
+            continue
+        cut, _, _ = _specialist_threshold_for_fp(probs, labels, 1)
+        if cut is None:
+            continue
+        hit = np.isfinite(probs) & (probs >= cut)
+        false_rows = np.flatnonzero(hit & benign)
+        if len(false_rows) == 1:
+            upgrades.setdefault(int(false_rows[0]), []).append((route, float(cut), hit))
+    best_thresholds, best_hit = thresholds, base
+    best_tp = int(np.sum(base & ~benign))
+    for false_row in sorted(upgrades):
+        hit = base.copy()
+        cuts = dict(thresholds)
+        for route, cut, added in upgrades[false_row]:
+            cuts[route] = cut
+            hit |= added
+        tp = int(np.sum(hit & ~benign))
+        # Preserve the zero-FP solution on equal recall, then use stable row
+        # order for ties between equally good one-FP solutions.
+        if tp > best_tp:
+            best_thresholds, best_hit, best_tp = cuts, hit, tp
+    return best_thresholds, best_hit
+
+
 def _joint_or_search(
     route_probs: dict[str, np.ndarray],
     labels: np.ndarray,
@@ -341,8 +386,12 @@ def _joint_or_search(
     fp_budget: int,
     max_iters: int = 8,
 ) -> tuple[dict[str, float], np.ndarray]:
-    """Coordinate descent on per-route thresholds for an OR-rule policy
+    """Optimize per-route thresholds for an OR-rule policy
     constrained to ``fp_budget`` total FPs in the slice.
+
+    Zero/one-FP budgets use exact enumeration of the allowed benign identity.
+    Larger budgets use the following coordinate descent heuristic; it can
+    reach a local optimum and is not a global-optimality guarantee.
 
     Each round, hold all-but-one route fixed and solve a 1-D problem:
     given the OR-hit from the other routes, find the loosest threshold
@@ -361,20 +410,22 @@ def _joint_or_search(
     Returns ``(thresholds, union_hit)``.
     """
     n = len(labels)
-    thresholds: dict[str, float] = {route: 1.0 for route in routes}
+    thresholds: dict[str, float] = {route: _INACTIVE_THRESHOLD for route in routes}
     if fp_budget < 0:
         return thresholds, np.zeros(n, dtype=bool)
+    if fp_budget <= 1:
+        return _joint_or_small_budget(route_probs, labels, routes, fp_budget)
     # Initial seed: each route's solo-Pareto threshold at the full budget.
     # Coordinate descent then redistributes budget across routes.
     for route in routes:
         probs = route_probs[route]
         threshold, _, _ = _specialist_threshold_for_fp(probs, labels, fp_budget)
-        thresholds[route] = float(threshold) if threshold is not None else 1.0
+        thresholds[route] = float(threshold) if threshold is not None else _INACTIVE_THRESHOLD
 
     def _hit_union(except_route: str | None = None) -> np.ndarray:
         out = np.zeros(n, dtype=bool)
         for r, t in thresholds.items():
-            if r == except_route or t >= 1.0:
+            if r == except_route or t > 1.0:
                 continue
             probs = route_probs[r]
             valid = ~np.isnan(probs)
@@ -390,35 +441,27 @@ def _joint_or_search(
             remaining = fp_budget - other_fp
             if remaining < 0:
                 # Other routes already exhaust the budget; turn this one off.
-                if thresholds[route] < 1.0:
-                    thresholds[route] = 1.0
+                if thresholds[route] <= 1.0:
+                    thresholds[route] = _INACTIVE_THRESHOLD
                     changed = True
                 continue
             probs = route_probs[route]
             valid = ~np.isnan(probs)
             mask = valid & ~other_hit
             if not mask.any():
-                if thresholds[route] < 1.0:
-                    thresholds[route] = 1.0
+                if thresholds[route] <= 1.0:
+                    thresholds[route] = _INACTIVE_THRESHOLD
                     changed = True
                 continue
             p = probs[mask].astype(np.float64)
             y = labels[mask].astype(np.int8)
             if int((y == 1).sum()) == 0:
-                if thresholds[route] < 1.0:
-                    thresholds[route] = 1.0
+                if thresholds[route] <= 1.0:
+                    thresholds[route] = _INACTIVE_THRESHOLD
                     changed = True
                 continue
-            order = np.lexsort((y, -p))
-            p_sorted = p[order]
-            y_sorted = y[order]
-            fp_cum = np.cumsum(y_sorted == 0)
-            eligible = np.flatnonzero(fp_cum <= remaining)
-            if len(eligible) == 0:
-                new_t = 1.0
-            else:
-                end = int(eligible[-1])
-                new_t = float(p_sorted[end])
+            threshold, _, _ = _specialist_threshold_for_fp(p, y, remaining)
+            new_t = float(threshold) if threshold is not None else _INACTIVE_THRESHOLD
             if abs(thresholds[route] - new_t) > 1e-12:
                 thresholds[route] = new_t
                 changed = True
@@ -479,6 +522,9 @@ def _fit_learned_blend(
     route_probs: dict[str, np.ndarray],
     labels: np.ndarray,
     routes: tuple[str, ...],
+    *,
+    sample_weight: np.ndarray | None = None,
+    max_iter: int = 200,
 ) -> dict[str, Any] | None:
     """Fit a logistic regression over logit-stacked route probabilities.
 
@@ -516,6 +562,14 @@ def _fit_learned_blend(
         return None
     x_fit = stacked[fit_mask]
     y_fit = labels[fit_mask].astype(np.int8)
+    fit_weight = None
+    if sample_weight is not None:
+        weights = np.asarray(sample_weight, dtype=np.float64)
+        if (weights.shape != labels.shape or not np.isfinite(weights).all()
+                or np.any(weights <= 0)):
+            raise ValueError("blend sample weights must be finite, positive, and row-aligned")
+        fit_weight = weights[fit_mask]
+        fit_weight = fit_weight / fit_weight.mean()
     # class_weight='balanced' counteracts the corpus's benign skew so the
     # loss doesn't get dominated by easy benigns. L2 with C=1 is mild —
     # with only len(present_routes) features we're nowhere near overfit
@@ -535,8 +589,8 @@ def _fit_learned_blend(
     keep = list(range(len(present_routes)))
     while True:
         clf = LogisticRegression(
-            C=1.0, class_weight="balanced", solver="liblinear", max_iter=200,
-        ).fit(x_fit[:, keep], y_fit)
+            C=1.0, class_weight="balanced", solver="liblinear", max_iter=max_iter,
+        ).fit(x_fit[:, keep], y_fit, sample_weight=fit_weight)
         w = clf.coef_[0].astype(np.float64)
         worst = int(np.argmin(w))
         if w[worst] >= -_BLEND_MIN_WEIGHT:
@@ -565,6 +619,44 @@ def _fit_learned_blend(
         "weights": weights,
         "intercept": intercept,
     }
+
+
+def _fit_tail_weighted_blend(
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    routes: tuple[str, ...],
+    *,
+    weight: float,
+    fraction: float = .02,
+) -> dict[str, Any] | None:
+    """Give difficult dev benigns more fitting weight, without changing FP budgets.
+
+    The ordinary blend identifies the highest-scoring benign fraction. Refit
+    the same inputs with greater loss weight on those rows, retaining the
+    nonnegative coefficient and runtime float32 contracts. The resulting blend
+    is an additional candidate; it never replaces the ordinary blend by fiat.
+    Parameters must be selected on development data before test confirmation.
+    """
+    if (not np.isfinite(weight) or weight < 1
+            or not np.isfinite(fraction) or not 0 < fraction <= 1):
+        raise ValueError("tail blend requires finite weight >= 1 and 0 < fraction <= 1")
+    control = _fit_learned_blend(route_probs, labels, routes)
+    if control is None or weight == 1:
+        return control
+    benign = (labels == 0) & control["valid_row"]
+    cutoff = np.quantile(control["blend_score"][benign], 1 - fraction)
+    hard = benign & (control["blend_score"] >= cutoff)
+    weights = np.ones(len(labels), dtype=np.float64)
+    weights[hard] = weight
+    fit = _fit_learned_blend(
+        route_probs, labels, routes, sample_weight=weights, max_iter=300,
+    )
+    if fit is not None:
+        fit["tail_weighting"] = {
+            "weight": float(weight), "fraction": float(fraction),
+            "hard_benign_rows": int(hard.sum()),
+        }
+    return fit
 
 
 def _blend_candidate_from_fit(
@@ -663,7 +755,7 @@ def _make_joint_or_candidate_at_fp(
     )
     if not np.any(hit):
         return None
-    thresholds_out = {r: t for r, t in thresholds.items() if t < 1.0}
+    thresholds_out = {r: t for r, t in thresholds.items() if t <= 1.0}
     if not thresholds_out:
         return None
     return _metrics(
@@ -828,7 +920,10 @@ def _specialist_threshold_for_fp(
     y_sorted = y[order]
     fp_cum = np.cumsum(y_sorted == 0)
     tp_cum = np.cumsum(y_sorted == 1)
-    eligible = np.flatnonzero(fp_cum <= fp_target)
+    # A threshold includes the entire equal-score group. Partial groups would
+    # report fewer FPs than the persisted >= comparison actually produces.
+    endpoints = np.flatnonzero(np.r_[p_sorted[1:] != p_sorted[:-1], True])
+    eligible = endpoints[fp_cum[endpoints] <= fp_target]
     if len(eligible) == 0:
         return None, 0, 0
     end = int(eligible[-1])
@@ -1568,7 +1663,7 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         f"- Calibration snapshot: `{payload.get('calibration_snapshot_id')}`",
         f"- Rows: {payload.get('rows')} ({payload.get('malware')} malware, {payload.get('benign')} benign)",
     ]
-    # Headline sections: L50 (new default), L100 (loose end of the new grid).
+    # Historical report checkpoints L50 and L100; the deploy default is L25.
     # Skip a level cleanly if a route lacks it — happens for routes whose
     # policies are carried forward from a pre-migration bundle that emitted
     # the old (0,1,2,3,5,10,25,50,100,200,300,500,1000,2000) grid.
@@ -1590,13 +1685,13 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
                 "",
                 f"## L{level_no} {severity.title()}",
                 "",
-                "Rows marked † are below data resolution: the per-filetype "
-                "calibration sample is too small to credibly assert FP/100M ≤ "
-                "target at this level (95% CI). The threshold shown is the "
-                "loosest empirical 0-FP threshold; FP/100M is what the test "
-                "partition actually observed under that threshold. *95% CI "
-                "upper* is the Clopper-Pearson upper bound on deployment "
-                "FP/100M given the observed FP count in this filetype's benigns.",
+                "Levels use the [shared pool-adjusted allowance](https://github.com/atomdrift-project/collimator/blob/main/LEVELS.md): "
+                "L0 allows zero observed calibration FPs; positive L allows "
+                "`1 + (L - 1) * N / 100_000_000` for N benigns. "
+                "Rows marked † have limited calibration resolution; the marker "
+                "does not mean zero observed FPs. FP/100M is the observed rate "
+                "on the reported partition. The 95% upper bound is separate "
+                "from the count allowance and assumes representative sampling.",
                 "",
                 "| Route | Policy | Malware | Benign | Recall | FP | FP/100M | 95% CI upper (FP/100M) | Global FP/100M | F1 | Accuracy | Thresholds |",
                 "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
@@ -1757,6 +1852,28 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
         route_names.append(group_route)
     if type_route in routes:
         route_names.append(type_route)
+    primary_route_names = tuple(route_names)
+    # Optional global alternatives (for example the incumbent general model)
+    # let dev selection preserve complementary detections without replacing
+    # the primary general model for every filetype. They remain ordinary
+    # named filegroup routes in the runtime bundle.
+    auxiliaries = config.get("global_auxiliary_routes", [])
+    if (not isinstance(auxiliaries, list)
+            or any(not isinstance(name, str) or not name.startswith("filegroups/")
+                   or name not in routes for name in auxiliaries)
+            or len(set(auxiliaries)) != len(auxiliaries)):
+        raise ValueError("global_auxiliary_routes must name distinct scored filegroup routes")
+    route_names.extend(name for name in auxiliaries if name not in route_names)
+    global_route_names = tuple(route_names)
+    scoped = config.get("filetype_auxiliary_routes", {})
+    if (not isinstance(scoped, dict)
+            or any(not isinstance(ft, str) or not isinstance(names, list)
+                   or any(not isinstance(name, str) or not name.startswith("filegroups/")
+                          or name not in routes for name in names)
+                   or len(set(names)) != len(names)
+                   for ft, names in scoped.items())):
+        raise ValueError("filetype_auxiliary_routes must map filetypes to distinct scored filegroup routes")
+    route_names.extend(name for name in scoped.get(file_type, []) if name not in route_names)
     route_probs = {
         route_name: dense
         for route_name in route_names
@@ -1785,21 +1902,40 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
             file=sys.stderr,
         )
         del route_probs[type_route]
+    # Adding an alternative must not remove the existing max/joint/blend
+    # families. A four-input blend is a different fitted model, not a superset
+    # of the three-input blend that previously won on the same dev examples.
+    policy_inputs = []
+    for names in (primary_route_names, global_route_names, tuple(route_probs)):
+        subset = {name: probs for name, probs in route_probs.items() if name in names}
+        if not any(set(subset) == set(previous) for previous in policy_inputs):
+            policy_inputs.append(subset)
     specialist_probs = route_probs.get(type_route)
     pareto = (
         _specialist_pareto_curve(specialist_probs, scoped_labels)
         if specialist_probs is not None else None
     )
-    routes_for_joint_full = tuple(route_probs.keys())
     # The learned blend is fit on RAW route probs — the space litmus feeds it at
     # serving now that the isotonic calibrator is gone. The calibrator was
     # decision-irrelevant (monotonic, thresholds mapped through it) but saturated
     # the blend's logit inputs, collapsing distinct raw scores to the same value.
     # See the project_calibrator_decision_irrelevant memory.
-    blend_fit = None
-    if len(routes_for_joint_full) >= 2:
-        blend_fit = _fit_learned_blend(
-            route_probs, scoped_labels, routes_for_joint_full,
+    blend_fits = [(_fit_learned_blend(probs, scoped_labels, tuple(probs))
+                   if len(probs) >= 2 else None) for probs in policy_inputs]
+    weighted_options = config.get("tail_weighted_blends", {})
+    if (not isinstance(weighted_options, dict)
+            or any(not isinstance(ft, str) or not isinstance(options, dict)
+                   or set(options) != {"weight", "fraction"}
+                   or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                          or not np.isfinite(value) for value in options.values())
+                   or options["weight"] < 1 or not 0 < options["fraction"] <= 1
+                   for ft, options in weighted_options.items())):
+        raise ValueError("tail_weighted_blends must map filetypes to finite weight >= 1 "
+                         "and 0 < fraction <= 1")
+    weighted_fit = None
+    if file_type in weighted_options and malware >= _MIN_SLICE_MALWARE:
+        weighted_fit = _fit_tail_weighted_blend(
+            route_probs, scoped_labels, tuple(route_probs), **weighted_options[file_type],
         )
     levels: list[dict[str, Any]] = []
     for target in config["levels"]:
@@ -1825,39 +1961,33 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                         target_per_million=target_per_million,
                         total_benign=total_benign,
                     )
+                    for general_route in ["general", *(name for name in auxiliaries if name in route_probs)]
                     for policy, primary, allowed in _policy_candidates(
-                        general="general",
+                        general=general_route,
                         group=group_route if group_route in route_probs else None,
                         filetype=type_route if type_route in route_probs else None,
                     )
                 )
-                routes_for_max = tuple(
-                    route for route in (
-                        "general",
-                        group_route if group_route in route_probs else None,
-                        type_route if type_route in route_probs else None,
-                    )
-                    if route is not None
-                )
-                if len(routes_for_max) >= 2:
-                    candidates.append(
-                        _calibrate_max_rule_policy(
-                            scoped_labels,
-                            route_probs,
-                            allowed_routes=routes_for_max,
-                            target_per_million=target_per_million,
-                            total_benign=total_benign,
-                        ),
-                    )
+                for probs in policy_inputs:
+                    if len(probs) >= 2:
+                        candidates.append(
+                            _calibrate_max_rule_policy(
+                                scoped_labels,
+                                probs,
+                                allowed_routes=tuple(probs),
+                                target_per_million=target_per_million,
+                                total_benign=total_benign,
+                            ),
+                        )
             calibrated_thresholds = target[severity].get("thresholds", {})
             if calibrated_thresholds:
-                candidates.append(
+                candidates.extend(
                     _make_calibrate_inherited_candidate(
-                        scoped_labels, route_probs,
+                        scoped_labels, probs,
                         thresholds=calibrated_thresholds,
                         target_per_million=target_per_million,
                         total_benign=total_benign,
-                    ),
+                    ) for probs in policy_inputs
                 )
             # (Previously: when hostile had no inherited thresholds, fall back
             # to the suspicious thresholds. With suspicious removed from
@@ -1868,16 +1998,53 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                 # learned-blend at fixed FP counts), so it sits behind the same
                 # floor as the policy candidates above — otherwise a 1-malware
                 # slice still gets a threshold fitted to its single positive.
-                _mark_dominated_by_specialist(
-                    candidates,
-                    route_probs,
-                    scoped_labels,
-                    specialist_route=type_route,
-                    target_per_million=target_per_million,
-                    total_benign=total_benign,
-                    pareto=pareto,
-                    blend_fit=blend_fit,
-                )
+                for probs, blend_fit in zip(policy_inputs, blend_fits, strict=True):
+                    if type_route not in probs:
+                        # General/group alternatives can be complementary even
+                        # without a dedicated filetype model. Specialist
+                        # dominance has no meaning here, but joint thresholds
+                        # and blends still need to enter the search.
+                        if len(probs) >= 2:
+                            fp_targets = {0, 1, 3, _budget(benign, target_per_million)}
+                            for fp_target in sorted(fp_targets):
+                                joint = _make_joint_or_candidate_at_fp(
+                                    route_probs=probs, labels=scoped_labels, routes=tuple(probs),
+                                    fp_target=fp_target, target_per_million=target_per_million,
+                                    total_benign=total_benign,
+                                )
+                                if joint is not None:
+                                    candidates.append(joint)
+                                if blend_fit is not None:
+                                    blend = _blend_candidate_from_fit(
+                                        blend_fit, scoped_labels, fp_target=fp_target,
+                                        target_per_million=target_per_million,
+                                        total_benign=total_benign,
+                                    )
+                                    if blend is not None:
+                                        candidates.append(blend)
+                        continue
+                    _mark_dominated_by_specialist(
+                        candidates,
+                        probs,
+                        scoped_labels,
+                        specialist_route=type_route,
+                        target_per_million=target_per_million,
+                        total_benign=total_benign,
+                        pareto=pareto,
+                        blend_fit=blend_fit,
+                    )
+                if weighted_fit is not None:
+                    weight = weighted_options[file_type]["weight"]
+                    for count in sorted({0, 1, 3, _budget(benign, target_per_million)}):
+                        weighted = _blend_candidate_from_fit(
+                            weighted_fit, scoped_labels, fp_target=count,
+                            target_per_million=target_per_million,
+                            total_benign=total_benign,
+                        )
+                        if weighted is not None:
+                            weighted["policy"] = f"tail_weighted_{weight:g}_blend_at_fp_{count}"
+                            weighted["tail_weighting"] = weighted_fit.get("tail_weighting", {})
+                            candidates.append(weighted)
             level_item[severity] = {
                 "target_per_million": target_per_million,
                 "budget": _budget(benign, target_per_million),

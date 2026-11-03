@@ -2146,3 +2146,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T215029-filetypes-python` — 2026-11-02T21:50:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `131fee033190ac95` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.8952 | 0.9357 | 0.8210 | 64 | [log](out/autocollie/runs/2026-11-02T21-53-00_20261102T215029-filetypes-python_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `0030a8042266bde2` | python_kv_vocab_depth4_cutoff4 | ok | 0.9661 | 0.9857 | 0.8747 | 76 | [log](out/autocollie/runs/2026-11-02T21-54-09_20261102T215029-filetypes-python_python_kv_vocab_depth4_cutoff4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_kv_vocab_depth4_cutoff4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.6331 L25 recall of the best comparable run by combining the superior trait_path_depth=4 specificity (0.6119 recall, 0.9881 PR_AUC) with the min_malware_training_score=4 cutoff (0.6331 recall) to filter low-severity noise while retaining high-severity signal.
+
+</details>
+

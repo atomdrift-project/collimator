@@ -54,6 +54,15 @@ def split_bucket(canonical):
     return int.from_bytes(hashlib.sha256(("portable-stability-v1:" + canonical).encode()).digest()[:4], "big") / 2**32
 
 
+def ensemble_probability(members):
+    """Match bundle/Scan averaging: accumulate f32 member scores in f64.
+
+    Averaging in f32 can round a near-one benign score to exactly one and
+    create a tie that does not exist in the deployed ensemble.
+    """
+    return np.mean(members, axis=0, dtype=np.float64).astype(np.float32)
+
+
 def threshold_at_fp_budget(y, scores, budget):
     """Inclusive score threshold with no partial acceptance of tied scores."""
     benign = np.sort(np.asarray(scores, dtype=np.float64)[y == 0])[::-1]
@@ -287,7 +296,7 @@ def summarize(args, yd, selection, filetypes):
             continue
         for size in range(1, len(seeds) + 1):
             for subset in itertools.combinations(seeds, size):
-                p = np.mean([predictions[(name, s)] for s in subset], axis=0, dtype=np.float32)
+                p = ensemble_probability([predictions[(name, s)] for s in subset])
                 selection_results.append({"variant": name, "seeds": list(subset),
                                           "selection": metrics(yd[selection], p[selection])})
     # Winner and seed admission are frozen before consulting assessment labels.
@@ -310,7 +319,7 @@ def assessment(args, yd, selection, filetypes, winner, comparisons, predictions)
         if key in seen:
             continue
         seen.add(key)
-        p = np.mean([predictions[(entry["variant"], s)] for s in entry["seeds"]], axis=0, dtype=np.float32)
+        p = ensemble_probability([predictions[(entry["variant"], s)] for s in entry["seeds"]])
         mask = ~selection
         thresholds = {b: v["threshold"] for b, v in entry["selection"]["at_fp"].items()}
         def report(subset):

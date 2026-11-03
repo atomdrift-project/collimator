@@ -7,7 +7,6 @@ from dataclasses import asdict, fields
 import json
 import logging
 from pathlib import Path
-import shutil
 
 import lightgbm as lgb
 import numpy as np
@@ -15,7 +14,7 @@ import onnxruntime as ort
 
 import azoth_specialist_tuneup as tune
 import azoth_portable_stability as study
-from azoth_specialist_suite import _seed_health_failure
+from azoth_specialist_suite import _seed_health_failure, _temporary_feature_env
 from collimator import bundle, cache_identity, export, features, train
 
 
@@ -35,7 +34,9 @@ def refit(root: Path, threads: int):
         if selected['training_pool'] == 'all_labeled':
             training = tune.with_extra(root, training)
     spec = features.FeatureSpec.load(root/selected['feature_spec'])
-    shutil.copy2(root/selected['feature_spec'], dest/'feature_spec.json')
+    with _temporary_feature_env(selected['feature_env']):
+        spec.bind_metric_contract()
+    spec.save(dest/'feature_spec.json')
     keys = {f.name for f in fields(train.TrainConfig)}
     settings = {**original['train_config'], **selected['training_overrides'],
                 'num_threads': threads, 'device': 'cpu', 'n_folds': 0}

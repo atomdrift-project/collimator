@@ -1248,3 +1248,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T235833-filegroups-media` — 2026-11-02T23:58:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0a53fd6fb23bcc5e` | inherit_from_filetypes_dex_67099b41 | ok | 0.9221 | 0.9861 | 0.8604 | 15 | [log](out/autocollie/runs/2026-11-03T00-00-33_20261102T235833-filegroups-media_inherit_from_filetypes_dex_67099b41.log) |
+| `ccaaa0d9fa347919` | media_min_malware_score_4 | ok | 0.5786 | 0.9069 | 0.5119 | 8 | [log](out/autocollie/runs/2026-11-03T00-00-50_20261102T235833-filegroups-media_media_min_malware_score_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the measured L25 recall of 0.0790 by testing if the historical best configuration (0.0848) relied on filtering low-severity malware (min_malware_score=4) to reduce noise and improve class balance, which was reverted to 0 in recent runs.
+
+</details>
+

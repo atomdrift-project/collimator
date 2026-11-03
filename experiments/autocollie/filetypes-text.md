@@ -1347,3 +1347,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T232747-filetypes-text` — 2026-11-02T23:27:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aba18e5bed1e67cc` | inherit_from_filetypes_iso_10e59f57 | ok | 0.9217 | 0.9825 | 0.7870 | 15 | [log](out/autocollie/runs/2026-11-02T23-30-14_20261102T232747-filetypes-text_inherit_from_filetypes_iso_10e59f57.log) |
+| `4fe40e74cffa6bea` | text_min_malware_score_0_seed_search_k3 | ok | 0.9261 | 0.9829 | 0.8804 | 11 | [log](out/autocollie/runs/2026-11-02T23-30-33_20261102T232747-filetypes-text_text_min_malware_score_0_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_min_malware_score_0_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve the 0.3801 L25 recall of the best historical run (3546e3721884c8ec) by averaging an ensemble of 3 seeds to reduce variance and potentially capture more stable malware patterns, while retaining the full training coverage established by min_malware_score=0.
+
+</details>
+

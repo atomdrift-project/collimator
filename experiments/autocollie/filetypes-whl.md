@@ -411,3 +411,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T230625-filetypes-whl` — 2026-11-02T23:06:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a0dedb0d4b804ce` | inherit_from_filetypes_iso_10e59f57 | ok | 0.8696 | 0.9916 | 0.4819 | 220 | [log](out/autocollie/runs/2026-11-02T23-09-50_20261102T230625-filetypes-whl_inherit_from_filetypes_iso_10e59f57.log) |
+| `e9e615af3905fef7` | whl_min_malware_score_zero | ok | 0.8869 | 0.9922 | 0.8022 | 237 | [log](out/autocollie/runs/2026-11-02T23-13-42_20261102T230625-filetypes-whl_whl_min_malware_score_zero.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`whl_min_malware_score_zero`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve L25 recall from 0.2052 by removing the min_malware_score=4 filter that likely discards low-severity malware samples, thereby increasing training class balance and allowing the model to learn broader detection patterns without inflating class weights excessively.
+
+</details>
+

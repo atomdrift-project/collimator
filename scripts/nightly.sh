@@ -46,6 +46,15 @@
 # deferral. Installed units additionally enforce RAM/swap limits.
 set -uo pipefail
 
+# Bash otherwise reads later commands from disk after each long-running stage.
+# A checkout update during training can shift that read offset into another
+# command. Load this invocation completely before starting any work.
+if [[ -n ${BASH_SOURCE[0]:-} ]]; then
+  export NIGHTLY_REPO_ROOT="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+  script=$(cat -- "${BASH_SOURCE[0]}") || exit 1
+  exec bash -c "$script" "${BASH_SOURCE[0]}" "$@"
+fi
+
 mode="${1:-train}"
 case "$mode" in
   train|autocollie) ;;
@@ -62,7 +71,7 @@ export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$PATH"
 export LANG="${LANG:-C.UTF-8}"
 
-cd "$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")" || exit 1   # collimator/
+cd "$NIGHTLY_REPO_ROOT" || exit 1   # collimator/
 azoth="$(dirname "$PWD")/azoth"
 
 # Manual runs need the same hard boundary as the installed service. Re-enter

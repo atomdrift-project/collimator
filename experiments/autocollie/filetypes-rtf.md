@@ -919,3 +919,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T223317-filetypes-rtf` — 2026-11-02T22:33:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e3697b9a34234149` | inherit_from_filetypes_rar_41a97b22 | ok | 0.9985 | 0.9949 | 0.9918 | 5 | [log](out/autocollie/runs/2026-11-02T22-36-01_20261102T223317-filetypes-rtf_inherit_from_filetypes_rar_41a97b22.log) |
+| `bde46993836eeedf` | rtf_training_max_delta_step_20 | ok | 0.9978 | 0.9924 | 0.9918 | 8 | [log](out/autocollie/runs/2026-11-02T22-36-08_20261102T223317-filetypes-rtf_rtf_training_max_delta_step_20.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_41a97b22`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rar (key=41a97b22a5b32ca4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_training_max_delta_step_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Aims to improve the 0.9912 L25 recall of the current best comparable run by testing max_delta_step=20, a transfer hypothesis from the nupkg route's perfect score, to address potential constant models or saturated scores without changing features.
+
+</details>
+

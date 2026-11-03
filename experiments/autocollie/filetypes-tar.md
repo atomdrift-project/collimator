@@ -1202,3 +1202,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T000059-filetypes-tar` — 2026-11-03T00:00:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a53a6ebb9ddb7ca1` | inherit_from_filetypes_dex_67099b41 | ok | 0.9636 | 0.9902 | 0.9118 | 63 | [log](out/autocollie/runs/2026-11-03T00-04-42_20261103T000059-filetypes-tar_inherit_from_filetypes_dex_67099b41.log) |
+| `0c1cbf878de945df` | hard_negative_fraction_001_weight_12 | ok | 0.9410 | 0.9839 | 0.8281 | 49 | [log](out/autocollie/runs/2026-11-03T00-05-12_20261103T000059-filetypes-tar_hard_negative_fraction_001_weight_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_negative_fraction_001_weight_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the L25 recall of 0.7424 by reducing false positives via a tighter hard-negative fraction (0.01) and higher weight (12) to address the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+
+</details>
+

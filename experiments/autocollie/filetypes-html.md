@@ -421,3 +421,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T224528-filetypes-html` — 2026-11-02T22:45:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4ac59106eeb6b128` | inherit_from_filetypes_iso_95e36236 | ok | 0.9947 | 0.9938 | 0.9716 | 23 | [log](out/autocollie/runs/2026-11-02T22-47-24_20261102T224528-filetypes-html_inherit_from_filetypes_iso_95e36236.log) |
+| `9d57d18a4eaaae16` | html_desc_kw_balanced_mi | ok | 0.9992 | 0.9990 | 0.9928 | 41 | [log](out/autocollie/runs/2026-11-02T22-47-55_20261102T224528-filetypes-html_html_desc_kw_balanced_mi.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_95e36236`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=95e3623646ed09d3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`html_desc_kw_balanced_mi`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Aims to improve the 0.9269 L25 recall of the best description-keyword run by switching selection to balanced_mi, which may better rank discriminative HTML-specific terms than frequency, potentially capturing more malware at the 1-FP budget.
+
+</details>
+

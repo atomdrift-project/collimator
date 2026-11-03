@@ -1254,3 +1254,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T224950-filetypes-rust` — 2026-11-02T22:49:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fc7a779c0c82aa1f` | inherit_from_filetypes_iso_10e59f57 | ok | 0.9594 | 0.9968 | 0.9222 | 20 | [log](out/autocollie/runs/2026-11-02T22-50-35_20261102T224950-filetypes-rust_inherit_from_filetypes_iso_10e59f57.log) |
+| `daa3f66cfd1eb767` | rust_depth5_transfer_elf | ok | 0.9784 | 0.9989 | 0.9625 | 17 | [log](out/autocollie/runs/2026-11-02T22-51-00_20261102T224950-filetypes-rust_rust_depth5_transfer_elf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_depth5_transfer_elf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests trait_path_depth=5 to improve the 0.8776 L25 recall by increasing finding-prefix specificity, following the depth transfer hypothesis from sister routes where depth 2/4 were tested but 5 remains unexplored for this route's high-recall baseline.
+
+</details>
+

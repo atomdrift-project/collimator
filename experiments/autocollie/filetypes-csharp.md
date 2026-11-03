@@ -1284,3 +1284,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T220936-filetypes-csharp` — 2026-11-02T22:09:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `25be78599dc3af06` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.2949 | 0.6371 | 0.3767 | 13 | [log](out/autocollie/runs/2026-11-02T22-13-42_20261102T220936-filetypes-csharp_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `958e4bd79c6825a1` | csharp_depth5_cutoff0 | ok | 0.9512 | 0.9974 | 0.9182 | 14 | [log](out/autocollie/runs/2026-11-02T22-13-59_20261102T220936-filetypes-csharp_csharp_depth5_cutoff0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_depth5_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 5 further improves L25 recall beyond the 0.4684 achieved at depth 4 by capturing more specific finding prefixes, while maintaining the min_malware_score=0 setting that prevented class weight inflation.
+
+</details>
+

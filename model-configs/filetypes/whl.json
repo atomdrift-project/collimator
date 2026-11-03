@@ -1,8 +1,8 @@
 {
   "schema": "azoth.model_config.v1",
   "route": "filetypes/whl",
-  "experiment_key": "a3b98e528344adf4",
-  "updated_at": "2026-10-28T14:34:58.911417+00:00",
+  "experiment_key": "0614b35a078ba51c",
+  "updated_at": "2026-11-03T00:09:49.913951+00:00",
   "train_config": {
     "benign_filetype_weights": {},
     "beta": 1.25,
@@ -29,7 +29,7 @@
     "reg_alpha": 0.0,
     "reg_lambda": 1.0,
     "scale_pos_weight_mult": 0.1,
-    "seed": 42,
+    "seed": 43,
     "subsample": 0.8,
     "threshold_fpr_target": null,
     "threshold_mode": "fbeta"
@@ -119,17 +119,38 @@
     "COLLIMATOR_TRAIT_PATH_DEPTH": "3",
     "COLLIMATOR_TRIGRAM_MAX": "500",
     "COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC": "0.01",
-    "COLLIMATOR_TRIGRAM_MIN_FREQ": "5"
+    "COLLIMATOR_TRIGRAM_MIN_FREQ": "5",
+    "COLLIMATOR_CONTEXT_KEYWORDS": "1",
+    "COLLIMATOR_CONTEXT_KEYWORD_VOCAB_MAX": "5000",
+    "COLLIMATOR_CONTEXT_KEYWORD_MIN_FREQ": "2",
+    "COLLIMATOR_CONTEXT_KEYWORD_SELECTION": "frequency",
+    "COLLIMATOR_ARCHIVE_MEMBER_CONTEXT": "1"
   },
   "min_malware_training_score": 4,
   "provenance": {
-    "run": "out/experiments/azoth/runs/a3b98e528344adf4.json",
-    "acceptance": {
-      "route": "filetypes/whl",
-      "full_train_key": "a3b98e528344adf4",
-      "updated_at": "2026-10-28T14:34:58.911417+00:00",
-      "source": "verified_research_installation",
-      "model_revision": "90de00fde50080ba633355020da61b747b708dd207001a4f19baf526b87f56d6"
+    "source": "user_requested_research_default",
+    "research": "out/experiments/whl-80-20261102/context-search/context-confirmation.json",
+    "recipe": "expanded-current",
+    "evidence": "80% recall required 74 vs 79 FP on 10,092 benign files; results mixed across low-FP budgets. Research default, not a deployed promotion.",
+    "training_note": "Use normal pipeline holdout and calibration; research fit used an external reserved group split.",
+    "previous": {
+      "experiment_key": "a3b98e528344adf4",
+      "provenance": {
+        "run": "out/experiments/azoth/runs/a3b98e528344adf4.json",
+        "acceptance": {
+          "route": "filetypes/whl",
+          "full_train_key": "a3b98e528344adf4",
+          "updated_at": "2026-10-28T14:34:58.911417+00:00",
+          "source": "verified_research_installation",
+          "model_revision": "90de00fde50080ba633355020da61b747b708dd207001a4f19baf526b87f56d6"
+        }
+      }
     }
-  }
+  },
+  "ensemble_seeds": [
+    43,
+    44,
+    45,
+    46
+  ]
 }

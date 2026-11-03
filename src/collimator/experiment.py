@@ -253,6 +253,10 @@ def _matrix_cache_key(
     content_hash = _allowlist_content_hash(feature_env)
     if content_hash:
         key_dict["allowlist_content"] = content_hash
+    from .model_config import feature_spec_digest
+    pinned_digest = feature_spec_digest(feature_env)
+    if pinned_digest:
+        key_dict['feature_spec_content'] = pinned_digest
     blob = json.dumps(key_dict, sort_keys=True, default=str)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -928,6 +932,11 @@ def run_experiment(
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     started = time.perf_counter()
+    from .model_config import parse_ensemble_seeds, feature_spec_digest, pinned_feature_spec
+    requested_seeds = parse_ensemble_seeds(os.getenv('COLLIMATOR_ENSEMBLE_SEEDS', ''))
+    if requested_seeds is not None:
+        seed_search_k = len(requested_seeds)
+        save_all_seeds = len(requested_seeds) > 1
     # Capture all source identities before long-running work. Later edits must
     # not change a running process's checkpoint keys halfway through a fold.
     for stage in ("corpus", "features", "training"):
@@ -1021,6 +1030,11 @@ def run_experiment(
             "monotone_constraints": monotone_constraints or {},
         },
     }
+    if requested_seeds is not None:
+        experiment_spec['ensemble_seeds'] = requested_seeds
+    pinned_digest = feature_spec_digest(feature_env)
+    if pinned_digest:
+        experiment_spec['pinned_feature_spec_revision'] = pinned_digest
     exp_key = _experiment_key(experiment_spec)
     keyed_result_path = output_dir / "runs" / f"{exp_key}.json" if output_dir is not None else None
     if (keyed_result_path is not None and keyed_result_path.exists()
@@ -1077,6 +1091,7 @@ def run_experiment(
     cached_matrices = _load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None
     if cached_matrices is not None:
         spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids, eval_revision = cached_matrices
+        spec.bind_metric_contract()
         print(f"\nEXPERIMENT (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
     else:
         # --- Cache level 1: corpus row selections + file types ----------------
@@ -1138,12 +1153,18 @@ def run_experiment(
             vocab_key = features.vocabulary_identity(db_path, train_ids_labels)
             prefix = "vocabulary_shared" if shared_vocab_dir else "vocabulary"
             vocab_options["checkpoint_dir"] = cache_dir / f"{prefix}_{vocab_key}"
-        spec = features.build_vocab_from_db(
-            db_path,
-            train_ids_labels,
-            n_workers=n_workers,
-            **vocab_options,
-        )
+        spec = pinned_feature_spec(feature_env)
+        if spec is None:
+            spec = features.build_vocab_from_db(
+                db_path,
+                train_ids_labels,
+                n_workers=n_workers,
+                **vocab_options,
+            )
+        else:
+            log.info('replaying accepted vocabulary (%d features)', spec.total_features)
+
+        spec.bind_metric_contract()
 
         log.info("pass 2: extracting all features (worker-local DB fetching)")
         # Keep the requested maximum intact: vocabulary admission can recover
@@ -1250,8 +1271,8 @@ def run_experiment(
     all_attempt_seeds: list[int] = []
     all_attempt_probs: list[np.ndarray] = []
 
-    for k_idx in range(seed_search_k):
-        attempt_seed = int(seed) + k_idx
+    seed_sequence = requested_seeds if requested_seeds is not None else list(range(int(seed), int(seed)+seed_search_k))
+    for k_idx, attempt_seed in enumerate(seed_sequence):
         if seed_search_k > 1:
             log.info("seed-search attempt %d/%d (seed=%d)", k_idx + 1, seed_search_k, attempt_seed)
         attempt_started = time.perf_counter()
@@ -1469,6 +1490,7 @@ def run_experiment(
         "seed_search_results": seed_search_results,
         "save_all_seeds": bool(deploy_averaged),
         "n_seed_models_shipped": len(all_attempt_models) if deploy_averaged else 1,
+        "ensemble_seeds": all_attempt_seeds if deploy_averaged else [int(winning_seed)],
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "elapsed_seconds": float(time.perf_counter() - started),
         "snapshot_max_id": int(pinned_max_id),

@@ -47,6 +47,36 @@ def test_each_route_uses_its_own_allowlist(tmp_path, monkeypatch):
     assert suite.features.allowed_features() is None
 
 
+def test_current_pe_config_discovers_confirmed_keywords_with_nightly_allowlist():
+    """Exercise the same config loader and discovery used by nightly."""
+    from collimator import model_config
+
+    accepted = model_config.load("filetypes/pe")
+    with suite._temporary_feature_env(accepted["feature_env"]):
+        config = suite.features.feature_config_from_env()
+        assert suite.features._keyword_sources() == ("ruleword", "descword", "contextword")
+        for source, cap, selection in (("ruleword", 1000, "balanced_mi"),
+                                       ("descword", 5000, "balanced_mi"),
+                                       ("contextword", 1000, "frequency")):
+            assert config.keyword_source_settings[source] == dict(
+                selection=selection, vocab_max=cap, min_freq=5, candidate_max=100000)
+        report = {"files": [{"type": "pe", "traits": [{
+            "id": "metadata/network::curl_download_post", "desc": "Download via HTTP POST",
+            "conf": 1.0, "crit": 3}], "ctx": [{"ln": 0, "s": "runtime fetch_token"}]}]}
+        spec = suite.features.build_vocab([report] * 5, n_workers=1)
+        assert spec.keyword_vocabs == {
+            "ruleword": ["curl", "download", "post"],
+            "descword": ["download", "http", "post", "via"],
+            "contextword": ["fetch", "runtime", "token"],
+        }
+        assert spec.abi_version == 23
+        assert spec.base_feature_abi == 20
+        assert not any(f"{source}:*" in spec.feature_names for source in spec.keyword_vocabs)
+        allowed = suite.features.allowed_features()
+        assert all(suite.features._allowed_with_pair(name, allowed)
+                   for name in spec.feature_names if name.split(":", 1)[0] not in spec.keyword_vocabs)
+
+
 def test_initial_hessian_bound_catches_rar_but_not_deb():
     config = train.TrainConfig(learner="azoth", min_child_weight=5)
     blocked = suite._initial_split_blocker(config, n_benign=47, n_malware=16334)
@@ -84,9 +114,17 @@ def test_initial_hessian_block_is_real_even_with_a_perfect_feature():
 
 
 def test_rar_preflight_skips_seed_training_and_records_fallback(tmp_path, monkeypatch):
+    from collimator import experiment
+    monkeypatch.setenv('COLLIMATOR_ATTACK_FEATURES','1')
+    captured=[]
+    original_snapshot=experiment._collimator_env
+    def snapshot():
+        value=original_snapshot();captured.append(value);return value
+    monkeypatch.setattr(experiment,'_collimator_env',snapshot)
     labels = np.r_[np.zeros(47), np.ones(16334)].astype(np.float32)
     matrix = sparse.csr_matrix((len(labels), 1), dtype=np.float32)
-    spec = SimpleNamespace(total_features=1, feature_names=["test"], save=lambda path: None)
+    spec = suite.features.FeatureSpec(total_features=1, feature_names=["test"])
+    spec.save = lambda path: None
     monkeypatch.setattr(suite.cache_identity, "database_revision", lambda _: "test")
     monkeypatch.setattr(suite, "_fetch_rows", lambda *a, **k: [])
     monkeypatch.setattr(suite, "_ids_labels", lambda *a, **k: list(enumerate(labels)))
@@ -98,12 +136,59 @@ def test_rar_preflight_skips_seed_training_and_records_fallback(tmp_path, monkey
     result = suite._train_one(
         db_path="unused", name="rar", kind="filetype", file_types=("rar",),
         output_dir=tmp_path, general_spec_path=tmp_path/"unused", general_spec=spec,
-        mask_spec_path=None, feature_env={}, config=train.TrainConfig(learner="azoth"),
+        mask_spec_path=None, feature_env={'COLLIMATOR_TEXT_METRICS_FULL':'1'}, config=train.TrainConfig(learner="azoth"),
         workers=1, max_id=1, filegroup_score_filter=False, skip_benchmark=True, n_seed_extras=2,
     )
     assert result["skip_reason"] == "unsplittable_initial_hessian"
     assert result["seed_health"]["attempts"] == []
     assert result["seed_health"]["target_members"] == 3
+    assert captured[0]['COLLIMATOR_ATTACK_FEATURES']=='1'
+    assert captured[0]['COLLIMATOR_TEXT_METRICS_FULL']=='1'
+
+
+def test_route_keyword_selection_environment_reaches_every_seed(tmp_path, monkeypatch):
+    from collimator import keywords
+
+    monkeypatch.setenv("COLLIMATOR_DESCRIPTION_KEYWORD_SELECTION", "frequency")
+    labels = np.tile([0, 1], 20).astype(np.float32)
+    matrix = sparse.csr_matrix(np.column_stack((labels, 1 - labels)), dtype=np.float32)
+    spec = suite.features.FeatureSpec(total_features=2, feature_names=["descword:bad", "descword:good"])
+    spec.save = lambda path: None
+    monkeypatch.setattr(suite.cache_identity, "database_revision", lambda _: "test")
+    monkeypatch.setattr(suite, "_fetch_rows", lambda *a, **k: [])
+    monkeypatch.setattr(suite, "_ids_labels", lambda *a, **k: list(enumerate(labels)))
+    monkeypatch.setattr(suite, "_file_types", lambda *a, **k: ["pe"] * len(labels))
+    monkeypatch.setattr(suite.features, "build_vocab_from_db", lambda *a, **k: spec)
+    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", lambda *a, **k:
+                        (matrix, labels, matrix[:0], labels[:0]))
+    seen = []
+
+    def fit(x, y, config, **kwargs):
+        _, selected = keywords.select_for_fit(x, y, kwargs["feature_names"])
+        assert selected["descword"]["selected"] == 1
+        assert selected["descword"]["selection"] == "balanced_mi"
+        seen.append(config.seed)
+
+    class FinishedFits(Exception):
+        pass
+
+    def ensemble(**kwargs):
+        for seed in (43, 44, 45):
+            kwargs["fit_seed"](seed)
+            assert keywords.settings_from_env()["descword"]["selection"] == "frequency"
+        raise FinishedFits
+
+    monkeypatch.setattr(suite.train, "train", fit)
+    monkeypatch.setattr(suite, "_train_healthy_seed_ensemble", ensemble)
+    with pytest.raises(FinishedFits):
+        suite._train_one(
+            db_path="unused", name="pe", kind="filetype", file_types=("pe",),
+            output_dir=tmp_path, general_spec_path=tmp_path / "unused", general_spec=spec,
+            mask_spec_path=None, feature_env={"COLLIMATOR_DESCRIPTION_KEYWORD_SELECTION": "balanced_mi",
+                "COLLIMATOR_DESCRIPTION_KEYWORD_VOCAB_MAX": "1", "COLLIMATOR_DESCRIPTION_KEYWORD_MIN_FREQ": "1"},
+            config=train.TrainConfig(learner="azoth", min_child_weight=.1),
+            workers=1, max_id=1, filegroup_score_filter=False, skip_benchmark=True)
+    assert seen == [43, 44, 45]
 
 
 def _fake_train_result(
@@ -179,6 +264,29 @@ def test_seed_health_accepts_perfect_metric_roundoff_without_wasting_retries(mon
     assert len(attempts) == 3
     # The audit retains the measured value, not a rewritten metric.
     assert attempts[0]["avg_precision"] == 1.0000000000000002
+
+
+def test_pinned_ensemble_preserves_nonconsecutive_members_without_replacements(monkeypatch):
+    monkeypatch.setattr(suite.export, 'is_constant_predictor', lambda model: model.constant)
+    called = []
+    def fit(seed):
+        called.append(seed)
+        return _fake_train_result(.1 if seed == 44 else .99)
+    accepted, attempts = suite._train_healthy_seed_ensemble(
+        name='pinned', base_seed=42, target_members=2, retry_budget=3,
+        min_roc_auc=.5, fit_seed=fit, requested_seeds=[42,44])
+    assert called == [42,44]
+    assert [seed for seed, _ in accepted] == [42]
+    assert len(attempts) == 2  # Caller rejects incomplete membership; no seed 43/45.
+
+
+def test_pinned_single_seed_does_not_expand_to_the_global_default(monkeypatch):
+    monkeypatch.setattr(suite.export, 'is_constant_predictor', lambda model: model.constant)
+    accepted, attempts = suite._train_healthy_seed_ensemble(
+        name='rust', base_seed=42, target_members=1, retry_budget=3,
+        min_roc_auc=.5, fit_seed=lambda seed: _fake_train_result(.99), requested_seeds=[43])
+    assert [seed for seed, _ in accepted] == [43]
+    assert len(attempts) == 1
 
 
 @pytest.mark.parametrize("value", [-0.000001, 1.000001, float("inf"), float("nan")])

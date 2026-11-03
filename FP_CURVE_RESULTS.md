@@ -1,5 +1,10 @@
 # FP-Curve Estimation: Build + Results
 
+Historical research: rate labels below describe the experiments as run, including
+literal-rate alternatives. The current shared level definition is [LEVELS.md](LEVELS.md):
+L0 allows zero observed FPs; positive L allows `1 + (L - 1) * N / 100_000_000`.
+These historical results do not redefine the deployed scale.
+
 Status: EXPERIMENTS RUN (2026-08-03). Implements `FP_CURVE_PROPOSAL.md`.
 Nothing here touches a shipped bundle.
 

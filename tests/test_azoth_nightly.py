@@ -11,6 +11,20 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_sweep_passes_resolved_baseline_to_candidate_cloning(tmp_path):
+    baseline = tmp_path / "run"
+    baseline.mkdir()
+    alias = tmp_path / "azoth"
+    alias.symlink_to(baseline, target_is_directory=True)
+    result = subprocess.run(
+        ["make", "-n", "-o", "venv", "-o", "check-db", "-o", "autocollie-build",
+         "autocollie", "ROUTES=filetypes/chrome_manifest", f"AZOTH_ROOT={alias}"],
+        cwd=ROOT, text=True, capture_output=True, timeout=10, check=True,
+    )
+    assert f"--baseline-azoth-root {baseline}" in result.stdout
+    assert f"--baseline-azoth-root {alias}" not in result.stdout
+
+
 def _bash_version() -> tuple[int, int]:
     out = subprocess.run(
         ["bash", "-c", 'echo "${BASH_VERSINFO[0]} ${BASH_VERSINFO[1]}"'],
@@ -48,6 +62,9 @@ esac
 esac
 """,
         "make": """printf 'start %s\\n' "$1" >> "$TEST_EVENTS"
+if [[ ${TEST_REWRITE_NIGHTLY:-0} == 1 && $1 == azoth-publish-train ]]; then
+    printf '#!/bin/bash\\nexit 97\\n' > scripts/nightly.sh
+fi
 sleep 0.1
 printf 'end %s\\n' "$1" >> "$TEST_EVENTS"
 if [[ ${TEST_MEMORY_SWITCH_TARGET:-} == "$1" ]]; then
@@ -331,11 +348,17 @@ def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapsh
         tool.chmod(0o755)
     # Fail training deliberately: no Git writes or model publication in this test.
     env["TEST_FAIL_TARGET"] = "azoth-publish-train"
+    original_script = (scripts / 'nightly.sh').read_text()
+    env['TEST_REWRITE_NIGHTLY'] = '1'
     result = subprocess.run(
         ["bash", str(scripts / "nightly.sh"), "train"], cwd=sandbox, env=env,
         text=True, capture_output=True, timeout=10,
     )
-    assert result.returncode != 0
+    assert result.returncode == 1, result.stdout + result.stderr
+    if snapshot != 'invalid':
+        assert (scripts / 'nightly.sh').read_text() == '#!/bin/bash\nexit 97\n'
+    (scripts / 'nightly.sh').write_text(original_script)
+    env.pop('TEST_REWRITE_NIGHTLY')
     lines = events.read_text().splitlines()
     assert lines.index("protect") < lines.index("logger")
     assert "systemctl --user start --no-block azoth-autocollie.service" in lines

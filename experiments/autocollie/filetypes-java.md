@@ -872,3 +872,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T193544-filetypes-java` — 2026-11-02T19:35:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c311e0ae02766394` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.5556 | 0.9776 | 0.1617 | 17 | [log](out/autocollie/runs/2026-11-02T19-37-30_20261102T193544-filetypes-java_inherit_from_filetypes_jsp_ceef7938.log) |
+| `8d2ee615e43eb1e6` | java_hardneg_fraction_001_weight_16 | ok | 0.9877 | 0.9987 | 0.9752 | 18 | [log](out/autocollie/runs/2026-11-02T19-37-52_20261102T193544-filetypes-java_java_hardneg_fraction_001_weight_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_hardneg_fraction_001_weight_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.6921 L25 recall ceiling by reducing hard_negative_fraction to 0.01 and increasing hard_negative_weight to 16 to sharpen the decision boundary for the 445-malware minority class without diluting the signal with excessive benign upweighting.
+
+</details>
+

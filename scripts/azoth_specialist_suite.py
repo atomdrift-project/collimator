@@ -210,6 +210,7 @@ def _train_healthy_seed_ensemble(
     retry_budget: int,
     min_roc_auc: float,
     fit_seed: Callable[[int], train.TrainResult],
+    requested_seeds: list[int] | None = None,
 ) -> tuple[list[tuple[int, train.TrainResult]], list[dict[str, Any]]]:
     """Train until ``target_members`` healthy seeds exist or retries run out.
 
@@ -226,9 +227,13 @@ def _train_healthy_seed_ensemble(
 
     accepted: list[tuple[int, train.TrainResult]] = []
     attempts: list[dict[str, Any]] = []
-    max_attempts = target_members + retry_budget
-    for attempt_index in range(max_attempts):
-        attempt_seed = int(base_seed) + attempt_index
+    if requested_seeds is not None:
+        model_config.validate_ensemble_seeds(requested_seeds)
+        if len(requested_seeds) != target_members:
+            raise ValueError('Pinned ensemble membership must match target_members')
+    seeds = requested_seeds if requested_seeds is not None else list(range(int(base_seed), int(base_seed) + target_members + retry_budget))
+    max_attempts = len(seeds)
+    for attempt_index, attempt_seed in enumerate(seeds):
         LOG.info(
             "%s: training seed candidate %d/%d (seed=%d; accepted=%d/%d)",
             name,
@@ -1266,6 +1271,7 @@ def _train_one(
     seed_retry_budget: int = 3,
     skip_benchmark: bool = False,
     feature_cache_dir: Path | None = None,
+    requested_seeds: list[int] | None = None,
 ) -> dict[str, Any]:
     LOG.info("%s: malware training cutoff=%s", name, min_malware_score)
     db_revision = cache_identity.database_revision(db_path)
@@ -1296,10 +1302,19 @@ def _train_one(
             raise ValueError(f"{name}: no benchmark rows")
 
     feature_spec_policy = "route_specific"
-    feature_env_metadata = dict(sorted(feature_env.items()))
     with _temporary_feature_env(feature_env):
+        # Local overrides alone omit inherited Makefile settings. Persist the
+        # effective environment so replay produces the features actually fit.
+        from collimator.experiment import _collimator_env
+        feature_env_metadata = _collimator_env()
         LOG.info("%s: building route vocabulary from %d training rows (%d env overrides)", name, len(train_ids_labels), len(feature_env))
-        spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=workers)
+        spec = model_config.pinned_feature_spec(feature_env_metadata)
+        if spec is None:
+            spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=workers)
+        else:
+            feature_spec_policy = 'accepted_pinned'
+            LOG.info('%s: replaying accepted vocabulary (%d features)', name, spec.total_features)
+        spec.bind_metric_contract()
         spec_path = output_dir / "feature_spec.json"
         # Cache lookup hashes this file; persist it before extracting matrices.
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -1430,7 +1445,7 @@ def _train_one(
             "skip_reason": "no_malware_samples",
         }
 
-    target_seed_members = 1 + max(0, int(n_seed_extras))
+    target_seed_members = len(requested_seeds) if requested_seeds is not None else 1 + max(0, int(n_seed_extras))
 
     blocker = _initial_split_blocker(
         config, n_benign=int((y_train == 0).sum()), n_malware=n_malware,
@@ -1451,13 +1466,16 @@ def _train_one(
                                 "accepted_seeds": [], "attempts": []}}
 
     def _fit_seed(seed: int) -> train.TrainResult:
-        return train.train(
-            x_train,
-            y_train,
-            replace(config, seed=seed),
-            feature_names=spec.feature_names,
-            sample_file_types=sample_file_types,
-        )
+        # Discovery's temporary environment has already been restored. Each
+        # seed must also receive this route's fit-local keyword selector knobs.
+        with _temporary_feature_env(feature_env):
+            return train.train(
+                x_train,
+                y_train,
+                replace(config, seed=seed),
+                feature_names=spec.feature_names,
+                sample_file_types=sample_file_types,
+            )
 
     accepted_seed_results, seed_attempts = _train_healthy_seed_ensemble(
         name=name,
@@ -1466,6 +1484,7 @@ def _train_one(
         retry_budget=seed_retry_budget,
         min_roc_auc=seed_health_min_roc_auc,
         fit_seed=_fit_seed,
+        **({'requested_seeds': requested_seeds} if requested_seeds is not None else {}),
     )
     seed_health = {
         "target_members": target_seed_members,
@@ -1473,6 +1492,7 @@ def _train_one(
         "min_roc_auc": seed_health_min_roc_auc,
         "accepted_seeds": [seed for seed, _result in accepted_seed_results],
         "attempts": seed_attempts,
+        "requested_seeds": requested_seeds,
     }
     if len(accepted_seed_results) != target_seed_members:
         LOG.error(
@@ -1503,7 +1523,7 @@ def _train_one(
     # using seeds [base+1, base+K]. All K+1 ship under models/seed_<S>.txt and
     # litmus averages their predictions at inference time. Variance reduction
     # by ~(K+1) without the bias trade-offs of within-model bagging.
-    if n_seed_extras > 0:
+    if n_seed_extras > 0 or requested_seeds is not None:
         # Atomic write per seed: train, write to a `.tmp` sibling, then
         # rename in place. A kill mid-loop leaves at most one stray `.tmp`
         # which `bundle.model_files()` skips because it filters by the
@@ -1585,6 +1605,7 @@ def _train_one(
         ),
         "feature_mask": mask_metadata,
         "feature_env": feature_env_metadata,
+        "feature_env_scope": "effective_inherited_and_route",
         "train_metrics": result.metrics,
         # When skip_benchmark is set, y_bench/probs are empty and the metric
         # helpers can't compute anything meaningful. Emit a sentinel marker
@@ -1610,6 +1631,8 @@ def _train_one(
         'schema':model_config.SCHEMA, 'route':('filegroups/' if kind=='filegroup' else 'filetypes/')+name,
         'updated_at':datetime.now(UTC).isoformat(), 'train_config':payload['train_config'],
         'feature_env':payload['feature_env'], 'min_malware_training_score':int(min_malware_score or 0),
+        'ensemble_seeds':seed_health['accepted_seeds'],
+        'training_score_filter':payload['train_score_filter'],
         'provenance':{'kind':'effective_training_configuration','includes_explicit_overrides':True}})
     cache_identity.write_training_provenance(output_dir)
     return payload
@@ -1725,6 +1748,7 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
             seed_retry_budget=job.get("seed_retry_budget", 3),
             skip_benchmark=job.get("skip_benchmark", False),
             feature_cache_dir=job.get("feature_cache_dir"),
+            requested_seeds=job.get("requested_seeds"),
         )
     except Exception:
         LOG.exception("%s: failed", target["name"])
@@ -2086,13 +2110,15 @@ def main() -> int:
 
     # Current accepted knobs supersede historical selection. Explicit CLI
     # overrides remain the final layer; operational thread caps still apply.
-    accepted_train, accepted_env = {}, {}
+    accepted_train, accepted_env, accepted_seeds = {}, {}, {}
     explicit_train = _parse_train_overrides(args.train_override)
     explicit_env = _parse_feature_envs(args.feature_env)
     for target in targets:
         route = _route_key_for_target(target)
         accepted = model_config.load(route)
         if accepted is not None:
+            if accepted.get('ensemble_seeds') is not None:
+                accepted_seeds[route] = accepted['ensemble_seeds']
             accepted_train[route] = dict(accepted['train_config'])
             accepted_env[route] = dict(accepted['feature_env'])
             for key in _target_override_keys(target):
@@ -2243,6 +2269,7 @@ def main() -> int:
                     target, malware_cutoffs, args.default_min_malware_score, args.min_malware_score,
                 ),
                 "n_seed_extras": args.n_seed_extras,
+                "requested_seeds": accepted_seeds.get(_route_key_for_target(target)),
                 "seed_health_min_roc_auc": args.seed_health_min_roc_auc,
                 "seed_retry_budget": args.seed_retry_budget,
                 "skip_benchmark": args.skip_benchmark,

@@ -55,6 +55,29 @@ def margin(scores: dict[str, np.ndarray], decision: dict, size: int) -> np.ndarr
     return result
 
 
+def union_threshold_rules(*decisions: dict) -> dict:
+    """Combine pure OR rules without fitting or changing their decisions.
+
+    For a route present in multiple rules, the lowest active threshold gives
+    their union. Check active cuts in serving float32 precision, as ``margin``
+    does, and retain the original numeric cut for anchor provenance. Blends
+    cannot be represented this way.
+    Callers must separately check budgets and any wider-pool anchor safeguards.
+    """
+    cuts: dict[str, float] = {}
+    for decision in decisions:
+        if decision.get('blend'):
+            raise ValueError('a learned blend cannot be flattened into OR thresholds')
+        for route, threshold in (decision.get('thresholds') or {}).items():
+            if threshold is None:
+                continue
+            value = np.float32(threshold)
+            if not 0 <= value <= 1:
+                continue
+            cuts[route] = min(cuts.get(route, float('inf')), float(threshold))
+    return {'thresholds': dict(sorted(cuts.items()))}
+
+
 def swept_margin(scores: dict[str, np.ndarray], levels: list[dict], level: int,
                  size: int, *, severity: str = "hostile") -> np.ndarray:
     """Scan flags a file if any policy at or below the requested level fires."""

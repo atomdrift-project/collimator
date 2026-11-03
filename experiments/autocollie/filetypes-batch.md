@@ -1430,3 +1430,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T191059-filetypes-batch` — 2026-11-02T19:10:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `445d04c01e3f1a3c` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9779 | 0.8821 | 0.3025 | 24 | [log](out/autocollie/runs/2026-11-02T19-13-17_20261102T191059-filetypes-batch_inherit_from_filetypes_jsp_ceef7938.log) |
+| `517b41235cf0dde5` | batch_trait_path_depth_4 | ok | 0.9999 | 0.9995 | 0.9974 | 14 | [log](out/autocollie/runs/2026-11-02T19-13-45_20261102T191059-filetypes-batch_batch_trait_path_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the measured L25 recall of 0.9824 by testing if deeper finding hierarchy prefixes (depth 4 vs 3) provide more specific signal for batch malware without increasing false positives.
+
+</details>
+

@@ -1,8 +1,8 @@
 {
   "schema": "azoth.model_config.v1",
   "route": "filetypes/pe",
-  "experiment_key": "0eb02804f11ef814",
-  "updated_at": "2026-08-24T23:45:23.417241564Z",
+  "experiment_key": null,
+  "updated_at": "2026-11-01T01:09:46.837705Z",
   "train_config": {
     "benign_filetype_weights": {},
     "beta": 1.25,
@@ -121,23 +121,68 @@
     "COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE": "0",
     "COLLIMATOR_TRIGRAM_MAX": "500",
     "COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC": "0.01",
-    "COLLIMATOR_TRIGRAM_MIN_FREQ": "5"
+    "COLLIMATOR_TRIGRAM_MIN_FREQ": "5",
+    "COLLIMATOR_RULE_KEYWORDS": "1",
+    "COLLIMATOR_RULE_KEYWORD_SELECTION": "balanced_mi",
+    "COLLIMATOR_RULE_KEYWORD_VOCAB_MAX": "1000",
+    "COLLIMATOR_RULE_KEYWORD_MIN_FREQ": "5",
+    "COLLIMATOR_DESCRIPTION_KEYWORDS": "1",
+    "COLLIMATOR_DESCRIPTION_KEYWORD_SELECTION": "balanced_mi",
+    "COLLIMATOR_DESCRIPTION_KEYWORD_VOCAB_MAX": "5000",
+    "COLLIMATOR_DESCRIPTION_KEYWORD_MIN_FREQ": "5",
+    "COLLIMATOR_FULL_RULE_KEYWORDS": "0",
+    "COLLIMATOR_RULE_DESCRIPTION_KEYWORDS": "0",
+    "COLLIMATOR_CONTEXT_KEYWORDS": "1",
+    "COLLIMATOR_CONTEXT_KEYWORD_SELECTION": "frequency",
+    "COLLIMATOR_CONTEXT_KEYWORD_VOCAB_MAX": "1000",
+    "COLLIMATOR_CONTEXT_KEYWORD_MIN_FREQ": "5",
+    "COLLIMATOR_KEYWORD_SELECTION": "frequency",
+    "COLLIMATOR_KEYWORD_VOCAB_MAX": "10000",
+    "COLLIMATOR_KEYWORD_MIN_FREQ": "5",
+    "COLLIMATOR_KEYWORD_CANDIDATE_MAX": "100000"
   },
   "min_malware_training_score": 0,
   "provenance": {
-    "run": "out/experiments/azoth/runs/0eb02804f11ef814.json",
-    "acceptance": {
-      "avg_precision": 0.9998146261984084,
-      "brier": 0.005556541960686445,
-      "candidate_root": "/home/t/collimator/out/models/azoth-candidate-filetypes-pe-4b57d6f856c83a31",
-      "full_train_key": "0eb02804f11ef814",
-      "has_brier": true,
-      "has_recall_at_50_per_100M": true,
-      "promote_key": "4b57d6f856c83a31",
-      "recall_at_50_per_100M": 0.7004,
-      "roc_auc": 0.9997396002924903,
-      "route": "filetypes/pe",
-      "updated_at": "2026-08-24T23:45:23.417241564Z"
+    "source": "operator_adopted_confirmed_keyword_experiment",
+    "report": "experiments/keyword-pe-search.md",
+    "artifact": "out/experiments/keyword-pe-search/confirmation/best-sources-plus-context",
+    "scope": "Training defaults for nightly and autocollie; next trained bundle follows normal validation and publishing gates.",
+    "training_samples": 139384,
+    "confirmation_seeds": [
+      43,
+      44,
+      45,
+      46
+    ],
+    "confirmation": {
+      "malware": 36287,
+      "goodware": 5916,
+      "ap": 0.9998894065714244,
+      "auc": 0.9993347374537748,
+      "recall_0fp": 0.8357538512414915,
+      "threshold_0fp": 0.9939549565315247,
+      "recall_1fp": 0.848595915892744,
+      "threshold_1fp": 0.9928532838821411
+    },
+    "previous_configuration": {
+      "experiment_key": "0eb02804f11ef814",
+      "updated_at": "2026-08-24T23:45:23.417241564Z",
+      "provenance": {
+        "run": "out/experiments/azoth/runs/0eb02804f11ef814.json",
+        "acceptance": {
+          "avg_precision": 0.9998146261984084,
+          "brier": 0.005556541960686445,
+          "candidate_root": "/home/t/collimator/out/models/azoth-candidate-filetypes-pe-4b57d6f856c83a31",
+          "full_train_key": "0eb02804f11ef814",
+          "has_brier": true,
+          "has_recall_at_50_per_100M": true,
+          "promote_key": "4b57d6f856c83a31",
+          "recall_at_50_per_100M": 0.7004,
+          "roc_auc": 0.9997396002924903,
+          "route": "filetypes/pe",
+          "updated_at": "2026-08-24T23:45:23.417241564Z"
+        }
+      }
     }
   }
 }

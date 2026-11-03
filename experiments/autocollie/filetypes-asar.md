@@ -37,3 +37,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T220738-filetypes-asar` — 2026-11-02T22:07:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bf96153623c3a235` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.9977 | 0.9983 | 0.9394 | 40 | [log](out/autocollie/runs/2026-11-02T22-08-15_20261102T220738-filetypes-asar_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `8bb01b0b13e56316` | test_min_malware_score_0 | ok | 0.9975 | 0.9983 | 0.9552 | 37 | [log](out/autocollie/runs/2026-11-02T22-08-58_20261102T220738-filetypes-asar_test_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Aims to improve L25 recall by testing if the current min_malware_score=4 cutoff is discarding low-severity malware samples that could enhance the model's ability to detect the full range of ASAR threats, potentially increasing recall at the 1FP budget.
+
+</details>
+

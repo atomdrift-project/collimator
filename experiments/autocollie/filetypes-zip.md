@@ -1334,3 +1334,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T213139-filetypes-zip` — 2026-11-02T21:31:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9eaad34759716947` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.9732 | 0.9732 | 0.8376 | 465 | [log](out/autocollie/runs/2026-11-02T21-33-52_20261102T213139-filetypes-zip_inherit_from_filetypes_jsp_ceef7938.log) |
+| `9d1d81949b14ec4e` | zip_hardneg_0015_w12 | ok | 0.9978 | 0.9977 | 0.9791 | 391 | [log](out/autocollie/runs/2026-11-02T21-42-16_20261102T213139-filetypes-zip_zip_hardneg_0015_w12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_hardneg_0015_w12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.8178 L25 recall ceiling by reducing false positives via a tighter hard-negative sweep (fraction 0.015, weight 12) to improve the combiner threshold at the 1-FP budget.
+
+</details>
+

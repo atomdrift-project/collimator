@@ -32,6 +32,8 @@ import os
 import random
 import sqlite3
 import time
+import threading
+from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -485,7 +487,7 @@ def fetch_cleave_results(
     """
     if not ids:
         return {}
-    with _connect(dsn) as conn:
+    with _connect(dsn, repeatable_read=member_context_enabled()) as conn:
         if evaluation_labels:
             from .cache_identity import evaluation_row_digest
 
@@ -516,13 +518,13 @@ def fetch_cleave_results(
                         version[columns.index("label")] = label
                     item["evaluation_digest"] = evaluation_row_digest(version)
                 result[rid] = item
-            return result
+            return add_member_context(conn, result)
         if _is_pg(dsn):
             # PostgreSQL: use ANY(%s) with array parameter.
             query = "SELECT id, cleave_result, formula, elements, score, mtime, 0 AS cluster_id FROM samples WHERE id = ANY(%s)"
             with conn.cursor() as cur:
                 cur.execute(query, [ids])
-                return {
+                return add_member_context(conn, {
                     int(rid): {
                         "cleave_result": _cleave_value(cr),
                         "formula": formula,
@@ -533,11 +535,11 @@ def fetch_cleave_results(
                     }
                     for rid, cr, formula, elements, score, mtime, cluster_id in cur
                     if cr is not None
-                }
+                })
         else:
             placeholders = ",".join("?" for _ in ids)
             query = f"SELECT id, cleave_result, formula, elements, score, mtime, 0 AS cluster_id FROM samples WHERE id IN ({placeholders})"  # noqa: S608
-            return {
+            return add_member_context(conn, {
                 int(rid): {
                     "cleave_result": cr,
                     "formula": formula,
@@ -548,7 +550,130 @@ def fetch_cleave_results(
                 }
                 for rid, cr, formula, elements, score, mtime, cluster_id in conn.execute(query, ids)
                 if cr is not None
-            }
+            })
+
+
+def member_context_enabled() -> bool:
+    """Opt-in input source for archive context keywords, not trait reassembly."""
+    return os.getenv("COLLIMATOR_ARCHIVE_MEMBER_CONTEXT", "0").lower() in {"1", "true", "yes", "on"}
+
+
+_MEMBER_CONTEXT_CACHE = OrderedDict()
+_MEMBER_CONTEXT_CACHE_KEY = None
+_MEMBER_CONTEXT_CACHE_BYTES = 0
+_MEMBER_CONTEXT_CACHE_LIMIT = 64 * 1024 * 1024
+_MEMBER_CONTEXT_CACHE_LOCK = threading.Lock()
+
+
+def _member_context_cache(key, sha, value=None):
+    """Bounded process-local cache, usable only inside an exported snapshot.
+
+    Store encoded windows so the byte bound measures retained data directly.
+    Missing leaves are cached too; each snapshot has a separate identity.
+    """
+    global _MEMBER_CONTEXT_CACHE_KEY, _MEMBER_CONTEXT_CACHE_BYTES
+    with _MEMBER_CONTEXT_CACHE_LOCK:
+        if key != _MEMBER_CONTEXT_CACHE_KEY or not key:
+            _MEMBER_CONTEXT_CACHE.clear()
+            _MEMBER_CONTEXT_CACHE_BYTES = 0
+            _MEMBER_CONTEXT_CACHE_KEY = key
+        if not key:
+            return None
+        if value is None:
+            if sha not in _MEMBER_CONTEXT_CACHE:
+                return None
+            _MEMBER_CONTEXT_CACHE.move_to_end(sha)
+            return _MEMBER_CONTEXT_CACHE[sha]
+        size = len(value[0] or b'') + 256
+        if size > _MEMBER_CONTEXT_CACHE_LIMIT:
+            return None
+        old = _MEMBER_CONTEXT_CACHE.pop(sha, None)
+        if old is not None:
+            _MEMBER_CONTEXT_CACHE_BYTES -= len(old[0] or b'') + 256
+        _MEMBER_CONTEXT_CACHE[sha] = value
+        _MEMBER_CONTEXT_CACHE_BYTES += size
+        while _MEMBER_CONTEXT_CACHE_BYTES > _MEMBER_CONTEXT_CACHE_LIMIT or len(_MEMBER_CONTEXT_CACHE) > 8192:
+            _, removed = _MEMBER_CONTEXT_CACHE.popitem(last=False)
+            _MEMBER_CONTEXT_CACHE_BYTES -= len(removed[0] or b'') + 256
+    return None
+
+
+def add_member_context(conn, items):
+    """Read missing member context within the parent's transaction snapshot.
+
+    Preserve every trait, fact, and occurrence field in the compact parent.
+    Only context windows are added, matching the WHL expanded-context study.
+    Cache identities include missing leaves and the exact contexts consumed.
+    """
+    if not member_context_enabled():
+        return items
+    references, identities = {}, {}
+    for rid, item in items.items():
+        report = _cleave_report(item["cleave_result"])
+        if not isinstance(report, dict):
+            continue
+        key = "files" if "files" in report else "fs"
+        files = report.get(key) or []
+        refs = [(i, f) for i, f in enumerate(files) if isinstance(f, dict)
+                and f.get("depth", f.get("dp", 0)) > 0 and f.get("sha") and not f.get("ctx")]
+        if not refs:
+            continue
+        report = dict(report)
+        report[key] = list(files)
+        item["cleave_result"] = report
+        identities[rid] = {}
+        for index, ref in refs:
+            references.setdefault(ref["sha"], []).append((rid, key, index, ref))
+            identities[rid][ref["sha"]] = None
+    snapshot = os.getenv("COLLIMATOR_PG_SNAPSHOT")
+    database = os.getenv("COLLIMATOR_PG_SNAPSHOT_DATABASE")
+    cache_key = (database, snapshot) if snapshot and database and not isinstance(conn, sqlite3.Connection) else None
+
+    def apply_context(sha, payload, digest):
+        ctx = json.loads(payload) if payload else []
+        for rid, key, index, ref in references[sha]:
+            if ctx:
+                items[rid]["cleave_result"][key][index] = dict(ref, ctx=ctx)
+            identities[rid][sha] = digest
+
+    shas = []
+    for sha in sorted(references):
+        cached = _member_context_cache(cache_key, sha)
+        if cached is None:
+            shas.append(sha)
+        else:
+            apply_context(sha, *cached)
+    for start in range(0, len(shas), 256):
+        chunk = shas[start:start + 256]
+        if isinstance(conn, sqlite3.Connection):
+            marks = ",".join("?" for _ in chunk)
+            rows = conn.execute(f"SELECT sha256,cleave_result FROM samples WHERE sha256 IN ({marks})", chunk)
+            contexts = []
+            for sha, raw in rows:
+                leaf = _cleave_report(raw)
+                files = (leaf.get("files", leaf.get("fs", [])) or []) if isinstance(leaf, dict) else []
+                contexts.append((sha, files[0].get("ctx") if files and isinstance(files[0], dict) else None))
+        else:
+            contexts = conn.execute("SELECT sha256,COALESCE(cleave_result->'files',cleave_result->'fs')->0->'ctx' "
+                                    "FROM samples WHERE sha256=ANY(%s)", [chunk])
+        missing = set(chunk)
+        for sha, ctx in contexts:
+            missing.discard(sha)
+            if not isinstance(ctx, list):
+                ctx = []
+            payload = json.dumps(ctx, sort_keys=True, separators=(",", ":")).encode()
+            digest = hashlib.sha256(payload).hexdigest()
+            _member_context_cache(cache_key, sha, (payload, digest))
+            apply_context(sha, payload, digest)
+        for sha in missing:
+            _member_context_cache(cache_key, sha, (None, None))
+    for rid, versions in identities.items():
+        item = items[rid]
+        if "evaluation_digest" in item:
+            h = hashlib.sha256(b"archive-member-context-v1\n" + item["evaluation_digest"])
+            h.update(json.dumps(sorted(versions.items()), separators=(",", ":")).encode())
+            item["evaluation_digest"] = h.digest()
+    return items
 
 
 # ---------------------------------------------------------------------------
@@ -765,7 +890,7 @@ def stream_samples(
                 sha256=sha256,
                 path=path or "",
                 label=_label_int(label),
-                report=report,
+                report=add_member_context(conn, {0: {"cleave_result": report}})[0]["cleave_result"],
                 formula=formula or "",
                 elements=elements or "",
                 score=score or 0,
@@ -825,7 +950,7 @@ def stream_labeled_samples_full(
                 sha256=sha256,
                 path=path or "",
                 label=_label_int(label),
-                report=report,
+                report=add_member_context(conn, {0: {"cleave_result": report}})[0]["cleave_result"],
                 formula=formula or "",
                 elements=elements or "",
                 score=score or 0,

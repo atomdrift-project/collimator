@@ -24,7 +24,16 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import bundle, cache_identity, data, export, features, policy, thresholds
+from collimator import (
+    bundle,
+    cache_identity,
+    data,
+    export,
+    features,
+    policy,
+    retained_components,
+    thresholds,
+)
 from collimator.profiling import initialize_worker, timed
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -400,6 +409,52 @@ def _score_route(
         return _score_route_impl(db_path, route, **options)
 
 
+def _capture_row_fingerprints(db_path, rows):
+    """Capture PostgreSQL report versions without fetching the report payloads.
+
+    The selected label is part of the digest, exactly as in extraction. A zero
+    digest denotes a missing report and is never eligible for paired reuse.
+    """
+    if not data._is_pg(db_path):
+        return None
+    result = np.zeros(len(rows), dtype='V32')
+    with data._connect(db_path, repeatable_read=True) as conn:
+        for start in range(0, len(rows), 2000):
+            selected = rows[start:start + 2000]
+            positions = {int(rid): (start + i, int(label))
+                         for i, (rid, label) in enumerate(selected)}
+            versions = conn.execute(
+                'SELECT id, xmin::text FROM samples WHERE id = ANY(%s) '
+                'AND cleave_result IS NOT NULL', (list(positions),))
+            for rid, version in versions:
+                position, label = positions[int(rid)]
+                result[position] = np.void(cache_identity.evaluation_row_digest(
+                    [int(rid), version, {0: 'good', 1: 'bad'}[label]]))
+    return result
+
+
+def _score_audit_fields(db_path, rows, before, output_dir):
+    if before is None:
+        return {}
+    after = _capture_row_fingerprints(db_path, rows)
+    stable = (before == after) & (before != np.void(bytes(32)))
+    changed = int((~stable).sum())
+    if changed:
+        LOG.warning('%s: %d scoring rows changed version or disappeared; '
+                    'excluded from future matched-score reuse', output_dir, changed)
+    return {
+        'audit_row_ids': np.asarray([rid for rid, _ in rows], dtype=np.int64),
+        'audit_labels': np.asarray([label for _, label in rows], dtype=np.int8),
+        'audit_fingerprints': before,
+        'audit_stable_rows': stable,
+        'audit_model_revision': np.asarray(cache_identity.model_revision(output_dir)),
+        'audit_spec_revision': np.asarray(_file_sha256(output_dir / 'feature_spec.json')),
+        'audit_feature_revision': np.asarray(cache_identity.code_revision('features')),
+        'audit_feature_config': np.asarray(json.dumps(
+            asdict(features.feature_config_from_env()), sort_keys=True, default=sorted)),
+    }
+
+
 def _score_route_impl(
     db_path: Path | str,
     route: dict[str, Any],
@@ -434,7 +489,8 @@ def _score_route_impl(
     score_identity = hashlib.sha256((score_identity + json.dumps(
         asdict(features.feature_config_from_env()), sort_keys=True, default=sorted,
     )).encode()).hexdigest()
-    route_hash = hashlib.sha256((_hash_route_artifacts(output_dir) + score_identity).encode()).hexdigest()
+    artifact_hash = _hash_route_artifacts(output_dir)
+    route_hash = hashlib.sha256((artifact_hash + score_identity).encode()).hexdigest()
     force_refresh = refresh or route["route"] in refresh_routes or route["name"] in refresh_routes
     if cache_path.exists() and not force_refresh:
         with np.load(cache_path) as cache:
@@ -477,6 +533,7 @@ def _score_route_impl(
     load_s = time.perf_counter() - t0
     row_ids = np.asarray([row_id for row_id, _label in rows], dtype=np.int64)
     rows_hash = _hash_ints(row_ids)
+    before_fingerprints = None
     t0 = time.perf_counter()
     # NPZ matrix caches inflate into anonymous memory. Keep them for small
     # routes; large routes use reclaimable mmap CSR arrays instead.
@@ -494,6 +551,10 @@ def _score_route_impl(
     if x_matrix is None:
         from collimator.matrix_store import MatrixWriter
 
+        # Bracket fresh extraction/prediction with version reads. Unchanged
+        # xmin binds scores to those report versions. A legacy matrix cache
+        # lacks row-version evidence, so it does not receive this audit claim.
+        before_fingerprints = _capture_row_fingerprints(db_path, rows)
         writer = MatrixWriter(os.getenv("COLLIMATOR_MATRIX_DISK_DIR",
                                         "out/cache/matrix-scratch"), spec.total_features)
         progress_at = time.perf_counter()
@@ -533,6 +594,9 @@ def _score_route_impl(
     t0 = time.perf_counter()
     probs = _predict_matrix(clf, x_matrix, spec)
     predict_s = time.perf_counter() - t0
+    audit_fields = _score_audit_fields(db_path, rows, before_fingerprints, output_dir)
+    if _hash_route_artifacts(output_dir) != artifact_hash:
+        raise ValueError(f'{output_dir}: model artifacts changed during calibration scoring')
     t0 = time.perf_counter()
     temporary = cache_path.with_name(f"{cache_path.stem}.tmp.{os.getpid()}.npz")
     np.savez_compressed(
@@ -541,6 +605,7 @@ def _score_route_impl(
         probs=probs.astype(np.float32),
         route_hash=np.asarray(route_hash),
         max_id=np.asarray(max_id, dtype=np.int64),
+        **audit_fields,
     )
     os.replace(temporary, cache_path)
     write_s = time.perf_counter() - t0
@@ -627,11 +692,9 @@ def _candidate_thresholds(
     return candidates
 
 
-# Canonical operating-point threshold now lives in collimator.thresholds so the
-# screen experiment (experiment._recall_at_per_100M) derives recall at the EXACT
-# same operating point the deploy/policy-search uses. Re-exported under the old
-# private name for azoth_route_policy_search's `from azoth_calibrate_ensemble
-# import _quantile_severity_threshold`.
+# Shared standalone calibration curve. Final routed policies can select other
+# cuts under the same L-1 count allowance. Keep the private alias used by
+# azoth_route_policy_search.
 _quantile_severity_threshold = thresholds.quantile_severity_threshold
 
 # --- Route admission --------------------------------------------------------
@@ -820,15 +883,15 @@ def _calibrate_one(
 ) -> dict[str, Any]:
     """Derive per-route severity-tier thresholds at ``target_per_million``.
 
-    For each route, the threshold is the (1 − q×10⁻⁶) quantile of that
-    route's calibrated benign dev scores — the *observation* of which score
-    cut leaves at most q FP per million benigns below it. When q sits below
-    the empirical floor (q × N_benign / 1e6 < 1), the threshold comes from
-    a generalized-Pareto tail fit on the upper tail of the benign scores
-    instead. Either way the answer is data-derived, not searched: there is
-    no coordinate-descent over a TP-vs-FP-budget objective. The deploy
-    decision (which threshold to honor at run-time) lives elsewhere — this
-    function produces the L0..L9 severity grade litmus uses.
+    The legacy ``target_per_million`` argument encodes displayed level L/100.
+    Positive L has allowance 1 + (L-1)*N_benign/1e8; L0 is the separate
+    zero-observed-FP case. The shared curve interpolates observed benign
+    order-statistic anchors in log-rate/logit-score space and extrapolates
+    its strict tail. It does not fit a generalized-Pareto distribution.
+
+    These are per-route anchors across the configured level grid. The final
+    routed policy search chooses shared-budget decisions separately; these
+    standalone thresholds are not additive FP credits or population guarantees.
 
     Returns the same dict shape the legacy FP-budget search emitted so the
     rest of the pipeline (cards, route_policies.json, runtime config) keeps
@@ -1381,6 +1444,11 @@ def main() -> int:
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--check-inputs-only", action="store_true", help="Check model provenance before expensive scoring")
     parser.add_argument(
+        "--retain-auxiliaries-from", type=Path,
+        help=("Retain exact auxiliary artifacts from a previous training bundle; "
+              "rescore and recalibrate them."),
+    )
+    parser.add_argument(
         "--refresh-route",
         action="append",
         default=[],
@@ -1456,12 +1524,21 @@ def main() -> int:
     cache_identity.require_reserved_dev(general_dir)
     if any(p.suffix != ".onnx" for p in bundle.model_files(general_dir)):
         raise ValueError("export general to ONNX before calibration")
+    retained = retained_components.prepare(
+        args.azoth_root, args.summary, args.retain_auxiliaries_from,
+        check_only=args.check_inputs_only or args.apply_thresholds_from is not None,
+    )
     routes = list(_load_routes(args.summary))
     for route in routes:
         directory = Path(route["output_dir"])
         cache_identity.require_reserved_dev(directory)
         if any(p.suffix != ".onnx" for p in bundle.model_files(directory)):
             raise ValueError(f"export {route['route']} to ONNX before calibration")
+    if not args.check_inputs_only:
+        expected = {item["route"] for item in retained.get("retained_components", [])}
+        missing = expected - {route["route"] for route in routes}
+        if missing:
+            raise ValueError(f"retained components unavailable for scoring: {sorted(missing)}")
     if args.check_inputs_only:
         return 0
     if args.apply_thresholds_from is not None:
@@ -1672,6 +1749,7 @@ def main() -> int:
         # fall back to their own const only for older configs lacking the field.
         "default_severity_level": int(thresholds.DEFAULT_SEVERITY_LEVEL),
     }
+    payload.update(retained)
     # Atomic write: config.json is consumed by litmus, validate, deploy, etc.
     bundle.atomic_write_json(args.output, payload)
     print(f"wrote {args.output}")

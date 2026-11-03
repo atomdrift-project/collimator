@@ -143,8 +143,8 @@ def _apply_or_rule(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Return (hit, valid) under deployed OR-rule with per-route thresholds.
 
-    Each route is OR'd in when its threshold is < 1.0 (the no-fire
-    sentinel). ``valid`` is True wherever at least one named route has
+    Each route is OR'd in when its float32 threshold is in [0, 1].
+    ``valid`` is True wherever at least one named route has
     a non-NaN prob; OR-rule on a row with all NaNs would land on no
     contribution and should be treated as ineligible rather than benign.
     """
@@ -152,14 +152,14 @@ def _apply_or_rule(
     hit = np.zeros(n, dtype=bool)
     valid = np.zeros(n, dtype=bool)
     for route_name, threshold in thresholds.items():
-        if threshold is None or float(threshold) >= 1.0:
+        if threshold is None or not 0 <= np.float32(threshold) <= 1:
             continue
         probs = route_probs.get(route_name)
         if probs is None:
             continue
         slice_probs = probs[mask]
         slice_valid = ~np.isnan(slice_probs)
-        hit |= slice_valid & (slice_probs >= float(threshold))
+        hit |= slice_valid & (slice_probs.astype(np.float32, copy=False) >= np.float32(threshold))
         valid |= slice_valid
     return hit, valid
 

@@ -87,9 +87,11 @@ def evaluation_revision(db: Path | str, row_ids: list[int], labels=None) -> str:
     with data._connect(db, repeatable_read=True) as conn:
         for start in range(0, len(row_ids), 2000):
             ids = row_ids[start:start + 2000]
+            member_context = data.member_context_enabled()
             if data._is_pg(db):
                 rows = conn.execute(
-                    "SELECT id, xmin::text, label FROM samples WHERE id=ANY(%s) ORDER BY id",
+                    "SELECT id, xmin::text, label" + (", cleave_result" if member_context else "")
+                    + " FROM samples WHERE id=ANY(%s) ORDER BY id",
                     (ids,),
                 )
             else:
@@ -99,13 +101,21 @@ def evaluation_revision(db: Path | str, row_ids: list[int], labels=None) -> str:
                 )
             columns = [column[0] for column in rows.description]
             id_column, label_column = columns.index("id"), columns.index("label")
+            items = {}
             for row in rows:
                 found += 1
                 if expected is not None:
                     label = {"bad": 1, "good": 0}.get(row[label_column])
                     if label != expected[row[id_column]]:
                         raise ValueError("evaluation labels changed; rerun screening")
-                h.update(evaluation_row_digest(row))
+                digest = evaluation_row_digest(row[:3] if member_context and data._is_pg(db) else row)
+                if member_context:
+                    items[row[id_column]] = dict(cleave_result=row[columns.index("cleave_result")], evaluation_digest=digest)
+                else:
+                    h.update(digest)
+            if member_context:
+                for item in data.add_member_context(conn, items).values():
+                    h.update(item["evaluation_digest"])
     if found != len(row_ids):
         raise ValueError("evaluation rows were deleted; rerun screening")
     return h.hexdigest()

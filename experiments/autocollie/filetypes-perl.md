@@ -390,3 +390,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T230401-filetypes-perl` — 2026-11-02T23:04:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6f6f2dde596b5469` | inherit_from_filetypes_iso_10e59f57 | ok | 0.9512 | 0.9982 | 0.9032 | 13 | [log](out/autocollie/runs/2026-11-02T23-05-49_20261102T230401-filetypes-perl_inherit_from_filetypes_iso_10e59f57.log) |
+| `64b14cf5d8f53e9c` | perl_trait_depth_2 | ok | 0.7803 | 0.9846 | 0.7241 | 12 | [log](out/autocollie/runs/2026-11-02T23-06-07_20261102T230401-filetypes-perl_perl_trait_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_10e59f57`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/iso (key=10e59f57dfac74d9, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_trait_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if reducing trait_path_depth from 3 to 2 improves L25 recall@1FP (currently 0.7018) by increasing feature specificity for the small malware cohort, following the successful depth-2 hypothesis from the nupkg sister route.
+
+</details>
+

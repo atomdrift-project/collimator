@@ -19,3 +19,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T224448-filetypes-iso` — 2026-11-02T22:44:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `95e3623646ed09d3` | inherit_from_filetypes_rar_41a97b22 | ok | 0.9851 | 0.5000 | 0.9925 | 14 | [log](out/autocollie/runs/2026-11-02T22-45-35_20261102T224448-filetypes-iso_inherit_from_filetypes_rar_41a97b22.log) |
+| `10e59f57dfac74d9` | iso_min_malware_score_0 | ok | 0.9851 | 0.5000 | 0.9925 | 15 | [log](out/autocollie/runs/2026-11-02T22-45-54_20261102T224448-filetypes-iso_iso_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_41a97b22`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rar (key=41a97b22a5b32ca4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`iso_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Aims to improve the measured 0.0000 L25 recall by removing the min_malware_score=4 training filter, which likely discards low-severity malware samples and inflates class weights, thereby allowing the model to learn from the full malware distribution.
+
+</details>
+

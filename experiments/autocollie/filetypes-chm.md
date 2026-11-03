@@ -36,3 +36,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T233320-filetypes-chm` — 2026-11-02T23:33:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0a2ba363f3e30412` | inherit_from_filetypes_bmp_04cbaa81 | ok | 0.8043 | 0.5000 | 0.8916 | 5 | [log](out/autocollie/runs/2026-11-02T23-34-30_20261102T233320-filetypes-chm_inherit_from_filetypes_bmp_04cbaa81.log) |
+| `9c006d8898ab63a1` | chm_min_malware_score_0 | ok | 0.9986 | 0.9940 | 0.8438 | 5 | [log](out/autocollie/runs/2026-11-02T23-34-37_20261102T233320-filetypes-chm_chm_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_04cbaa81`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/bmp (key=04cbaa8139cf87bf, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`chm_min_malware_score_0`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Tests if removing the min_malware_score filter improves L25 recall@1FP by including low-severity malware in training, addressing the 0.0000 recall observed in recent runs with min_malware_training_score=0 but potentially different effective cutoffs or data availability.
+
+</details>
+

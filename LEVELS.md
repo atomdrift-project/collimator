@@ -1,268 +1,144 @@
-# Severity levels: what they mean and how they are computed
+# Severity levels: the shared Collimator, Azoth, and Scan contract
 
-Status: 2026-10-28. Preserves the 2026-08-03 resolution-adjusted scale and
-aligns policy selection and deployment gates with it. Supersedes METHODOLOGY.md
-§"L0..L10000 severity tiers". Implemented in
-`collimator.thresholds.quantile_severity_threshold`; experiments and evidence
-in `FP_CURVE_RESULTS.md`.
+Updated 2026-11-01. This is the authoritative level definition for Collimator’s
+training and evaluation, Azoth’s model bundles, and Scan’s `-l` option and API.
+It retains the existing `L−1` convention. No model thresholds change merely
+because the documentation changes.
 
-## The contract
+## Definition
 
-A level is a **false-positive budget on benign files, expressed per 100
-million — resolution-adjusted to the route it is applied to**:
+A level controls the false-positive allowance for a pool of **benign files**.
+For a pool containing `N > 0` benign files:
 
-    true_rate = requested_level + floor_level - 1
+```text
+L0:     continuous allowance = 0
+L > 0:  continuous allowance = 1 + (L - 1) * N / 100_000_000
+```
 
-where `floor_level = 1e8 / n_benign` is the rate of that route's first false
-positive. Three consequences define the contract:
+The integer FP-count budget is the floor of that allowance, capped at `N`.
+A pool with no benign observations has no measurable allowance.
 
-* **L1 is the first false positive, on every route.** Not "1 per 100M" — one
-  actual observed FP. L0 is one step stricter along the same curve and admits
-  zero — enforced, see "Why L0 is clamped above the data" below.
-* **The k-th false positive sits at `L(1 + (k-1) * floor_level)`.** On ELF
-  (floor 160) FP2 is at L161; on general (floor 8) FP2 is at L9.
-* **At 100M benigns the floor is 1 and the mapping is the identity.** This is
-  the true per-100M rate scale, quantised to the resolution a route actually
-  has — not a different unit.
+- **L0:** zero observed false positives in calibration.
+- **L1:** one false positive in the pool, with no additional rate allowance.
+- **L25:** one false positive plus an estimated additional **24 per 100 million
+  benign files**. “One FP plus approximately 25 per 100 million” is shorthand;
+  the exact increment is 24 because the first FP is anchored at L1.
+- **L1000:** one false positive plus an estimated additional 999 per 100 million.
 
-The cost, stated once: the same level is a different true rate on different
-routes (L25 is 31.7/100M on general, 39,394/100M on gem). Comparability moves
-from the label to the false-positive count. That is deliberate. The
-alternative is claiming a rate a route cannot deliver, which is what the rule
-before 2026-08-03 did by a median factor of ~945x.
+L25 is the deployment default. Lower levels are stricter; higher levels allow
+more false positives in exchange for potentially more detections. L0 is a
+separate zero-observed-FP case, not a substitution into the positive-level formula.
 
-### The count budget used for optimization and gating
+The initial FP belongs to the calibration/evaluation decision pool. It is not
+an extra FP per component model, scan invocation, archive, or future block of
+100 million files. `N` refers to the benign sample population used to calibrate
+or evaluate that decision, not the number of files in a user's scan command.
 
-For a pool with `N` benign samples, the equivalent continuous count is
-`1 + (L - 1) * N / 100_000_000`. Its integer allowance is the floor of that
-value (capped at N); L0 allows zero, and a pool with no benign observations
-has no measurable allowance. The `-1` makes L1 exactly the first FP. This is
-the precise version of “one FP plus roughly L FPs per hundred million.”
+| Benign files in the pool | L1 allowance | L25 continuous allowance | L25 integer budget |
+|---:|---:|---:|---:|
+| 2,540 | 1 | 1.0006096 | 1 |
+| 1,000,000 | 1 | 1.24 | 1 |
+| 4,000,000 | 1 | 1.96 | 1 |
+| 100,000,000 | 1 | 25 | 25 |
 
-For historical Gem's 2,540 benigns, L25 therefore allows **one** FP. Expressing
-that single event as a rate gives roughly 39,370/100M. That conversion is not
-evidence of Gem's future population rate. Historical counts below are examples,
-not current corpus sizes.
+Fractional allowances describe the target curve; an observed count is always
+an integer. Several levels can therefore share the same count budget. Tied
+model scores can also prevent spending exactly that budget: it is an allowance,
+not a requirement to produce a particular number of errors.
 
-The unit of the deployed budget is **one final filetype decision pool**, not
-each component in its ensemble. General, group, and type models must share it.
-Standalone model calibration still uses that model's own benign pool; these
-thresholds are candidates/anchors for final policy selection, not additive FP
-credits for overlapping components.
+## Rates, estimates, and observations
 
-Policy search maximizes recall within the allowance on dev. Candidate choices
-include the one-FP operating point, alongside zero-FP and other applicable
-counts. Selection evaluates actual float32 decisions and unions each candidate
-with all previously selected stricter levels. Two policies hitting different
-benigns spend two FPs even if each individually hits only one. Their shared
-false positives are counted only once. This is a sequential search over the
-available candidates, not a claim of a globally optimal policy grid.
+For positive levels, the equivalent nominal rate per 100 million is:
 
-The deployment gate applies the frozen runtime sweep to test rows and checks
-each filetype's allowance using its test benign count. Totals sum those
-allowances for reporting; an under-budget route cannot subsidize an over-budget
-one. The default multiplier is 1 and there is no small-pool exemption. Nightly
-gates the canonical operating point, L25, while reporting the whole grid.
-`--budget-gate-level` selects another checkpoint; `--budget-gate-max-level`
-explicitly opts into checking every level up to a ceiling. An L0 gate would
-require zero observed test FPs, so it is not silently imposed on an L25 deploy.
-All-empty grids are evaluated with the runtime's
-general fallback rather than assumed to be inert. A dev policy whose fallback
-exceeds the allowance is rejected before publication.
+```text
+first_FP_rate = 100_000_000 / N
+nominal_rate_per_100M = first_FP_rate + L - 1
+```
 
-The gate is an **empirical count gate**, not a confidence-bound gate. Reports
-include observed counts/rates and one-sided 95% exact binomial upper bounds
-separately. Those bounds assume independent, representative benign samples;
-archive grouping reduces leakage but does not establish those assumptions.
-Zero observed FPs is also not proof of zero population risk. Maximizing recall
-at zero observed FPs remains a useful comparison, but can let one extreme benign
-sample dictate a much stricter threshold. L25 deliberately accepts the first FP
-to measure the recall available beyond that point.
+The level label alone is not a literal population FP rate. At L25, one FP in a
+2,540-benign pool corresponds to about 39,370 observed FP/100M, while one FP in
+a million-benign pool corresponds to 100 observed FP/100M. Neither observation
+establishes the future rate. At exactly 100 million benigns the allowance and
+level number coincide.
 
-Selection never fits thresholds on the test partition. Once repeated research
-uses test results to choose configurations, fresh confirmation data is needed.
+We aim to estimate the additional rate as accurately as possible, using
+interpolation or extrapolation when sample resolution requires it. An
+extrapolated estimate is not a measurement or a guarantee. Heavy extrapolation
+must remain identifiable, with its sample size and uncertainty; it does not
+remove the initial one-FP allowance or turn L25 into a literal 25-FP/100M target.
 
-## Three floors, per route
+Reports must distinguish the requested level, benign count, allowed/observed FP
+counts, observed FP rate, and uncertainty. A one-sided 95% exact binomial upper
+bound is a separate statistical quantity, not the budget used for selection.
+Those bounds assume independent, representative benign observations. Zero
+observed FPs does not establish zero future risk, and there is no universal
+“within 5–6×” accuracy guarantee for small filetypes.
 
-Every route has three distinct limits. Confusing them is the source of most
-of the trouble in this area.
+## One allowance for the final decision
 
-| floor | definition | example (PE, 205,094 benigns) |
-|---|---|---|
-| **1-FP floor** | `1e8 / n_benign` — the strictest level at which one observed false positive exists | L488 |
-| **certifiable floor** | Clopper-Pearson 95% bound with zero observed FP: `1e8 * (1 - 0.05^(1/n))` | L1,461 |
-| **saturation floor** | `1e8 * (benigns scored p=1.0) / n` — unreachable at any threshold | L0 (PE is not saturated) |
+The deployed budget belongs to **one final filetype decision pool**. General,
+group, and specialist models share it. Standalone calibration uses each model’s
+own benign pool, but its thresholds do not create additive FP credits when
+models are combined.
 
-Fleet values:
+Policy search maximizes recall within the shared allowance on dev. Selection
+counts the union of decisions from every level up to the requested level,
+matching Scan’s runtime sweep. Two policies hitting different benign files
+spend two FPs, even when each individually hits only one. Shared false positives
+are counted once. This is a sequential search, not a global-optimality claim.
 
-| route | benign | 1-FP floor | 95% certifiable | saturated |
-|---|---|---|---|---|
-| general | 12,945,343 | L8 | L23 | no |
-| filegroups/scripts | 2,970,762 | L34 | L101 | no |
-| filetypes/elf | 626,474 | L160 | L478 | no |
-| filetypes/pe | 205,094 | L488 | L1,461 | no |
-| filetypes/ruby | 176,786 | L566 | L1,695 | no |
-| filetypes/npm | 6,195 | L16,142 | L48,346 | no |
-| filetypes/gem | 2,540 | L39,370 | L117,873 | no |
-| filetypes/plist | 97,587 | L1,025 | L3,069 | **L1,051,370** |
+Test evaluates the frozen decisions using each test pool’s benign count; it
+must not choose new thresholds. Repeatedly using test outcomes to select
+configurations requires fresh confirmation data. An under-budget filetype does
+not subsidize an over-budget filetype. All-empty policy grids are evaluated with
+the runtime’s general fallback, not assumed to be inert.
 
-Eight routes (plist, deb, rust, text, makefile, json, png, markdown) score
-some benign files at exactly p=1.0. For those the *entire* deploy grid is
-unreachable: they false-positive at every level the grid can name, and no
-estimator can change that. It is a model problem, not a threshold problem.
+Nightly reports FP overruns across the grid. They do not block installation by
+default; detection regression and runtime validation gates remain mandatory.
+For deployment and regression-recovery acceptance, only detection losses at
+L0 through L25 can block. The deployment gate retains its configured recall
+tolerances and net-improvement policy within that range. Check every saved
+operating point in that inclusive range using the runtime's cumulative sweep. Detection changes above L25 remain reportable
+but do not block acceptance. This does not relax calibration FP allowances.
+`AZOTH_BUDGET_GATE_ARGS=--fail-on-budget` opts into the empirical FP-count gate.
+`--budget-gate-level` selects a checkpoint, while `--budget-gate-max-level`
+explicitly checks levels up to a ceiling. An L25 check does not silently impose
+an L0 requirement of zero test FPs.
 
-## The "at least 1 FP" rule
+## Implementation and numerical limits
 
-L0 means *no* benign fires. Every level above L0 admits at least one false
-positive — otherwise L0 and L1 would be the same threshold and the strict end
-of the dial would carry no information.
+`collimator.thresholds.resolution_adjusted_fp_budget` implements the integer
+allowance. `quantile_severity_threshold` maps requested levels to score cuts;
+its legacy `target_per_million` argument carries `L / 100`, not the full
+pool-adjusted FP rate. Serialized fields such as `target_per_100M` likewise
+encode the nominal level; observed `fp_per_100M` is a different quantity.
 
-The rule before 2026-08-03 implemented this as a *clamp*
-(`_fp_budget_for_rate`: `max(1, floor(n * rate))`), which forced a route to
-spend one false positive on a level it could not resolve. On PE, L25 budgets
-0.051 expected FP, the clamp rounded it to 1, and 1 FP in 205,094 *is* L488 —
-so PE's entire L0-L50 range shipped the same threshold while reporting 31%
-recall against a rate 20x looser than the label.
+The current standalone curve uses observed benign order-statistic anchors and
+linear interpolation in log-rate/logit-score space. For positive levels it
+applies the `first_FP_rate + L - 1` shift. Its strict-end continuation estimates
+an extrapolation slope from the deepest decade of anchors. L0 is constrained
+above the largest observed benign score using a float32 step so the exclusion
+survives serialization. Final policy search can choose different score cuts
+under the shared integer count allowance; the resulting frozen policy is what
+Scan evaluates.
 
-The resolution-adjusted scale gets the same guarantee without the clamp: L1
-*is* the 1-FP anchor, so every level from L1 up admits at least one false
-positive by construction on every route, at or below the observed maximum.
-Only L0 sits above the data, by one step, and it admits zero. Verified across
-all 74 routes: 0 invariant violations.
+For untied scores, the k-th FP anchor maps to
+`L = 1 + (k - 1) * first_FP_rate`. Ties, finite precision, and score saturation
+can merge operating points, so neither distinct thresholds nor exactly k FPs
+at every anchor are universal guarantees. A threshold above 1 can represent
+an inactive probability rule; calibration and runtime fallback must agree on
+that behavior. Saturated scores may require model changes rather than a better
+curve fit.
 
-## Why L0 is clamped above the data
+Scan reads saved thresholds and policy grids; it does not extrapolate anew for
+each scan. It reports the lowest level at which a file fires. Its suspicious
+band is derived from the level table and does not change the level definition.
 
-L0's threshold is floored at **the first float32 step past the largest
-observed benign score**. Both halves of that sentence are load-bearing, and
-both were learned by shipping it wrong.
+## Historical research
 
-The curve alone does not deliver zero FP. Benign scores are clipped to
-`1 - 1e-7` before the logit transform (logit 16.118), so a route that scores
-benign files at exactly `p = 1.0` gets an L0 threshold of `~0.9999999` — below
-the very files it exists to exclude. The first version of this estimator
-(2026-08-03) did exactly that, and L0 quietly stopped meaning zero:
-
-| route | benigns firing at L0 | previous rule |
-|---|---|---|
-| filetypes/rust | 464 | 0 |
-| filetypes/java_class | 422 | 0 |
-| filetypes/text | 333 | 0 |
-| filetypes/makefile | 294 | 0 |
-| filetypes/json | 293 | 0 |
-| filetypes/png | 171 | 0 |
-| filetypes/c | 26 | 0 |
-| filetypes/swift | 10 | 0 |
-| filetypes/svg | 3 | 0 |
-| **fleet total** | **2,016** | **0** |
-
-Worse, it was a strict regression: fleet L0 went from 0 FP at 38.86% recall to
-2,016 FP at 32.12%. Both axes moved the wrong way, because thresholds moved in
-*opposite directions* on different routes — looser on saturated routes (which
-let the ceiling mass in) while tighter everywhere else (which gave up recall).
-The rule it replaced achieved zero by clamping saturated routes to exactly
-1.0, an unreachable threshold. That clamp was doing real work, and deleting it
-was a mistake.
-
-**float32, not float64.** Thresholds ship through `config.json` into
-litmus/ONNX as float32. A float64 threshold that sits above the max benign but
-rounds to the *same float32* stops excluding it the moment it deploys. The
-step is taken in float32 so the exclusion survives the round trip — the same
-class of bug as the ONNX parity flake of 2026-07-13.
-
-**On a saturated route this lands above 1.0, and that is correct.** Such a
-route has only two thresholds available to it: one where the whole p=1.0 mass
-fires, and one where nothing does. There is no intermediate, so L0 → L1 is a
-genuine 0 → N cliff rather than a smooth step. That is honest — the route
-cannot resolve anything finer — and it is confined to L0. Everywhere else the
-curve stays continuous, which was the point of the redesign.
-
-The invariant to test, and the one that failed: **L0 admits zero false
-positives, in float32, on every route including saturated ones.**
-
-## How a curve is built (EXP-8b)
-
-Chosen on measured accuracy at L1 and L25 across 15 non-saturated routes:
-median error 0.62 decades against the incumbent's 1.88, best worst-case of
-any candidate, and the only estimator centred rather than biased loose.
-Full comparison in `FP_CURVE_RESULTS.md`.
-
-1. **Anchors are measurements.** The k-th largest benign score IS the
-   threshold admitting exactly k false positives, at level `k * 1e8 / n`.
-   Anchors are taken at k = 1..10 and then geometrically out to 5% of the
-   pool.
-2. **Between anchors: interpolation.** Shape-preserving monotone (PCHIP) in
-   (log level, logit threshold). No model, no distributional assumption.
-3. **Below the 1-FP anchor: one line.** Slope measured over the deepest
-   decade of anchors (1 to 10 FP) and extended. That window matters: a slope
-   fitted over the *body* (5-5000 FP) extrapolates 35-94x too strict, because
-   benign tails flatten faster than their bodies imply.
-4. **L0 is one step further along the same line**, so there is no
-   discontinuity between L0 and L1.
-
-Everything is in logit space; thresholds convert back at emission. The curve
-is strictly monotone and smooth by construction (measured total variation
-0.000), and it is capped at the float32 probability ceiling because no
-threshold above p=1.0 is representable.
-
-## What each emitted row carries
-
-| field | meaning |
-|---|---|
-| `level` | the requested budget, per 100M |
-| `threshold` | the score at or above which a file fires |
-| `model_extrapolated` | true below the 1-FP floor — this row is a claim, not a measurement |
-| `cp_floor_per_100M` | the tightest rate this corpus can certify at 95% |
-| `saturation_floor_per_100M` | the rate imposed by benigns scored p=1.0 |
-| `saturation_limited` | true when the requested level is below that floor |
-
-A consumer that needs a promise should read `cp_floor_per_100M`; a consumer
-that wants a dial reads `threshold`. The level never silently becomes a
-guarantee it cannot back.
-
-## Consequence for the suspicious tier
-
-`scan` derives the suspicious threshold as a **level-table lookup** at
-`min(max_grid_level, 3000)` (`capped_suspicious_level`), so nothing breaks
-mechanically — it reads whatever the table says. But the separation between
-hostile and suspicious is now route-relative too.
-
-On a route whose floor exceeds the grid span (n < 4,000 benigns, so
-`floor_level > 25000`), the **entire** L0-L25000 grid lives between that
-route's 1st and 2nd false positive. Every level returns the same single FP,
-and hostile and suspicious collapse onto thresholds separated only by
-interpolation within one FP gap. Roughly 15 routes are in that state today:
-applescript, chrome-manifest, chrome_manifest, docx, xpi, rtf, lnk, xlsx,
-gem, nupkg, crx, ooxml, vsix, vbs, pkg-info.
-
-This is honest — those corpora genuinely cannot resolve a second operating
-point — but it is a behaviour change for consumers that bucket on
-`l > critical_level` (promoter, prism, hopper). Growing those corpora is the
-only fix.
-
-## Verification
-
-Two properties are cheap to check on any route and should gate any change:
-
-1. **Anchor exactness** — at the k-th anchor the curve must produce exactly k
-   false positives. EXP-8b passes by construction; a tail-model estimator
-   anchored deeper (EXP-3b, anchored at 5 FP) fails at k=1, returning a
-   threshold 1.56 logits above the highest benign that exists.
-2. **Strict monotonicity and distinct thresholds** over the continuous grid,
-   below the score ceiling.
-
-The scale-ladder backtest (`scripts/fp_curve_bench.py`) verifies calibration
-by subsampling deep pools and counting realized false positives on the full
-pool. `scripts/fp_curve_audit.py` scores the strict end across every route
-deep enough to be measured.
-
-## Known limitations
-
-- **Cross-route comparability is by FP count, not by label.** L25 means a
-  different true rate on every route. Compare routes by how many false
-  positives a level spends, not by the level number.
-- **Below the 1-FP floor, accuracy is roughly half a decade** at deployment
-  scale (median 0.62 for L1+L25) and degrades on small routes.
-- **Saturated routes cannot honour any grid level** and need model work, not
-  estimator work.
-- **The general-model OOF pool (12.9M benigns, floor L8) landed 2026-08-03**
-  and is the only route that can certify the L25 deploy point.
+[FP_CURVE_PROPOSAL.md](FP_CURVE_PROPOSAL.md) and
+[FP_CURVE_RESULTS.md](FP_CURVE_RESULTS.md) preserve dated estimator experiments,
+including literal-rate alternatives. Their numeric results and corpus sizes
+are historical evidence, not the current level definition or a guarantee for
+an installed bundle. [METHODOLOGY.md](METHODOLOGY.md) defers to this contract
+for severity-level semantics.

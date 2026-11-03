@@ -131,5 +131,9 @@
       "source": "verified_research_installation",
       "model_revision": "39cce4fa7b19fe161de1c0e68d4e82c2c5fa952144531b745719f4254d642584"
     }
-  }
+  },
+  "ensemble_seeds": [
+    43,
+    44
+  ]
 }

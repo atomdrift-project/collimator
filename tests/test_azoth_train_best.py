@@ -143,6 +143,15 @@ def test_resolve_env_maps_train_config_to_exp_vars() -> None:
     assert "monotone_constraints" not in env
 
 
+def test_accepted_membership_survives_replay_default_and_make_translation():
+    run={'train_config':{},'feature_env':{},'ensemble_seeds':[42,44]}
+    env=_mod._resolve_env(run,{'EXP_SEED_SEARCH_K':'3','EXP_SAVE_ALL_SEEDS':'1'})
+    assert env['COLLIMATOR_ENSEMBLE_SEEDS']=='42,44'
+    assert env['EXP_SEED_SEARCH_K']=='2'
+    translated=_mod._translate_env_for_make(env)
+    assert translated['EXP_ENSEMBLE_SEEDS']=='42,44'
+
+
 def test_keyword_settings_survive_full_training_make_replay() -> None:
     values = {"RULE_KEYWORDS": "0", "DESCRIPTION_KEYWORDS": "1",
               "KEYWORD_VOCAB_MAX": "50000", "KEYWORD_MIN_FREQ": "2"}

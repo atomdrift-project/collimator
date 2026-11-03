@@ -53,5 +53,8 @@
       "source": "verified_research_installation",
       "model_revision": "16af24a6943ebb9c64a83ccfdc0f0099fd9cc6534af2c962557a8d6b30bab040"
     }
-  }
+  },
+  "ensemble_seeds": [
+    43
+  ]
 }

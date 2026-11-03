@@ -27,7 +27,7 @@ from collimator.thresholds import (  # noqa: E402
 )
 from azoth_calibrate_ensemble import _clopper_pearson_fp_per_million_upper  # noqa: E402
 
-# Full deploy grid of per-100M operating points. Curves are sampled at
+# Full deploy grid of pool-adjusted operating points. Curves are sampled at
 # every level so the SVG shows the same x-axis the deploy pipeline tunes.
 RECALL_CURVE_LEVELS: tuple[int, ...] = tuple(_CHART_LEVELS_PER_100M)
 # Default operating point — rendered as a vertical dashed gridline so the
@@ -39,10 +39,18 @@ DEFAULT_RECALL_LEVEL = DEFAULT_SEVERITY_LEVEL
 # prose, and chart annotations so a future DEFAULT_SEVERITY_LEVEL flip
 # updates every README mention with no further edits.
 #   _DEFAULT_LEVEL_LABEL  →  "L4"
-#   _DEFAULT_LEVEL_PHRASE →  "L4 (0.04 FP/M)"
+#   _DEFAULT_LEVEL_PHRASE →  "L4 (one FP plus an estimated additional 3 FP/100M)"
 _DEFAULT_LEVEL_LABEL = f"L{DEFAULT_SEVERITY_LEVEL}"
 _DEFAULT_LEVEL_PHRASE = (
-    f"{_DEFAULT_LEVEL_LABEL} ({DEFAULT_SEVERITY_LEVEL / 100.0:g} FP/M)"
+    f"{_DEFAULT_LEVEL_LABEL} (one FP plus an estimated additional "
+    f"{DEFAULT_SEVERITY_LEVEL - 1:g} FP/100M)"
+    if DEFAULT_SEVERITY_LEVEL > 0 else "L0 (zero observed calibration FPs)"
+)
+_LEVEL_CONTRACT_NOTE = (
+    "Level labels use the [shared pool-adjusted FP allowance]"
+    "(https://github.com/atomdrift-project/collimator/blob/main/LEVELS.md): "
+    "L0 allows zero observed calibration FPs; L1 allows one; L25 adds an "
+    "estimated 24 FP/100M beyond the initial FP."
 )
 # Full span of severity levels litmus can report, derived from the deploy
 # grid so the README prose tracks the grid instead of hardcoding an
@@ -261,7 +269,7 @@ def _render_recall_svg(
     parts.append(
         f'<text class="axis-title" x="{margin_left + plot_w / 2:.1f}" '
         f'y="{height - 16}" text-anchor="middle">'
-        f'Severity level (FP per 100M benigns)</text>'
+        f'Severity level (pool-adjusted)</text>'
     )
     # Curves.
     for name, points in plotted.items():
@@ -854,7 +862,7 @@ def _route_summary(config: dict[str, Any]) -> str:
 
 def _level_table(levels: list[dict[str, Any]]) -> str:
     lines = [
-        "| L | Target/100M | Recall | FP/100M | Threshold |",
+        "| L | Nominal level | Recall | FP/100M | Threshold |",
         "| ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in sorted(levels, key=lambda item: int(item["level"])):
@@ -944,7 +952,7 @@ def _global_policy_table(root: Path) -> str:
         return _clopper_pearson_fp_per_million_upper(int(fp), n_test_benign, alpha=0.05) * 100.0
 
     lines = [
-        "| L | Target/100M | Recall | FP/100M | 95% CI upper (FP/100M) |",
+        "| L | Nominal level | Recall | FP/100M | 95% CI upper (FP/100M) |",
         "| ---: | ---: | ---: | ---: | ---: |",
     ]
     for level_no in sorted(int(item["level"]) for item in data["levels"]):
@@ -967,20 +975,16 @@ def _global_policy_table(root: Path) -> str:
     out += (
         f"\n\n*95% CI upper* is the Clopper-Pearson upper bound on the deployment "
         f"FP rate given the observed FP count in {n_test_benign:,} test-partition "
-        f"benigns. The honest deployment-FP/100M claim sits below this number with "
-        f"95% confidence."
+        f"benigns. Under independent, representative sampling, this is a one-sided "
+        f"95% confidence bound, not a guaranteed live-traffic rate."
     )
     if any_below:
         out += (
-            "\n\n† dataset-limited granularity: the calibration benign volume is "
-            "too small to *separate* this level from its neighbours at 95% CI, so "
-            "adjacent levels share one operating point (the curve is flat here). "
-            "The threshold is still a real measured ceiling — the loosest score "
-            "admitting at most the level's FP budget plus one (the +1 slack) on the "
-            "calibration benigns — not an extrapolation, so it can't overshoot on "
-            "live traffic. The 95% CI column shows the residual sampling "
-            "uncertainty; finer steps between levels appear only as benign volume "
-            "grows."
+            "\n\n† Limited calibration resolution: adjacent levels may share an "
+            "integer FP allowance or measured operating point. Interpolation or "
+            "extrapolation estimates finer rate differences; neither guarantees "
+            "the future FP rate. The 95% CI column reports sampling uncertainty, "
+            "assuming independent, representative benign observations."
         )
     return out
 
@@ -1116,6 +1120,8 @@ def _write_general(root: Path) -> None:
         "",
         "General malware detector used for every routed decision.",
         "",
+        _LEVEL_CONTRACT_NOTE,
+        "",
         f"- Inputs: shared `feature_spec.json` "
         f"({_int(_feature_count(root / 'general' / 'feature_spec.json', evaluation.get('n_features')))} features) "
         "extracted from cleave reports.",
@@ -1138,9 +1144,13 @@ def _write_route(root: Path, path: Path) -> None:
     with open(path / "benchmark.json") as f:
         data = json.load(f)
     metrics = data.get("metrics") or {}
-    name = data["name"]
-    kind = data["kind"]
-    file_types = ", ".join(f"`{item}`" for item in data.get("file_types", []))
+    # Retained components preserve their original benchmark verbatim (its
+    # digest is part of the artifact identity). General-model benchmarks lack
+    # specialist identity fields, and copied specialists can retain an old name.
+    # The bundle slot identifies the route being documented in both cases.
+    name = path.name
+    kind = {"filegroups": "filegroup", "filetypes": "filetype"}[path.parent.name]
+    file_types = ", ".join(f"`{item}`" for item in data.get("file_types", [])) or "all file types"
 
     per_ft = _load_per_filetype_metrics(root)
     pf_entry = per_ft.get("filetypes", {}).get(name) if kind == "filetype" else None
@@ -1153,6 +1163,8 @@ def _write_route(root: Path, path: Path) -> None:
         "",
         f"LightGBM specialist for {file_types}. Member of the Azoth routed "
         f"ensemble; bundle root: [../..](../..).",
+        "",
+        _LEVEL_CONTRACT_NOTE,
         "",
     ]
 
@@ -1229,16 +1241,19 @@ def _write_route(root: Path, path: Path) -> None:
             "recall_curve.svg",
             curves,
             title=f"{name}: recall by FP level",
-            alt_text=f"{name}: recall by FP level (per 100M benigns)",
+            alt_text=f"{name}: recall by FP level (pool-adjusted)",
         )
         if img_tag:
             lines.extend([
-                "## Recall by FP level (per 100M benigns)",
+                "## Recall by FP level (pool-adjusted)",
                 "",
                 img_tag,
                 "",
-                "Each curve plots recall at the per-100M-benign FP target "
-                f"for the route. The vertical dashed line marks the "
+                "Each curve plots recall at the route's pool-adjusted FP level. "
+                "L0 allows zero observed calibration FPs; positive L allows "
+                "`1 + (L - 1) * N / 100_000_000` for N benigns. See the "
+                "[shared level definition](https://github.com/atomdrift-project/collimator/blob/main/LEVELS.md). "
+                "The vertical dashed line marks the "
                 f"{_DEFAULT_LEVEL_LABEL} deploy operating point.",
                 "",
             ])
@@ -1328,12 +1343,12 @@ def _bundle_recall_curve_section(metrics: dict[str, Any], root: Path | None = No
             "recall_curve.svg",
             curves,
             title="Corpus recall by FP level",
-            alt_text="Corpus-weighted recall by FP level (per 100M benigns)",
+            alt_text="Corpus-weighted recall by FP level (pool-adjusted)",
         )
         if not img_tag:
             return []
     return [
-        "## Recall by FP level (per 100M benigns)",
+        "## Recall by FP level (pool-adjusted)",
         "",
         img_tag,
         "",
@@ -1404,6 +1419,21 @@ def _write_bundle(root: Path) -> None:
         f"default is {_DEFAULT_LEVEL_PHRASE}. Lower levels tighten the "
         "operating point; higher levels loosen it.",
         "",
+        "## False-positive levels",
+        "",
+        "For N benign files, L0 allows zero observed calibration FPs; positive L "
+        "has a continuous allowance `1 + (L - 1) * N / 100_000_000`, rounded down "
+        "for an integer count budget. L1 allows one FP; L25 adds an estimated "
+        "24 FP/100M beyond that initial FP. Components share the final filetype "
+        "decision allowance. These are calibration targets, not guaranteed future "
+        "rates; interpolated or extrapolated estimates and uncertainty are separate "
+        "from observed counts. See the "
+        "[shared level definition](https://github.com/atomdrift-project/collimator/blob/main/LEVELS.md).",
+        "",
+        "Only detection regressions at L0 through L25 (inclusive) can block model "
+        "acceptance. Higher levels remain reportable. Calibration allowances apply "
+        "at every level; empirical test FP overruns do not block installation by default.",
+        "",
         "## Bundle layout",
         "",
         "`config.json` records the deployed thresholds. Each route lives "
@@ -1460,7 +1490,7 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Limits",
         "",
-        f"- Strict L0..{_DEFAULT_LEVEL_LABEL} (FP/100M) targets can sit below the calibration benign volume's resolution (the finest non-zero rate is 1 FP / N_benign); below that, adjacent levels share one measured-ceiling operating point. Thresholds are measured (loosest score within the level's FP budget +1 slack), not extrapolated — they can't overshoot on live traffic. More benigns sharpen the low levels.",
+        "- The level is a pool-adjusted calibration target. Interpolation or extrapolation does not guarantee the future FP rate; more representative benign data improves rate estimation.",
         "- The split is content-deduplicated by `canonical_sha256`, not family-aware. Campaign-level generalization may be overstated.",
         "- Deployment distribution may differ from the training corpus.",
         "",
@@ -1516,17 +1546,17 @@ def _write_ensemble_card(root: Path) -> None:
         "## Routing policies",
         "",
         "Per filetype per level, `azoth_route_policy_search.py` picks "
-        "one of these policy forms by recall at the FP/M target, with "
+        "one of these policy forms by recall at the shared FP allowance, with "
         "F1 and fp-count tiebreaks. The chosen policy and its "
         "calibrated thresholds are written to `route_policies.json` "
         "and read by Scan at scan time:",
         "",
         "- `joint_or_at_fp_N` — OR-rule across the allowed routes, "
-        "with per-route thresholds calibrated to a joint FP/M target "
-        "of N per million. The common case.",
+        "with per-route thresholds sharing a total allowance of N observed "
+        "false positives in the decision pool. The common case.",
         "- `learned_blend_at_fp_N` — a logit blend "
         "`σ(b + Σ wᵢ · logit(pᵢ))` over raw route probabilities, "
-        "thresholded to hit the FP/M target. Wins when route scores "
+        "thresholded to hit the shared FP allowance. Wins when route scores "
         "are complementary in a way a simple OR misses.",
         "- `filetype_only` / `filetype_only_at_fp_N` — the specialist "
         "fires alone.",
@@ -1535,20 +1565,17 @@ def _write_ensemble_card(root: Path) -> None:
         "single-primary variants.",
         "- `calibrate_inherited` — the level inherits its threshold "
         "from a stricter level (no fresh calibration was warranted).",
-        "- `no_policy` — no configuration meets the FP/M target at this "
+        "- `no_policy` — no configuration meets the shared FP allowance at this "
         "level; the route does not fire at this severity.",
         "",
-        "## Severity levels (L0..L20)",
+        f"## Severity levels ({_LEVEL_RANGE_LABEL})",
         "",
-        "L0..L20 are measured strictness grades, not optimization "
-        "targets. L0 is the 0-FP point (loosest threshold flagging no "
-        "calibration benign). For each higher route level Lk, the "
-        "threshold is the loosest score admitting at most the level's "
-        "FP budget plus one benign (the +1 slack) — a real measured "
-        "ceiling, never an extrapolation, so it can't overshoot on live "
-        "traffic. Where benign volume can't separate adjacent levels, "
-        "they share one ceiling (a flat run); finer steps emerge only as "
-        "benign volume grows.",
+        "L0 allows zero observed calibration FPs. For N benign files, positive L "
+        "has continuous allowance `1 + (L - 1) * N / 100_000_000`, rounded down "
+        "for a count budget. L1 allows one FP; L25 adds an estimated 24 FP/100M. "
+        "General, group, and specialist models share the final decision allowance. "
+        "Interpolation or extrapolation does not guarantee live-traffic rates. "
+        "See the [shared level definition](https://github.com/atomdrift-project/collimator/blob/main/LEVELS.md).",
         "",
         "Litmus reads the per-level thresholds from "
         "`route_policies.json` and assigns severity per file.",

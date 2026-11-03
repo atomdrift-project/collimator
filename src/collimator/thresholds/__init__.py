@@ -17,12 +17,11 @@ from collimator.model import load_model, predict_proba
 
 log = logging.getLogger(__name__)
 
-# Deployment operating points on the per-100M-benigns scale. The integer
-# `level` IS the false-positive budget per 100 million benigns — so L100
-# means 100 FP / 100M ≡ 1 FP/M. The internal computation still carries
-# `hostile_per_million` as a float because the rest of the threshold math
-# is keyed on FP/M; the per-100M level number is the canonical wire unit
-# (matches litmus's `-l` knob and the JSON emit field `target_per_100M`).
+# Deployment levels use the shared pool-adjusted allowance in LEVELS.md:
+# L0 = zero observed calibration FPs; positive L = 1 + (L-1)*N/1e8 FPs.
+# The wire label is L, not the full population rate. Legacy field names
+# hostile_per_million and target_per_100M carry L/100 and L respectively;
+# the first-FP offset is applied by the shared threshold/budget functions.
 #
 # Grid is dense in the strict region (L0-L10, where finer resolution
 # actually pays off once the benign corpus is large enough to resolve
@@ -74,7 +73,8 @@ _CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 # ============================================================================
 # CANONICAL DEPLOY OPERATING POINT
 # ============================================================================
-# 25 FP/100M = 0.25 FP/M — the deploy tuning goal. Moved down from L50 (2026-07):
+# L25 = one FP plus an estimated additional 24 FP/100M (LEVELS.md).
+# Historical rationale for moving down from L50 (2026-07; corpus-specific):
 # L25 is the knee of the hostile curve — reaching it from L20 is nearly free
 # (+1.79pp recall for ~32 benign FP), whereas L30 costs ~2.6x the FP for +0.61pp
 # and L40 quadruples FP again (the L30->L40 cliff) for only +0.32pp. L25 sits
@@ -142,8 +142,9 @@ DEFAULT_SEVERITY_TARGET = _severity_target(DEFAULT_SEVERITY_LEVEL)
 # the threshold by up to 11 logits (median cliff z 8.7-19.3), where the
 # replacement sits at sampling noise.
 #
-# The construction: the k-th largest benign score IS the threshold admitting
-# exactly k false positives, at level k*1e8/n. Those anchors are measurements.
+# For untied scores, the k-th largest benign score admits k observed FPs.
+# Its empirical rate is k*1e8/n; on the displayed L-1 scale its level is
+# 1 + (k-1)*1e8/n. Ties can merge these observed anchors.
 # Between them, shape-preserving monotone interpolation. Below the 1-FP anchor,
 # one line whose slope is measured over the deepest decade of anchors (1..10
 # FP) — NOT over the body, which extrapolates 35-94x too strict because benign
@@ -211,22 +212,22 @@ def quantile_severity_threshold(
 ) -> tuple[float | None, str]:
     """Operating-point score threshold for a per-100M severity level.
 
-    THIS IS THE ONE shared operating-point definition. Deploy (route policy
-    search / calibration), the screen experiment's recall@level metrics, the
-    headline tables, and real-world litmus thresholds all derive recall at a
-    level from this function, so a candidate is screened at the exact operating
-    point it will ship at.
+    This supplies standalone calibration anchors. Final policy search can
+    choose different score cuts within the shared L-1 count allowance; the
+    frozen routed policy determines the deployed decision (see LEVELS.md).
 
-    ONE rule for every route (see LEVELS.md). The k-th largest benign score is
-    the threshold admitting exactly k false positives, at level ``k*1e8/n``;
-    those anchors are measurements. Between them the curve interpolates; below
-    the 1-FP anchor it continues on a line whose slope is measured over the
-    deepest decade of anchors. There is no low-volume regime and no 25k switch.
+    For untied scores, the k-th benign anchor maps to displayed level
+    ``1 + (k - 1) * 1e8 / n``. Its observed rate is ``k * 1e8 / n``, a
+    separate quantity. Between anchors the curve interpolates in log-rate /
+    logit-score space; below the first anchor it continues using the slope
+    measured over the deepest decade of anchors. Ties can merge anchors.
 
     L0 is the sole level below the 1-FP anchor and it admits zero false
     positives: its threshold is floored at the first float32 step past the
     largest observed benign, so on a saturated route it lands above 1.0 and
-    nothing fires. Every level from L1 up admits at least one.
+    nothing fires. The standalone curve from L1 up admits at least one
+    observed benign; tied scores can admit more. Final shared-budget policy
+    selection may choose a stricter cut, including no decision.
 
     Returns ``(threshold, method)`` where method is ``"measured"`` (at or above
     the sample's 1-FP floor — interpolation between observed order statistics),
@@ -248,14 +249,13 @@ def quantile_severity_threshold(
     #
     #     true_rate = requested + floor_level - 1
     #
-    # so L1 is exactly 1 FP, the k-th FP sits at L(1 + (k-1)*floor_level), and
-    # L0 is one unit past L1 along the same line. A route with 100M benigns has
-    # floor_level = 1 and the mapping becomes the identity — this is the true
-    # per-100M rate scale, quantised to the resolution a route actually has,
-    # not a different unit.
+    # For untied scores L1 lands on one observed FP, and the k-th anchor is
+    # L(1 + (k-1)*floor_level). L0 uses a separate zero-observed-FP clamp below.
+    # At 100M benigns floor_level=1, so displayed levels and the empirical
+    # rate anchors coincide. This mapping does not establish a population rate.
     #
     # The consequence, stated plainly: the same displayed level is a different
-    # true rate on different routes (L25 is 31.7/100M on general, 39,394/100M
+    # nominal adjusted rate on different routes (L25 is 31.7/100M on general, 39,394/100M
     # on gem). Comparability moves from the label to the false-positive count.
     # That is deliberate — the alternative is claiming a rate a route cannot
     # deliver, which is what the pre-2026-08-03 rule did by a median factor of
@@ -283,7 +283,7 @@ def quantile_severity_threshold(
     # guarantee: 2,016 benigns fired at L0 across nine saturated routes (rust
     # 464, java_class 422, text 333, makefile 294, json 293, png 171, c 26,
     # swift 10, svg 3) where the previous rule had exactly 0. See LEVELS.md
-    # "Why L0 is clamped above the data".
+    # "Implementation and numerical limits".
     #
     # Floor it at the first float32 step past the largest observed benign. On a
     # normal route the line is already above that and nothing changes; on a
@@ -313,18 +313,12 @@ def recall_at_fp_budget(
     every malware). Scores use float32 serving precision. A threshold includes
     an entire equal-score group; it cannot split tied benigns or malware.
 
-    NOT the same thing as ``quantile_severity_threshold``, and the difference is
-    deliberate. The k-th largest benign score also admits exactly k FPs, but so
-    does any threshold down to just above the (k+1)-th, which captures strictly
-    more malware for the same FP count — that dominating point is what this
-    reports. `quantile_severity_threshold` picks the conservative end (at the
-    k-th benign) because it selects a threshold to SHIP against unseen data,
-    where the gap between the two is unmeasured. So expect this to read a little
-    higher than recall at the equivalent per-100M level; on filetypes/pe's 10k
-    screen holdout the gap was 0.9pp (0.6618 vs 0.6527) for the same 1 FP.
-
-    Use this for measured anchors and any "how much can this model catch at k
-    FPs" question. Use `quantile_severity_threshold` for the threshold to ship.
+    Unlike the standalone curve in ``quantile_severity_threshold``, this finds
+    the highest measured recall anywhere within the integer budget. For
+    untied scores, cuts between the k-th and (k+1)-th benign can admit the same
+    k FPs while detecting different malware. Final routed policy search uses
+    the shared count allowance and can select such cuts; its frozen decisions,
+    including the cumulative level sweep, determine what ships.
     """
     valid = ~np.isnan(y_prob)
     if not np.any(valid):

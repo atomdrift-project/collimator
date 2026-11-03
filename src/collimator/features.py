@@ -1638,6 +1638,50 @@ class FeatureSpec:
     # v22 extends the declared base ABI with source-specific keyword columns.
     base_feature_abi: int | None = None
     keyword_vocabs: dict[str, list[str]] = field(default_factory=dict)
+    # Optional for legacy layouts. New vocabularies bind the exact numeric
+    # transforms used in training; a column name alone does not distinguish
+    # extended metrics from the optional curated/log-scaled version.
+    metric_transforms: dict[str, str] | None = None
+    metric_getters: list[str] = field(default_factory=list)
+    metric_reference_year: int = 0
+    metric_correlations: dict[str, list[list[str]]] = field(default_factory=dict)
+
+    def bind_metric_contract(self) -> None:
+        """Bind an unbound layout under its verified training environment.
+
+        Loading or saving a historical spec never infers this implicitly.
+        Call before training/extraction, or when migrating a spec with known
+        training settings. Existing contracts remain authoritative.
+        """
+        if self.metric_transforms is not None:
+            return
+        from datetime import datetime
+
+        config = feature_config_from_env()
+        suffixes = [n.removeprefix("metrics:") for n in self.feature_names if n.startswith("metrics:")]
+        if suffixes and "metrics" not in config.enabled_groups:
+            raise ValueError("Cannot bind active metric columns with the metrics group disabled")
+        base = {f"{g}_{f}": use_log for g, f, use_log in KEY_METRICS}
+        getters = {s: use_log for table in _batch1_enabled_tables(config) for s, _, use_log in table}
+        correlations = {s: [list(a), list(b)] for s, a, b in _metric_correlation_columns(config)}
+        transforms = {}
+        for suffix in suffixes:
+            if suffix in correlations:
+                use_log = False
+            elif suffix in getters:
+                use_log = getters[suffix]
+            elif suffix in base:
+                use_log = base[suffix]
+            elif config.include_extended_metrics:
+                _, field_name = suffix.split("_", 1)
+                use_log = any(w in field_name for w in _LOG_METRIC_WORDS)
+            else:
+                raise ValueError(f"Metric column has no active training extractor: {suffix}")
+            transforms[suffix] = "log1p_abs" if use_log else "identity"
+        self.metric_transforms = transforms
+        self.metric_getters = [s for s in suffixes if s in getters]
+        self.metric_correlations = {s: correlations[s] for s in suffixes if s in correlations}
+        self.metric_reference_year = datetime.now().year if "pe_year_distance" in self.metric_getters else 0
 
     def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
         """Return the presence/bigram/trigram vocabs litmus reconstructs the
@@ -1713,6 +1757,11 @@ class FeatureSpec:
             "total_features": self.total_features,
         }
         d["standardized"] = self.standardized
+        if self.metric_transforms is not None:
+            d.update(metric_transforms=self.metric_transforms,
+                     metric_getters=self.metric_getters,
+                     metric_reference_year=self.metric_reference_year,
+                     metric_correlations=self.metric_correlations)
         if self.feature_means is not None:
             d["feature_means"] = [0.0 if (math.isinf(v) or math.isnan(v)) else v for v in self.feature_means]
         if self.feature_stds is not None:
@@ -1770,6 +1819,10 @@ class FeatureSpec:
             tiered_branch_min_crit=data.get("tiered_branch_min_crit", {}),
             keyword_vocabs=data.get("keyword_vocabs", {}),
             base_feature_abi=data.get("base_feature_abi"),
+            metric_transforms=data.get("metric_transforms"),
+            metric_getters=data.get("metric_getters", []),
+            metric_reference_year=data.get("metric_reference_year", 0),
+            metric_correlations=data.get("metric_correlations", {}),
         )
 
 
@@ -1858,7 +1911,12 @@ def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
 
 @lru_cache(maxsize=1)
 def allowed_features() -> frozenset[str] | None:
-    """Read an explicit name filter. Missing or invalid pins are errors."""
+    """Read a name filter; keyword families also accept `source:*` entries.
+
+    Family entries only affect explicitly enabled keyword discovery. They do
+    not expand base features or become literal columns in the saved spec.
+    Missing or invalid pins are errors.
+    """
     path = os.getenv("COLLIMATOR_ALLOWED_FEATURES_FILE")
     if not path:
         return None
@@ -2503,7 +2561,8 @@ def _add_keyword_vocab(spec, counters):
         ranked = sorted((word for word, n in counts.items() if n >= settings["min_freq"]),
                         key=lambda word: (-counts[word], word))[:cap]
         vocabs[source] = sorted(word for word in ranked
-                                if allowed is None or f"{source}:{word}" in allowed)
+                                if allowed is None or f"{source}:*" in allowed
+                                or f"{source}:{word}" in allowed)
         log.info("%s: %d distinct words, %d selected (document frequency >= %d, cap %d)",
                  source, len(counts), len(vocabs[source]), settings["min_freq"], cap)
     names = spec.feature_names + [f"{source}:{word}" for source, words in vocabs.items() for word in words]
@@ -2609,6 +2668,7 @@ def _build_vocab(reports, n_workers, counts, scratch) -> FeatureSpec:
         tiered_min_crit=(feature_config_from_env().tiered_bigram_min_crit, feature_config_from_env().tiered_trigram_min_crit, feature_config_from_env().tiered_quadgram_min_crit),
         tiered_branch_min_crit=_parse_branch_min_crit_overrides(feature_config_from_env().tiered_bigram_branch_min_crit),
     )
+    spec.bind_metric_contract()
     return spec
 
 
@@ -2638,6 +2698,7 @@ class _ExtractContext:
         "trait_path_depth", "ranked_ngrams", "tiered_slots", "fact_profiles",
         "bigrams_by_first", "tiered_by_first",
         "keyword_lookups",
+        "metric_contract",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -2652,6 +2713,34 @@ class _ExtractContext:
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
         self.absolute_lookup = name_to_idx
+        self.metric_contract = None
+        if spec.metric_transforms is not None:
+            all_getters = {s: getter for table in (
+                _BATCH1_PE_FORMAT_FLAGS, _BATCH1_PE_TEMPORAL, _BATCH1_TEXT_FULL,
+                _BATCH1_OVERLAY, _BATCH1_RATIOS, _BATCH1_SIZE_NORMALIZED,
+                _BATCH1_NONSTANDARD_SECTION, _BATCH1_LINE_BUCKETS,
+            ) for s, getter, _ in table}
+            self.metric_contract = []
+            for name, slot in name_to_idx.items():
+                if not name.startswith("metrics:"):
+                    continue
+                suffix = name.removeprefix("metrics:")
+                transform = spec.metric_transforms.get(suffix)
+                if transform not in {"identity", "log1p_abs"}:
+                    raise ValueError(f"Missing or invalid metric transform: {suffix}")
+                pair = spec.metric_correlations.get(suffix)
+                getter = None
+                if suffix in spec.metric_getters:
+                    if suffix not in all_getters:
+                        raise ValueError(f"Unknown metric getter: {suffix}")
+                    getter = all_getters[suffix]
+                    if suffix == "pe_year_distance":
+                        year = spec.metric_reference_year
+                        if not 1970 <= year <= 9999:
+                            raise ValueError("pe_year_distance requires its training reference year")
+                        getter = lambda m, _f, year=year: (abs(year - y) if (y := _metric_number(m, "pe", "timestamp_year")) > 0 else 0.0)
+                group, field_name = suffix.split("_", 1)
+                self.metric_contract.append((slot, group, field_name, transform == "log1p_abs", getter, pair))
         self.keyword_lookups = {}
         for source, words in spec.keyword_vocabs.items():
             lookup = {word: name_to_idx[f"{source}:{word}"] for word in words
@@ -3828,6 +3917,16 @@ def _apply_metric_features(
     vec: np.ndarray,
 ) -> None:
     """Group 5: curated numeric metrics + Batch-1 toggles + extended vocab."""
+    if ctx.metric_contract is not None:
+        for slot, group, field_name, use_log, getter, pair in ctx.metric_contract:
+            if pair is not None:
+                val = _metric_number(metrics, *pair[0]) * _metric_number(metrics, *pair[1])
+            elif getter is not None:
+                val = getter(metrics, files)
+            else:
+                val = _float((metrics.get(group) or {}).get(field_name))
+            vec[slot] = math.log1p(abs(val)) if use_log else val
+        return
     lookup = ctx.absolute_lookup
     config = feature_config_from_env()
     for group, fname, use_log in KEY_METRICS:
@@ -7239,6 +7338,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
         tiered_min_crit=(config.tiered_bigram_min_crit, config.tiered_trigram_min_crit, config.tiered_quadgram_min_crit),
         tiered_branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
     )
+    spec.bind_metric_contract()
     log.info(
         "vocab: %d paths, %d filetypes, %d elements, %d bigrams, %d ghosts, %d ext_metrics -> %d features",
         len(presence_vocab), len(filetype_vocab), len(element_vocab), len(bigram_vocab),

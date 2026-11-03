@@ -1,12 +1,37 @@
 """Stage recovery verifies configuration, dependencies, and output contents."""
 
 import os
+import json
 from pathlib import Path
 import subprocess
 import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_model_defaults_and_allowlist_edits_invalidate_stage_receipts(tmp_path, monkeypatch):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import azoth_checkpoint as checkpoint
+
+    (tmp_path / "Makefile").write_text("# fixed code")
+    configs = tmp_path / "model-configs/filetypes"
+    configs.mkdir(parents=True)
+    allowlist = tmp_path / "allowed.json"
+    allowlist.write_text('["present:metadata"]')
+    path = configs / "pe.json"
+    document = {"feature_env": {"COLLIMATOR_ALLOWED_FEATURES_FILE": "allowed.json",
+                                 "COLLIMATOR_CONTEXT_KEYWORDS": "0"}}
+    path.write_text(json.dumps(document))
+    monkeypatch.setattr(checkpoint, "__file__", str(tmp_path / "scripts/azoth_checkpoint.py"))
+    before = checkpoint.fingerprint(["make", "azoth-specialists"], [])
+    document["feature_env"]["COLLIMATOR_CONTEXT_KEYWORDS"] = "1"
+    path.write_text(json.dumps(document))
+    enabled = checkpoint.fingerprint(["make", "azoth-specialists"], [])
+    assert before["code"] == enabled["code"]
+    assert before != enabled
+    allowlist.write_text('["present:metadata", "contextword:*"]')
+    assert checkpoint.fingerprint(["make", "azoth-specialists"], []) != enabled
 
 
 def test_stage_resumes_but_rejects_replaced_inputs_outputs_and_snapshot(tmp_path):

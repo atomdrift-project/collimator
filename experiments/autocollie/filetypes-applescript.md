@@ -396,3 +396,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T221414-filetypes-applescript` — 2026-11-02T22:14:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f1317631eaf6127` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.7459 | 0.9745 | 0.8462 | 7 | [log](out/autocollie/runs/2026-11-02T22-14-43_20261102T221414-filetypes-applescript_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `ebfbe461093bdb80` | test_trait_path_depth_2 | ok | 0.7711 | 0.9274 | 0.8000 | 4 | [log](out/autocollie/runs/2026-11-02T22-14-52_20261102T221414-filetypes-applescript_test_trait_path_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_trait_path_depth_2`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=50 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Aims to improve the 0.9231 L25 recall by testing if shallower finding prefixes (depth 2) provide more specific signal for AppleScript malware, following the successful depth-2 hypothesis from the nupkg sister route.
+
+</details>
+

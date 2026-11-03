@@ -116,8 +116,15 @@ def _score_labeled_corpus(
     cache_path: Path | None = None,
     refresh_cache: bool = False,
     include_samples: bool = True,
+    score_partitions: tuple[str, ...] | None = None,
 ) -> tuple[list[ScoredSample], np.ndarray, np.ndarray]:
-    """Score the full labeled corpus used for operational threshold tuning."""
+    """Score labeled rows, optionally restricting canonical partitions."""
+    partitions = tuple(sorted(set(score_partitions or ('train', 'dev', 'test'))))
+    if set(partitions) - {'train', 'dev', 'test'}:
+        raise ValueError('score_partitions must contain train, dev, or test')
+    restricted = set(partitions) != {'train', 'dev', 'test'}
+    if restricted and limit:
+        raise ValueError('partition-scoped scoring requires limit=0 to retain every selected row')
     cacheable = (
         cache_path is not None
         and path_substr is None
@@ -131,6 +138,8 @@ def _score_labeled_corpus(
     identity = hashlib.sha256((model_revision + spec_revision +
         cache_identity.code_revision("features") + cache_identity.code_revision("training") +
         cache_identity.database_revision(db_path)).encode()).hexdigest()
+    if restricted:
+        identity = hashlib.sha256((identity + ':partitions:' + ','.join(partitions)).encode()).hexdigest()
     if cacheable and not refresh_cache and cache_path.exists():
         with np.load(cache_path, allow_pickle=False) as arrays:
             valid = ("canonical_shas" in arrays.files and "score_identity" in arrays.files
@@ -180,6 +189,8 @@ def _score_labeled_corpus(
     metadata_started = metadata_progress = time.monotonic()
     row_metadata = []
     for row in metadata_stream:
+        if restricted and data.partition_of(row[-1] or row[1]) not in partitions:
+            continue
         row_metadata.append(row)
         if len(row_metadata) % 100_000 == 0:
             now = time.monotonic()
@@ -198,6 +209,7 @@ def _score_labeled_corpus(
         raise ValueError("no samples matched the requested filters")
     log.info("threshold scoring metadata: %d labeled rows in %.1fs",
              expected_samples, time.monotonic() - metadata_started)
+    log.info("threshold scoring partitions: %s", ','.join(partitions))
     scored_samples: list[ScoredSample] = []
     pred_batches: list[np.ndarray] = []
     label_batches: list[np.ndarray] = []
@@ -322,6 +334,7 @@ def _score_labeled_corpus(
             model_revision=np.asarray(model_revision),
             spec_revision=np.asarray(spec_revision),
             score_space=np.asarray("raw"),
+            score_partitions=np.asarray(partitions),
             row_ids=np.array([sample.row_id for sample in samples], dtype=np.int64),
             # Calibration needs IDs, canonical groups, labels and probabilities.
             # Fixed-width Unicode paths pad every row to the longest archive
@@ -390,6 +403,7 @@ def tune_thresholds(
     n_workers: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
+    score_partitions: tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
     """Score the full labeled corpus and report threshold policy candidates."""
     samples, probs, y = _score_labeled_corpus(
@@ -405,6 +419,7 @@ def tune_thresholds(
         cache_path=cache_path,
         refresh_cache=refresh_cache,
         include_samples=top_errors > 0 and not scores_only,
+        score_partitions=score_partitions,
     )
     if scores_only:
         return {"rows": len(y), "score_space": "raw"}

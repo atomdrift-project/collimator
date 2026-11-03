@@ -353,3 +353,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T001907-filetypes-ruby` — 2026-11-03T00:19:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1e235b10fd8d3c29` | inherit_from_filetypes_dex_67099b41 | ok | 0.9837 | 0.9999 | 0.9351 | 10 | [log](out/autocollie/runs/2026-11-03T00-19-49_20261103T001907-filetypes-ruby_inherit_from_filetypes_dex_67099b41.log) |
+| `946385fa6c4b79d7` | test_trait_path_depth_2 | ok | 0.9675 | 0.9990 | 0.9091 | 13 | [log](out/autocollie/runs/2026-11-03T00-20-03_20261103T001907-filetypes-ruby_test_trait_path_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_trait_path_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Aims to improve the 0.8947 L25 recall of the baseline control by testing if shallower finding prefixes (depth 2) reduce noise and improve ranking for the small Ruby malware cohort, reusing the baseline's strong training configuration.
+
+</details>
+

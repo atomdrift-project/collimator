@@ -1350,3 +1350,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T001539-filetypes-package.json` — 2026-11-03T00:15:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0322a4e8c00baa85` | inherit_from_filetypes_dex_67099b41 | ok | 0.9979 | 0.9993 | 0.9856 | 17 | [log](out/autocollie/runs/2026-11-03T00-17-23_20261103T001539-filetypes-package.json_inherit_from_filetypes_dex_67099b41.log) |
+| `cae8b0c9e98ea4b8` | pkgjson_hardneg_sweep_high_weight | ok | 0.9981 | 0.9994 | 0.9689 | 27 | [log](out/autocollie/runs/2026-11-03T00-17-49_20261103T001539-filetypes-package.json_pkgjson_hardneg_sweep_high_weight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkgjson_hardneg_sweep_high_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.8143 L25 recall ceiling by testing a high-weight hard-negative sweep (fraction 0.01, weight 20) to sharpen the decision boundary and reduce the single false positive, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+
+</details>
+

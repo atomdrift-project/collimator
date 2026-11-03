@@ -1106,3 +1106,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T000550-filegroups-scripts` — 2026-11-03T00:05:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9480ea6e396aa71` | inherit_from_filetypes_dex_67099b41 | ok | 0.9970 | 0.9965 | 0.9769 | 53 | [log](out/autocollie/runs/2026-11-03T00-08-28_20261103T000550-filegroups-scripts_inherit_from_filetypes_dex_67099b41.log) |
+| `62d1e7627140f3c8` | scripts_kv_vocab_depth_4 | ok | 0.9957 | 0.9953 | 0.9753 | 128 | [log](out/autocollie/runs/2026-11-03T00-09-31_20261103T000550-filegroups-scripts_scripts_kv_vocab_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_kv_vocab_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP over the 0.5088 baseline by capturing more specific finding hierarchies for script malware, while retaining the beneficial kv_vocab feature surface.
+
+</details>
+

@@ -359,3 +359,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T185845-filetypes-deb` — 2026-11-02T18:58:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9c90b3c414c7d6f1` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.1010 | 0.8513 | 0.1176 | 63 | [log](out/autocollie/runs/2026-11-02T18-59-18_20261102T185845-filetypes-deb_inherit_from_filetypes_jsp_ceef7938.log) |
+| `ff59baa1ca4baee2` | test_min_malware_score_0 | ok | 0.6287 | 0.9971 | 0.5641 | 52 | [log](out/autocollie/runs/2026-11-02T19-00-28_20261102T185845-filetypes-deb_test_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Aims to improve the 0.2000 L25 recall of the best run by removing the min_malware_score=4 filter that likely discards low-severity malware samples, thereby increasing training diversity and potentially boosting recall without increasing FPs.
+
+</details>
+

@@ -2750,3 +2750,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T235244-filetypes-go` — 2026-11-02T23:52:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cd3bf1b454555097` | inherit_from_filetypes_dex_67099b41 | ok | 0.8801 | 0.9526 | 0.8327 | 29 | [log](out/autocollie/runs/2026-11-02T23-55-47_20261102T235244-filetypes-go_inherit_from_filetypes_dex_67099b41.log) |
+| `824aeb993a27907c` | go_textenc_hardneg10 | ok | 0.9188 | 0.9693 | 0.8062 | 33 | [log](out/autocollie/runs/2026-11-02T23-56-24_20261102T235244-filetypes-go_go_textenc_hardneg10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_67099b41`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/dex/47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f.json COLLIMATOR_FEATURE_SPEC_SHA256=47ffe975b724cda950ecb6ebc1a8ec4b84d3849399fe3f5f0c38c55ae413a89f EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 …` — Sister-route inheritance from filetypes/dex (key=67099b416c634fe0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_textenc_hardneg10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing hard_negative_weight from 8 to 10 further suppresses false positives on the text_metrics_full feature surface, aiming to improve the 0.6240 L25 recall by allowing a lower decision threshold without exceeding the 1 FP budget.
+
+</details>
+

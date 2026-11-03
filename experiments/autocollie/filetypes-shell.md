@@ -1858,3 +1858,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261102T223617-filetypes-shell` — 2026-11-02T22:36:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `941aca32b0f9f6fe` | inherit_from_filetypes_rar_41a97b22 | ok | 0.9682 | 0.9821 | 0.9136 | 75 | [log](out/autocollie/runs/2026-11-02T22-38-14_20261102T223617-filetypes-shell_inherit_from_filetypes_rar_41a97b22.log) |
+| `e037bbc61a6f37f4` | shell_kv_vocab_depth4_cutoff0 | ok | 0.9910 | 0.9964 | 0.9502 | 219 | [log](out/autocollie/runs/2026-11-02T22-41-57_20261102T223617-filetypes-shell_shell_kv_vocab_depth4_cutoff0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_41a97b22`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rar (key=41a97b22a5b32ca4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_vocab_depth4_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if removing the min_malware_score=4 cutoff from the best-performing depth4/kv_vocab configuration (0.8643 recall) improves L25 recall by retaining low-severity malware samples that may contribute to feature coverage without increasing FPs.
+
+</details>
+

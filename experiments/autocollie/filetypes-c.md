@@ -1716,3 +1716,31 @@ Canonical run JSONs retain these larger-cohort results in research_evaluations, 
 
 </details>
 
+## Cycle `20261102T193812-filetypes-c` — 2026-11-02T19:38:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f1433f133961c38d` | inherit_from_filetypes_jsp_ceef7938 | ok | 0.4266 | 0.6400 | 0.3718 | 29 | [log](out/autocollie/runs/2026-11-02T19-41-40_20261102T193812-filetypes-c_inherit_from_filetypes_jsp_ceef7938.log) |
+| `3a0a62c1c0d293c1` | c_trait_path_depth_4 | ok | 0.9453 | 0.9803 | 0.8451 | 27 | [log](out/autocollie/runs/2026-11-02T19-42-14_20261102T193812-filetypes-c_c_trait_path_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_ceef7938`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/jsp (key=ceef79381f0c0d7a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8432 L25 recall of the best historical run by testing if deeper finding-prefix specificity (depth 4 vs 3) captures more distinct C malware patterns without increasing false positives.
+
+</details>
+
+## Cycle `20261102T221457-filetypes-c` — 2026-11-02T22:14:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `221473b2627381f4` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.4021 | 0.6136 | 0.3684 | 28 | [log](out/autocollie/runs/2026-11-02T22-17-52_20261102T221457-filetypes-c_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `5ce32696fa36da2b` | c_trait_path_depth_5 | ok | 0.9434 | 0.9784 | 0.8459 | 28 | [log](out/autocollie/runs/2026-11-02T22-18-27_20261102T221457-filetypes-c_c_trait_path_depth_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 5 improves L25 recall@1FP beyond the 0.6034 achieved at depth 4 by capturing more specific finding prefixes for C malware.
+
+</details>
+

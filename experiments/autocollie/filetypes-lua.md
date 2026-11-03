@@ -364,3 +364,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261102T222045-filetypes-lua` — 2026-11-02T22:20:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b76d1d345380c085` | inherit_from_filetypes_nupkg_f0b57edb | ok | 0.7644 | 0.9982 | 0.5714 | 12 | [log](out/autocollie/runs/2026-11-02T22-22-36_20261102T222045-filetypes-lua_inherit_from_filetypes_nupkg_f0b57edb.log) |
+| `50af6aaefd5840ab` | trait_path_depth_2_transfer | ok | 0.7924 | 0.9958 | 0.7143 | 6 | [log](out/autocollie/runs/2026-11-02T22-22-51_20261102T222045-filetypes-lua_trait_path_depth_2_transfer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_f0b57edb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/nupkg (key=f0b57edb36598905, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`trait_path_depth_2_transfer`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Aims to improve L25 recall from 0.8333 to 1.0000 by testing trait_path_depth=2, a setting that achieved perfect recall on the sister route filetypes/nupkg, to verify if shallower finding prefixes better capture Lua-specific malware signals without increasing false positives.
+
+</details>
+

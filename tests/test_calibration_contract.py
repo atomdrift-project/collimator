@@ -1,6 +1,7 @@
 """Regression coverage for production score identity and frozen test decisions."""
 
 import copy
+from contextlib import nullcontext
 import hashlib
 import json
 import sys
@@ -17,11 +18,55 @@ import azoth_oof_score as oof
 import azoth_policy_global_metrics as global_metrics
 import azoth_route_policy_eval as policy_eval
 import azoth_route_policy_search as search
+import azoth_stacker_experiment as stacker
 import convert_bundle_to_onnx as convert
 import stage_azoth_runtime_bundle as stage
 import validate_azoth_bundle as validate
 from collimator import bundle, cache_identity, export, features, model, model_bounds, policy, route_prune, train
 from collimator.thresholds import _inspect
+
+
+def test_calibration_fingerprints_preserve_selected_labels_order_and_missing_rows(monkeypatch):
+    class Connection:
+        def execute(self, sql, params):
+            assert sql.startswith('SELECT id, xmin::text FROM samples')
+            assert params == ([3, 1, 2],)
+            return [(1, '111'), (3, '333')]
+    monkeypatch.setattr(calibrate.data, '_is_pg', lambda db: True)
+    monkeypatch.setattr(calibrate.data, '_connect', lambda *a, **kw: nullcontext(Connection()))
+    result = calibrate._capture_row_fingerprints('pg', [(3, 1), (1, 0), (2, 1)])
+    assert result[0].tobytes() == cache_identity.evaluation_row_digest([3, '333', 'bad'])
+    assert result[1].tobytes() == cache_identity.evaluation_row_digest([1, '111', 'good'])
+    assert result[2].tobytes() == bytes(32)
+
+
+def test_calibration_audit_excludes_rows_changed_during_prediction(monkeypatch, tmp_path):
+    before = np.array([b'a'*32, b'b'*32, bytes(32)], dtype='V32')
+    after = np.array([b'a'*32, b'x'*32, bytes(32)], dtype='V32')
+    monkeypatch.setattr(calibrate, '_capture_row_fingerprints', lambda *args: after)
+    monkeypatch.setattr(calibrate.cache_identity, 'model_revision', lambda root: 'weights')
+    monkeypatch.setattr(calibrate.cache_identity, 'code_revision', lambda stage: 'code')
+    (tmp_path/'feature_spec.json').write_text('{}')
+    fields = calibrate._score_audit_fields('pg', [(1, 1), (2, 0), (3, 1)], before, tmp_path)
+    assert fields['audit_stable_rows'].tolist() == [True, False, False]
+    assert fields['audit_row_ids'].tolist() == [1, 2, 3]
+    assert fields['audit_labels'].tolist() == [1, 0, 1]
+    assert str(fields['audit_model_revision']) == 'weights'
+    assert calibrate._score_audit_fields('sqlite', [], None, tmp_path) == {}
+
+
+@pytest.mark.parametrize('threshold', [1., float(np.nextafter(np.float32(1), np.float32(np.inf))),
+                                       .90000002])
+def test_diagnostic_or_rules_match_runtime_at_float32_boundaries(threshold):
+    labels = np.array([0, 1, 1])
+    scores = {'general': np.array([np.nan, 1., .9], dtype=np.float32)}
+    thresholds = {'general': threshold}
+    expected = policy.margin(scores, {'thresholds': thresholds}, len(labels)) >= 0
+    metrics = policy_eval._deployed_or_metrics(scores, labels, thresholds)
+    assert metrics['tp'] == int((expected & (labels == 1)).sum())
+    assert metrics['fp'] == int((expected & (labels == 0)).sum())
+    hit, _ = stacker._apply_or_rule(scores, thresholds, np.ones(len(labels), dtype=bool))
+    np.testing.assert_array_equal(hit, expected)
 
 
 def score_table():
@@ -401,6 +446,56 @@ def test_general_cache_averages_ensemble_preserves_unordered_canonical_rows_and_
     assert calls[-1] == root
 
 
+def test_partition_scoring_uses_canonical_groups_and_separates_cache_scopes(tmp_path, monkeypatch):
+    root = tmp_path / 'general'
+    (root / 'models').mkdir(parents=True)
+    (root / 'models/seed_42.onnx').write_bytes(b'model')
+    spec = root / 'feature_spec.json'
+    spec.write_text('{}')
+    monkeypatch.setattr(features.FeatureSpec, 'load', lambda p: SimpleNamespace(standardized=False))
+    class Member:
+        __module__ = 'lightgbm.sklearn'
+        def predict_proba(self, x):
+            p = x.toarray()[:, 0] / 10
+            return np.column_stack([1-p, p])
+    monkeypatch.setattr(bundle.Ensemble, 'load_bundle', lambda p: bundle.Ensemble([Member()]))
+    monkeypatch.setattr(cache_identity, 'database_revision', lambda db: 'fixed')
+    rows = [(1, 'own00', 'a', 5, 1, 'parent80'),
+            (2, 'own80', 'b', 0, 0, 'parent00'),
+            (3, 'own00', 'c', 4, 1, 'parent20'),
+            (4, 'own20', 'd', 5, 1, ''),
+            (5, 'own80', 'e', 0, 0, '')]
+    monkeypatch.setattr(_inspect.data, 'stream_labeled_metadata_full', lambda *a, **k: iter(rows))
+    extracted = []
+    def extract(db, metadata, *a, **k):
+        extracted.append([r[0] for r in metadata])
+        batch = metadata[::-1]
+        yield (batch, sp.csr_matrix([[r[0]] for r in batch]), np.array([r[4] for r in batch]), {})
+    monkeypatch.setattr(features, 'extract_labeled_metadata_from_db_batches_unordered', extract)
+    cache = tmp_path / 'scores.npz'
+    options = dict(model_path=root, spec_path=spec, cache_path=cache, include_samples=False)
+    _inspect._score_labeled_corpus('db', **options, score_partitions=('dev', 'test'))
+    with np.load(cache) as values:
+        assert values['row_ids'].tolist() == [4, 3, 2]
+        assert values['score_partitions'].tolist() == ['dev', 'test']
+        scoped = dict(zip(values['row_ids'], values['probs'], strict=True))
+    _inspect._score_labeled_corpus('db', **options, score_partitions=('test', 'dev'))
+    assert extracted == [[2, 3, 4]]
+    _inspect._score_labeled_corpus('db', **options)
+    with np.load(cache) as values:
+        assert len(values['row_ids']) == 5
+        full = dict(zip(values['row_ids'], values['probs'], strict=True))
+        assert all(full[rid] == p for rid, p in scoped.items())
+    _inspect._score_labeled_corpus('db', **options, score_partitions=('dev', 'test'))
+    assert extracted == [[2, 3, 4], [1, 2, 3, 4, 5], [2, 3, 4]]
+
+
+def test_partition_scoring_rejects_limit_that_would_truncate_selected_partitions():
+    with pytest.raises(ValueError, match='requires limit=0'):
+        _inspect._score_labeled_corpus('unused', model_path=Path('unused'),
+            spec_path=Path('unused'), score_partitions=('dev', 'test'), limit=1)
+
+
 def test_model_bounds_export_staging_and_calibration_identity(tmp_path):
     rng = np.random.default_rng(11)
     X = rng.normal(size=(300, 2))
@@ -499,6 +594,42 @@ def test_specialist_cache_invalidates_changed_row_positions(tmp_path, monkeypatc
     result = calibrate._score_route("unused", route, row_index={1: 1, 2: 0}, **options)
     assert result["indices"].tolist() == [1, 0]
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize('mutate_model', [False, True])
+def test_specialist_audit_preserves_predictions_and_records_changed_rows(tmp_path, monkeypatch, mutate_model):
+    (tmp_path / 'model.onnx').write_bytes(b'model')
+    (tmp_path / 'feature_spec.json').write_text('{}')
+    monkeypatch.setattr(cache_identity, 'database_revision', lambda p: 'revision')
+    monkeypatch.setattr(features.FeatureSpec, 'load', lambda p: SimpleNamespace(total_features=1, standardized=False))
+    monkeypatch.setattr(calibrate, '_fetch_rows', lambda *a, **kw: [(2, 1), (1, 0)])
+    def predict(x):
+        if mutate_model:
+            (tmp_path/'model.onnx').write_bytes(b'changed')
+        return np.array([.7, .2], dtype=np.float32)
+    monkeypatch.setattr(bundle.Ensemble, 'load_bundle', lambda p: SimpleNamespace(predict_proba=predict))
+    monkeypatch.setattr(features, 'extract_labeled_from_db_batches', lambda *a, **kw: iter([
+        (sp.csr_matrix([[1], [0]], dtype=np.float32), np.array([1, 0]))]))
+    versions = iter([np.array([b'a'*32, b'b'*32], dtype='V32'),
+                     np.array([b'a'*32, b'x'*32], dtype='V32')])
+    monkeypatch.setattr(calibrate, '_capture_row_fingerprints', lambda *a: next(versions))
+    route = {'output_dir': str(tmp_path), 'route': 'filetypes/vsix', 'name': 'vsix',
+             'kind': 'filetype', 'file_types': ['vsix']}
+    options = dict(row_index={1: 0, 2: 1}, max_id=2, workers=1,
+                   refresh=False, refresh_routes=set(), feature_cache_dir=None)
+    if mutate_model:
+        with pytest.raises(ValueError, match='artifacts changed during'):
+            calibrate._score_route('unused', route, **options)
+        assert not (tmp_path/'calibration_scores.npz').exists()
+        return
+    result = calibrate._score_route('unused', route, **options)
+    assert result['indices'].tolist() == [1, 0]
+    np.testing.assert_array_equal(result['probs'], np.array([.7, .2], dtype=np.float32))
+    with np.load(tmp_path / 'calibration_scores.npz') as saved:
+        assert saved['audit_row_ids'].tolist() == [2, 1]
+        assert saved['audit_labels'].tolist() == [1, 0]
+        assert saved['audit_stable_rows'].tolist() == [True, False]
+        np.testing.assert_array_equal(saved['probs'], result['probs'])
 
 
 def test_specialist_replays_feature_settings_and_invalidates_cached_values(tmp_path, monkeypatch):
