@@ -59,7 +59,9 @@
 # COLLIMATOR_MEM_SHARES / AZOTH_CONCURRENT_SUITES = the number of concurrent
 # consumers, and both clamps divide their headroom by it. The concurrent
 # admissions then sum to what one sequential run would have taken, which is the
-# operating point those per-fit estimates were calibrated against.
+# operating point those per-fit estimates were calibrated against. A live
+# memory-shares file releases the split as soon as either training chain exits;
+# existing trainers and fetchers re-read it at each admission check.
 #
 # Fit allocations also share atomic reservations across chains. Extraction
 # streams matrices to disk-backed arrays so idle inputs can be reclaimed.
@@ -290,6 +292,21 @@ fi
 NPROC=$(nproc)
 CONCURRENCY=1
 PAR_ARGS=()
+set_memory_shares() {
+    local temporary="$RESOURCE_DIR/memory-shares.$BASHPID"
+    printf '%s\n' "$1" > "$temporary" && mv "$temporary" "$RESOURCE_DIR/memory-shares"
+}
+run_training_chain() {
+    local status=0
+    trap 'set_memory_shares 1' EXIT
+    "$@" || status=$?
+    # The survivor must see the released share inside its existing processes,
+    # including when its sibling failed after finishing its children.
+    set_memory_shares 1 || return 1
+    trap - EXIT
+    echo "[pipeline] $1 finished (status=$status); remaining chain has full memory headroom"
+    return "$status"
+}
 GENERAL_THREADS=${AZOTH_GENERAL_THREADS:-32}
 [[ $GENERAL_THREADS =~ ^[1-9][0-9]*$ ]] || { echo "ERROR: AZOTH_GENERAL_THREADS must be a positive integer"; exit 1; }
 (( GENERAL_THREADS > NPROC )) && GENERAL_THREADS=$NPROC
@@ -305,7 +322,7 @@ FIDELITY_ARGS=()
 [[ -n "${PUBLISH_TRAIN_SAMPLES:-}" ]] && FIDELITY_ARGS+=("DEPLOY_TRAIN_SAMPLES=$PUBLISH_TRAIN_SAMPLES")
 [[ -n "${PUBLISH_MAX_TEST_SAMPLES:-}" ]] && FIDELITY_ARGS+=("DEPLOY_MAX_TEST_SAMPLES=$PUBLISH_MAX_TEST_SAMPLES")
 
-# Split the box between the two chains for the whole parallel section.
+# Split the box while both chains are active.
 #
 #   COLLIMATOR_MEM_SHARES   halves the DB-fetch worker headroom (features.py)
 #   AZOTH_CONCURRENT_SUITES halves the specialist parallelism headroom AND its
@@ -351,10 +368,12 @@ if [[ "$PARALLEL_CHAINS" = "1" ]]; then
          "(nproc=${NPROC}, requested WORKERS=${WORKERS:-$NPROC})"
     echo "[pipeline] available RAM (including ZFS ARC) at start: $(mem_avail_gb) GiB"
 fi
+set_memory_shares "$CONCURRENCY" || exit 1
 FIDELITY_ARGS+=("EXP_LGBM_THREADS=$GENERAL_THREADS")
 
 # Undo the split for stages that run alone — they should have the whole box.
 unsplit_resources() {
+    set_memory_shares 1 || return 1
     export COLLIMATOR_MEM_SHARES=1
     export AZOTH_CONCURRENT_SUITES=1
     unset COLLIMATOR_NUM_THREADS
@@ -461,9 +480,9 @@ if stage_active 0 || stage_active 1 || stage_active 2 || stage_active 4 || stage
         echo "================================================================"
         # Flush each line: block-buffered prefixes can hide progress for minutes
         # and interleave fragments when both chains finally flush together.
-        bg_group chain_prod > >(sed -u 's/^/[prod] /') 2>&1
+        bg_group run_training_chain chain_prod > >(sed -u 's/^/[prod] /') 2>&1
         PID_PROD=$BG_PID
-        bg_group chain_fold > >(sed -u 's/^/[fold] /') 2>&1
+        bg_group run_training_chain chain_fold > >(sed -u 's/^/[fold] /') 2>&1
         PID_FOLD=$BG_PID
         CHAIN_PIDS=("$PID_PROD" "$PID_FOLD")
         CHAIN_FAIL=0
@@ -509,6 +528,7 @@ if stage_active 3 || stage_active 6; then
         if [[ $REQUESTED_PARALLEL_CHAINS != 0 ]]; then
             PARALLEL_CHAINS=1
             export COLLIMATOR_MEM_SHARES=2 AZOTH_CONCURRENT_SUITES=2
+            set_memory_shares 2 || exit 1
             export COLLIMATOR_NUM_THREADS=$(( NPROC / 2 ))
             CHAIN_WORKERS=$(( ${WORKERS:-$NPROC} / 2 ))
             (( CHAIN_WORKERS < 1 )) && CHAIN_WORKERS=1
@@ -517,6 +537,15 @@ if stage_active 3 || stage_active 6; then
     else
         PARALLEL_CHAINS=0
     fi
+fi
+# Stage 3 (~37 min) finishes long before stage 6 (~84 min), which then had the
+# box alone on half the workers (2026-11-05). Give stage 6 the rest of the
+# scoring budget; 64 DB fetchers in total stay under postgres's 100 connections.
+STAGE6_ARGS=("${PAR_ARGS[@]}")
+if [[ "$PARALLEL_CHAINS" = "1" ]] && stage_active 3; then
+    STAGE6_WORKERS=$(( ${AZOTH_OOF_SCORING_WORKERS:-64} - CHAIN_WORKERS ))
+    (( STAGE6_WORKERS < CHAIN_WORKERS )) && STAGE6_WORKERS=$CHAIN_WORKERS
+    STAGE6_ARGS=("WORKERS=$STAGE6_WORKERS")
 fi
 if stage_active 3; then
     banner 3 "Merge OOF general predictions -> ${OOF_ROUTE_SCORES_DIR}/general/threshold_scores.npz"
@@ -528,9 +557,16 @@ if stage_active 3; then
         STAGE3_LOG=$(mktemp -t azoth-oof-merge-general.XXXXXX.log)
         echo "[3] running concurrently with stage 6; streaming to ${STAGE3_LOG}, reaped before stage 7"
         set -m   # own process group, so cleanup can stop the whole merge (see bg_group)
-        (time checkpoint_stage general-scores --input "${FOLD_A_ROOT}/general" \
-            --input "${FOLD_B_ROOT}/general" --output "${OOF_ROUTE_SCORES_DIR}/general" -- \
-            make azoth-oof-merge-general "${PAR_ARGS[@]}") > "$STAGE3_LOG" 2>&1 &
+        (
+            status=0
+            time checkpoint_stage general-scores --input "${FOLD_A_ROOT}/general" \
+                --input "${FOLD_B_ROOT}/general" --output "${OOF_ROUTE_SCORES_DIR}/general" -- \
+                make azoth-oof-merge-general "${PAR_ARGS[@]}" || status=$?
+            # Stage 6 is still scoring: release the split to it right away
+            # (its fetch-worker clamp re-reads the live share count).
+            set_memory_shares 1 || true
+            exit "$status"
+        ) > "$STAGE3_LOG" 2>&1 &
         STAGE3_PID=$!
         set +m
     else
@@ -549,7 +585,7 @@ if stage_active 6; then
     require_file "prod specialists summary" "${AZOTH_ROOT}/specialists.json" 0
     time checkpoint_stage route-scores --input "$AZOTH_ROOT" \
         --input "$FOLD_A_ROOT" --input "$FOLD_B_ROOT" --output "$OOF_ROUTE_SCORES_DIR" -- \
-        make azoth-oof-route-scores "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
+        make azoth-oof-route-scores "${STAGE6_ARGS[@]}" || { report_mem_watch; exit 1; }
 else
     skipped 6 "OOF route-score merge"
 fi
@@ -588,7 +624,14 @@ if stage_active 7; then
     banner 7 "Calibrate production ensembles on dev + gate ($deploy_target)"
     # Production calibration reads the production ensembles; OOF diagnostics
     # are independent and need not exist when resuming publication at stage 7.
+    # The tail runs alone. At 2 routes x 16 workers, calibrate used a quarter of
+    # the cores (2026-11-05: load ~28 on 128, 2h+). Four concurrent routes peak
+    # near 80 GiB (two peaked at 39) and 64 fetchers stay well under postgres's
+    # 100 connections.
     time timed_stage validation make "$deploy_target" \
+        AZOTH_CALIBRATE_PARALLELISM=${AZOTH_PUBLISH_CALIBRATE_PARALLELISM:-4} \
+        AZOTH_CALIBRATE_WORKERS=${AZOTH_PUBLISH_CALIBRATE_WORKERS:-64} \
+        AZOTH_THRESHOLD_WORKERS=${AZOTH_PUBLISH_THRESHOLD_WORKERS:-64} \
         AZOTH_CALIBRATE_PARTITION=dev \
         AZOTH_USE_OOF_ROUTE_SCORES=0 \
         AZOTH_REFRESH_SCORES=${AZOTH_REFRESH_SCORES:-1} || { report_mem_watch; exit 1; }

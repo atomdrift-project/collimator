@@ -410,3 +410,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T004539-filetypes-applescript` — 2026-11-03T00:45:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `65a5bdf387ac5f0f` | inherit_from_filetypes_bmp_42b0c946 | ok | 0.7459 | 0.9745 | 0.8462 | 4 | [log](out/autocollie/runs/2026-11-03T00-47-25_20261103T004539-filetypes-applescript_inherit_from_filetypes_bmp_42b0c946.log) |
+| `ddf5f5032849dd79` | test_min_malware_score_0 | ok | 0.7804 | 0.9307 | 0.8000 | 4 | [log](out/autocollie/runs/2026-11-03T00-47-31_20261103T004539-filetypes-applescript_test_min_malware_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_42b0c946`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=42b0c946a1b435a3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=50 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 EXP_GAMMA=0 …` — Aims to improve L25 recall from 0.0769 to 0.9231 by removing the min_malware_score=4 cutoff that likely discards most of the 13 malware samples, matching the successful transfer hypothesis from sister routes like jsp and dex where min_malware_score=0 achieved 1.0000 recall.
+
+</details>
+

@@ -1744,3 +1744,17 @@ Canonical run JSONs retain these larger-cohort results in research_evaluations, 
 
 </details>
 
+## Cycle `20261103T002704-filetypes-c` — 2026-11-03T00:27:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6471048fa8dc8318` | inherit_from_filetypes_jsp_1eeb9561 | ok | 0.9909 | 0.9972 | 0.8732 | 24 | [log](out/autocollie/runs/2026-11-03T00-29-27_20261103T002704-filetypes-c_inherit_from_filetypes_jsp_1eeb9561.log) |
+| `e040c786428fa81b` | c_depth5_min_sample_score_0 | ok | 0.9917 | 0.9972 | 0.9399 | 21 | [log](out/autocollie/runs/2026-11-03T00-29-56_20261103T002704-filetypes-c_c_depth5_min_sample_score_0.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_1eeb9561`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=1eeb95619a5c5492, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_depth5_min_sample_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.4178 L25 recall of the depth-5 full-train run by removing the min_sample_score=3 filter that excludes low-severity samples, leveraging the 0.8432 recall observed with min_sample_score=0 at depth 3 to test if the higher specificity of depth 5 benefits from the expanded training corpus.
+
+</details>
+

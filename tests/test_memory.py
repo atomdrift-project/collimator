@@ -9,6 +9,22 @@ import pytest
 from collimator import features, memory
 
 
+def test_memory_share_policy_is_live_and_scoped_to_pipeline(tmp_path, monkeypatch):
+    monkeypatch.delenv('COLLIMATOR_FIT_RESOURCE_DIR', raising=False)
+    assert memory.memory_shares(2) == 2
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    assert memory.memory_shares(2) == 2
+    policy = tmp_path / 'memory-shares'
+    policy.write_text('2\n')
+    assert memory.memory_shares(2) == 2
+    policy.write_text('1\n')
+    assert memory.memory_shares(2) == 1
+    for value in ('0', '-1', 'garbage', ''):
+        policy.write_text(value)
+        with pytest.raises(ValueError):
+            memory.memory_shares(2)
+
+
 @pytest.fixture
 def memory_files(monkeypatch):
     monkeypatch.setattr(features, "cgroup_headroom_gb", lambda **kw: None)

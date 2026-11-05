@@ -1776,3 +1776,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T012153-filegroups-config` — 2026-11-03T01:21:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `034684f63e379b28` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9957 | 0.9976 | 0.9803 | 33 | [log](out/autocollie/runs/2026-11-03T01-24-45_20261103T012153-filegroups-config_inherit_from_filetypes_dex_f70ec135.log) |
+| `bf2ecfe7c7047a49` | config_depth4_kv_vocab | ok | 0.9732 | 0.9781 | 0.5268 | 27 | [log](out/autocollie/runs/2026-11-03T01-25-24_20261103T012153-filegroups-config_config_depth4_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_depth4_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8062 L25 recall of the recent kv_vocab run by testing if deeper trait prefixes (depth 4) provide more specific signal for config files, leveraging the high PR_AUC (0.9766) to suggest ranking quality that may benefit from increased feature specificity.
+
+</details>
+

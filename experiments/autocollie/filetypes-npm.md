@@ -511,3 +511,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T011410-filetypes-npm` — 2026-11-03T01:14:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9da03dad794823ca` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9869 | 0.9931 | 0.9566 | 373 | [log](out/autocollie/runs/2026-11-03T01-15-38_20261103T011410-filetypes-npm_inherit_from_filetypes_dex_f70ec135.log) |
+
+Rejected before run:
+
+- `npm_hard_negative_fraction_001_weight_12` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

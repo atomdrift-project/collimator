@@ -1444,3 +1444,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T012207-filetypes-batch` — 2026-11-03T01:22:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1b6e6b584d55fc90` | inherit_from_filetypes_dex_f70ec135 | ok | 1.0000 | 0.9996 | 0.9978 | 16 | [log](out/autocollie/runs/2026-11-03T01-23-49_20261103T012207-filetypes-batch_inherit_from_filetypes_dex_f70ec135.log) |
+| `c156510f1bd80579` | batch_trait_path_depth_5 | ok | 1.0000 | 0.9996 | 0.9971 | 13 | [log](out/autocollie/runs/2026-11-03T01-24-10_20261103T012207-filetypes-batch_batch_trait_path_depth_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 5 improves L25 recall beyond the 0.9811 achieved at depth 4 by capturing more specific finding prefixes for batch malware.
+
+</details>
+

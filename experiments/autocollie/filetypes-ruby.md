@@ -367,3 +367,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T003034-filetypes-ruby` — 2026-11-03T00:30:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb0b1e0c04afc6ba` | inherit_from_filetypes_jsp_1eeb9561 | ok | 0.9649 | 0.9988 | 0.7629 | 13 | [log](out/autocollie/runs/2026-11-03T00-33-18_20261103T003034-filetypes-ruby_inherit_from_filetypes_jsp_1eeb9561.log) |
+| `29f9f97b848a69eb` | test_min_malware_score_0_depth_2 | ok | 0.9677 | 0.9995 | 0.9114 | 16 | [log](out/autocollie/runs/2026-11-03T00-33-54_20261103T003034-filetypes-ruby_test_min_malware_score_0_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_1eeb9561`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=1eeb95619a5c5492, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Aims to improve L25 recall from 0.8947 by removing the min_malware_score=4 cutoff that likely discards low-severity malware samples, while retaining the trait_path_depth=2 setting that achieved the current best recall.
+
+</details>
+

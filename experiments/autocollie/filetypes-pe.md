@@ -2690,3 +2690,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T005855-filetypes-pe` — 2026-11-03T00:58:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea47a6f7d8b906e3` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9989 | 0.9989 | 0.9876 | 276 | [log](out/autocollie/runs/2026-11-03T01-01-31_20261103T005855-filetypes-pe_inherit_from_filetypes_dex_f70ec135.log) |
+| `865a4a08fff68a61` | pe_fpr_threshold_direct_tune | ok | 0.9992 | 0.9992 | 0.8869 | 349 | [log](out/autocollie/runs/2026-11-03T01-06-20_20261103T005855-filetypes-pe_pe_fpr_threshold_direct_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_fpr_threshold_direct_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the L25 recall gap (0.7815) by switching to max_recall_at_fpr with a 2.5e-07 target to directly optimize the deployed operating point against the 1-FP budget, addressing the 'or_loses' diagnostic where ranking is strong but threshold tuning leaves recall on the floor.
+
+</details>
+

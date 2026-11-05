@@ -36,7 +36,7 @@
 # (latest.log / latest-sweep.log symlinks; view with `make nightly-logs` /
 # `make nightly-sweep-logs`) and also reaches journald via the service's stdout.
 #
-# Env overrides: NIGHTLY_EXPERIMENTS (default 1), NIGHTLY_PASSES (default 0 =
+# Env overrides: NIGHTLY_EXPERIMENTS (default 12, minimum 12), NIGHTLY_PASSES (default 0 =
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
 # regression gate), NIGHTLY_WORKERS (default 48 train / 24 sweep; caps DB-fetch
 # parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
@@ -215,12 +215,17 @@ source scripts/azoth_resources.sh
 
 # ---------------------------------------------------------------- sweep mode
 if [ "$mode" = autocollie ]; then
+  experiments="${NIGHTLY_EXPERIMENTS:-12}"
+  if [[ ! $experiments =~ ^[1-9][0-9]*$ ]] || [ "$experiments" -lt 12 ]; then
+    echo "nightly(autocollie): NIGHTLY_EXPERIMENTS must be an integer of at least 12" >&2
+    exit 1
+  fi
   wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
   passes="${NIGHTLY_PASSES:-0}"
-  echo "== autocollie sweep (every route, ${NIGHTLY_EXPERIMENTS:-1} experiment(s) each," \
+  echo "== autocollie sweep (every route, $experiments experiment(s) each," \
        "$([ "$passes" = 0 ] && echo 'looping until preempted' || echo "$passes pass(es)")) =="
   make autocollie SHUFFLE_ROUTES=1 PASSES="$passes" \
-    EXPERIMENTS="${NIGHTLY_EXPERIMENTS:-1}" || rc=1
+    EXPERIMENTS="$experiments" || rc=1
   exit "$rc"
 fi
 

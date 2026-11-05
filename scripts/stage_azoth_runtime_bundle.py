@@ -48,6 +48,24 @@ def _copy_if_exists(src: Path, dst: Path) -> None:
         shutil.copy2(src, dst)
 
 
+def _stage_route_policies(src: Path, dst: Path) -> None:
+    """Keep selected decisions and provenance; search candidates stay in out/.
+
+    The updater already compresses the whole bundle as tar.zst. Compact JSON
+    reduces installed size and startup parsing without a second decompressor.
+    Preserve every other field (including metrics, blends, and future metadata).
+    """
+    with src.open() as f:
+        policy = json.load(f)
+    for route in policy.get("routes", {}).values():
+        for level in route.get("levels", []):
+            for severity in ("hostile", "suspicious"):
+                entry = level.get(severity)
+                if isinstance(entry, dict):
+                    entry.pop("candidates", None)
+    bundle.atomic_write_json(dst, policy, indent=None)
+
+
 def _stage_feature_spec(src: Path, dst: Path) -> None:
     """Preserve the feature extractor calibrated with the model, byte for byte.
 
@@ -115,7 +133,10 @@ def stage_runtime_bundle(src: Path, dst: Path) -> None:
         required = src / name
         if not required.is_file():
             raise SystemExit(f"missing required file: {required}")
-        _copy_if_exists(required, dst / name)
+        if name == "route_policies.json":
+            _stage_route_policies(required, dst / name)
+        else:
+            _copy_if_exists(required, dst / name)
 
     for name in OPTIONAL_ROOT_FILES:
         _copy_if_exists(src / name, dst / name)

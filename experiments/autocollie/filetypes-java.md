@@ -886,3 +886,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T003113-filetypes-java` — 2026-11-03T00:31:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eb5fcc7d055e51ed` | inherit_from_filetypes_iso_4f23b9b5 | ok | 0.4583 | 0.9663 | 0.1614 | 22 | [log](out/autocollie/runs/2026-11-03T00-33-30_20261103T003113-filetypes-java_inherit_from_filetypes_iso_4f23b9b5.log) |
+| `8a54b679c356eb78` | java_hardneg_fraction_0015_weight_12 | ok | 0.9889 | 0.9991 | 0.9762 | 29 | [log](out/autocollie/runs/2026-11-03T00-34-05_20261103T003113-filetypes-java_java_hardneg_fraction_0015_weight_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_4f23b9b5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=4f23b9b534f82330, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_hardneg_fraction_0015_weight_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the measured L25 recall of 0.7393 by testing a slightly higher hard-negative fraction (0.015) with a lower weight (12) to better balance the combiner threshold against the saturated PR-AUC, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall lags.
+
+</details>
+

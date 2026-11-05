@@ -51,3 +51,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T004040-filetypes-yaml` — 2026-11-03T00:40:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d859d5889467f41d` | inherit_from_filetypes_bmp_42b0c946 | ok | 0.0143 | 0.5044 | 0.0179 | 28 | [log](out/autocollie/runs/2026-11-03T00-41-22_20261103T004040-filetypes-yaml_inherit_from_filetypes_bmp_42b0c946.log) |
+| `cb04849ebd0a7da6` | test_min_malware_score_2 | ok | 0.0407 | 0.7987 | 0.0762 | 8 | [log](out/autocollie/runs/2026-11-03T00-42-03_20261103T004040-filetypes-yaml_test_min_malware_score_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_42b0c946`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=42b0c946a1b435a3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_2`** `COLLIMATOR_FEATURE_SPEC_FILE=model-vocabularies/filetypes/yaml/3c5bc00bb7a08e6464d1bf9d3fcd08c73675c67f4c0c5e83c1c0b99a86d544a2.json COLLIMATOR_FEATURE_SPEC_SHA256=3c5bc00bb7a08e6464d1bf9d3fcd08c73675c67f4c0c5e83c1c0b99a86d544a2 EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 …` — Aims to improve the 0.0096 L25 recall by testing if a moderate severity cutoff of 2 retains more discriminative signal than the aggressive cutoff of 4 in the accepted config, while avoiding the potential noise of the 0 cutoff that yielded the same recall.
+
+</details>
+

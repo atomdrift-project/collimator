@@ -113,7 +113,7 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.stats as stats
 
-from .memory import available_memory_gb, cgroup_headroom_gb
+from .memory import available_memory_gb, cgroup_headroom_gb, memory_shares
 from .errors import FactProfileError
 from .vocabulary import CountView, DiskTrigramCandidates, TrigramSource, VocabularyCounts
 
@@ -5374,6 +5374,7 @@ def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True,
         shares = max(1, int(os.getenv("COLLIMATOR_MEM_SHARES", "1")))
     except ValueError:
         return resolved
+    shares = memory_shares(shares)
     headroom = ram_headroom_gb(reserve)
     if headroom is None:
         return resolved  # non-Linux or unparseable /proc/meminfo: leave as requested

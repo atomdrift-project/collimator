@@ -4,6 +4,7 @@ This module uses only the standard library so shell admission can execute it
 directly, without importing the training stack.
 """
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -12,6 +13,20 @@ from pathlib import Path
 # when argparse imports dataclasses (Python 3.14).
 if __name__ == '__main__' and sys.path and sys.path[0] == str(Path(__file__).resolve().parent):
     sys.path.pop(0)
+
+
+def memory_shares(default: int) -> int:
+    """Read the pipeline's live share count, retaining static limits elsewhere."""
+    directory = os.getenv('COLLIMATOR_FIT_RESOURCE_DIR')
+    if not directory:
+        return default
+    try:
+        value = int((Path(directory) / 'memory-shares').read_text().strip())
+        if value < 1:
+            raise ValueError('memory shares must be positive')
+        return value
+    except FileNotFoundError:
+        return default
 
 
 def cgroup_path() -> Path | None:

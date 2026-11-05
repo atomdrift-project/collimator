@@ -97,6 +97,50 @@ def _locked(directory):
         os.replace(temporary, state)
 
 
+def claim_oversize_admission(holder):
+    """Atomically take the run's single oversize-admission ticket.
+
+    Concurrent training chains each admit fits against their share of RAM. A
+    fit larger than any share would otherwise wait until the sibling chain
+    exits (on 2026-11-04, PE waited 5h; on 2026-11-02, 41h). The ticket lets
+    one idle suite at a time admit such a fit against the whole box instead,
+    so two suites never claim the same undivided headroom at once. Returns
+    False when another live process holds it, or when no resource directory
+    coordinates the run.
+    """
+    directory = os.getenv('COLLIMATOR_FIT_RESOURCE_DIR')
+    if not directory:
+        return False
+    me = _process(os.getpid())
+    if me is None:
+        return False
+    with _locked(directory):
+        path = Path(directory) / 'oversize.json'
+        try:
+            current = json.loads(path.read_text())
+        except (FileNotFoundError, ValueError):
+            current = None
+        if current and current.get('pid') != os.getpid() and _live([current]):
+            return False
+        temporary = path.with_name(f'oversize.json.tmp.{os.getpid()}')
+        temporary.write_text(json.dumps(dict(pid=os.getpid(), start=me[0], holder=holder)))
+        os.replace(temporary, path)
+    return True
+
+
+def release_oversize_admission():
+    directory = os.getenv('COLLIMATOR_FIT_RESOURCE_DIR')
+    if not directory:
+        return
+    with _locked(directory):
+        path = Path(directory) / 'oversize.json'
+        try:
+            if json.loads(path.read_text()).get('pid') == os.getpid():
+                path.unlink()
+        except (FileNotFoundError, ValueError):
+            pass
+
+
 def reserved_headroom_gb():
     directory = os.getenv('COLLIMATOR_FIT_RESOURCE_DIR')
     if not directory:

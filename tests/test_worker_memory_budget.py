@@ -33,6 +33,17 @@ class ManualPool:
         raise AssertionError("no pending task")
 
 
+def test_workers_reclaim_finished_chain_share(tmp_path, monkeypatch, budget_env):
+    monkeypatch.setenv('COLLIMATOR_MEM_SHARES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setattr(features, 'ram_headroom_gb', lambda reserve: 8.0)
+    policy = tmp_path / 'memory-shares'
+    policy.write_text('2\n')
+    assert features.clamp_workers_to_available_ram(8) == 2
+    policy.write_text('1\n')
+    assert features.clamp_workers_to_available_ram(8) == 4
+
+
 @pytest.mark.parametrize("recovery", [True, False])
 def test_memory_budget_grows_and_drains_without_oversubmitting(monkeypatch, budget_env, recovery):
     clock = 0.0

@@ -1246,3 +1246,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T013422-filetypes-php` — 2026-11-03T01:34:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7691befa4d9125a0` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9923 | 0.9991 | 0.9599 | 51 | [log](out/autocollie/runs/2026-11-03T01-35-27_20261103T013422-filetypes-php_inherit_from_filetypes_dex_f70ec135.log) |
+| `d947e877fefadb37` | php_kv_vocab_depth3 | ok | 0.9929 | 0.9991 | 0.9182 | 46 | [log](out/autocollie/runs/2026-11-03T01-36-43_20261103T013422-filetypes-php_php_kv_vocab_depth3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_kv_vocab_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if enabling kv_vocab at the default trait_path_depth=3 improves L25 recall over the 0.8979 baseline by adding key-value signal without the specificity loss seen at depth 4.
+
+</details>
+

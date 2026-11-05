@@ -1364,3 +1364,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T003426-filetypes-package.json` — 2026-11-03T00:34:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e7e2a98f537ff7fa` | inherit_from_filetypes_iso_4f23b9b5 | ok | 0.9749 | 0.9754 | 0.9684 | 23 | [log](out/autocollie/runs/2026-11-03T00-36-03_20261103T003426-filetypes-package.json_inherit_from_filetypes_iso_4f23b9b5.log) |
+| `78e06a36951808e4` | pkgjson_hardneg_sweep_mid_weight | ok | 0.9983 | 0.9995 | 0.9721 | 34 | [log](out/autocollie/runs/2026-11-03T00-36-50_20261103T003426-filetypes-package.json_pkgjson_hardneg_sweep_mid_weight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_4f23b9b5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=4f23b9b534f82330, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkgjson_hardneg_sweep_mid_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests hard_negative_weight=12 with fraction=0.01 to refine the threshold operating point and improve L25 recall beyond the 0.8154 achieved by the high-weight (20) control, addressing the 'or_loses' diagnostic where ranking is strong but threshold recall is suboptimal.
+
+</details>
+

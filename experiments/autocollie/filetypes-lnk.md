@@ -1050,3 +1050,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T014122-filetypes-lnk` — 2026-11-03T01:41:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `79d622705357ac3d` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9986 | 0.9944 | 0.9834 | 51 | [log](out/autocollie/runs/2026-11-03T01-44-29_20261103T014122-filetypes-lnk_inherit_from_filetypes_dex_f70ec135.log) |
+| `179e92e90d995bfa` | lnk_dex_transfer_depth4 | ok | 0.9980 | 0.9919 | 0.9785 | 7 | [log](out/autocollie/runs/2026-11-03T01-44-40_20261103T014122-filetypes-lnk_lnk_dex_transfer_depth4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_dex_transfer_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if the dex-inherited configuration's high recall (0.9380) is driven by trait_path_depth=4, which is untested on this route's current cohort, aiming to improve L25 recall beyond the 0.8506 baseline.
+
+</details>
+

@@ -1361,3 +1361,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T004243-filetypes-text` — 2026-11-03T00:42:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecc765e30526a85f` | inherit_from_filetypes_bmp_42b0c946 | ok | 0.6112 | 0.9025 | 0.1529 | 9 | [log](out/autocollie/runs/2026-11-03T00-44-55_20261103T004243-filetypes-text_inherit_from_filetypes_bmp_42b0c946.log) |
+| `018929b20af55056` | text_trait_path_depth_2 | ok | 0.6112 | 0.9025 | 0.1529 | 6 | [log](out/autocollie/runs/2026-11-03T00-45-22_20261103T004243-filetypes-text_text_trait_path_depth_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_42b0c946`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=42b0c946a1b435a3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_trait_path_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Aims to improve the 0.2534 L25 recall of the current best by testing if shallower trait prefixes (depth 2) reduce feature sparsity and improve generalization for text files, following the successful depth-2 transfer hypothesis from filetypes/bmp.
+
+</details>
+

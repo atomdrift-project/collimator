@@ -41,7 +41,12 @@ from collimator.autocollie_selection import (
     write_selection_report,
 )
 from collimator.filegroups import ARCHIVE_FILETYPES
-from collimator.fit_resources import fit_wait_seconds
+from collimator.fit_resources import (
+    claim_oversize_admission,
+    fit_wait_seconds,
+    release_oversize_admission,
+)
+from collimator.memory import memory_shares
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
@@ -1805,10 +1810,34 @@ def fit_mem_budget_gb() -> float | None:
     COLLIMATOR_MEM_CEILING_GB (features.ram_headroom_gb). None where
     /proc/meminfo is unreadable. Tune the host reserve with AZOTH_MEM_RESERVE_GB.
     """
-    reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
-    suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-    headroom = features.ram_headroom_gb(reserve)
+    suites = memory_shares(max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1"))))
+    headroom = fit_mem_headroom_gb()
     return None if headroom is None else headroom / suites
+
+
+def fit_mem_headroom_gb() -> float | None:
+    """The whole box's RAM still free for fits, in GB, before any share split."""
+    return features.ram_headroom_gb(float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32")))
+
+
+def admit_oversize_fit(name: str, need_gb: float, share_free_gb: float | None) -> bool:
+    """Let an idle suite start a fit larger than its share of the box.
+
+    Shares keep two concurrent suites from both admitting against the same
+    headroom, but a fit bigger than one share (full-corpus PE) could then
+    never start until the sibling chain exited — it idled the prod suite for
+    5h on 2026-11-04 and was then the critical path for another 3.5h. Admit
+    it against the undivided live headroom (which already excludes other
+    fits' unspent reservations) when the run-wide oversize ticket is free;
+    the ticket keeps two suites from doing this at the same moment. The
+    fit's own fit_reservation still guards its allocation.
+    """
+    if share_free_gb is None or need_gb <= share_free_gb:
+        return False
+    whole = fit_mem_headroom_gb()
+    if whole is None or need_gb > whole:
+        return False
+    return claim_oversize_admission(f"specialist {name} ({need_gb:.1f} GiB)")
 
 
 # Most DB fetchers one suite keeps in flight: two concurrent suites plus
@@ -1854,6 +1883,93 @@ def next_fit(
     ):
         return None
     return queue.pop(0)
+
+
+def _schedule_fits(
+    queue: list[dict[str, Any]],
+    max_running: int,
+    record: Callable[[dict[str, Any], dict[str, Any], float], None],
+    make_pool: Callable[[], concurrent.futures.Executor],
+    fit: Callable[[dict[str, Any]], dict[str, Any]] = _fit_in_own_process,
+) -> None:
+    """Run fits largest-first within the memory budget, recording each result."""
+    running: dict[concurrent.futures.Future, tuple[dict[str, Any], float]] = {}
+
+    def failed(job: dict[str, Any]) -> dict[str, Any]:
+        return {"name": job["target"]["name"], "kind": job["target"]["kind"], "error": True}
+
+    with make_pool() as pool:
+        oversize_fut: concurrent.futures.Future | None = None
+
+        def submit(job: dict[str, Any]) -> concurrent.futures.Future | None:
+            try:
+                LOG.info("%s: starting (est %.1f GB)", job["target"]["name"], job["mem_gb"])
+                fut = pool.submit(fit, job)
+            except concurrent.futures.BrokenExecutor:
+                # A worker died (OOM kill) and took the pool down;
+                # every remaining fit fails the same way, as it would
+                # have had it been submitted up front.
+                LOG.error("%s: not started, worker pool is broken", job["target"]["name"])
+                record(job, failed(job), 0.0)
+                return None
+            running[fut] = (job, time.monotonic())
+            return fut
+
+        try:
+            idle_since = None
+            while queue or running:
+                running_gb = sum(job["mem_gb"] for job, _ in running.values())
+                free_gb = fit_mem_budget_gb()
+                # A suite that started during pressure can use recovered RAM.
+                budget_gb = None if free_gb is None else running_gb + free_gb
+                while job := next_fit(
+                    queue, running_gb, len(running), budget_gb, max_running, free_gb,
+                ):
+                    if submit(job) is not None:
+                        running_gb += job["mem_gb"]
+                        if free_gb is not None:
+                            free_gb -= job["mem_gb"]
+                if (not running and queue and oversize_fut is None
+                        and admit_oversize_fit(str(queue[0]["target"]["name"]),
+                                               queue[0]["mem_gb"], free_gb)):
+                    job = queue.pop(0)
+                    LOG.info("%s: needs %.1f GiB, more than this suite's %.1f GiB share; "
+                             "admitting it against the whole box's free RAM",
+                             job["target"]["name"], job["mem_gb"], free_gb or 0)
+                    oversize_fut = submit(job)
+                    if oversize_fut is None:
+                        release_oversize_admission()
+                    continue
+                if not running and queue:
+                    if idle_since is None:
+                        idle_since = time.monotonic()
+                    elapsed = time.monotonic() - idle_since
+                    if elapsed >= fit_wait_seconds():
+                        raise MemoryError("specialist fit could not fit within available RAM; "
+                                          "reduce overlapping stages or the matrix footprint")
+                    LOG.warning("specialist admission waiting: next fit needs %.1f GiB, "
+                                "%.1f GiB available; %.0fs elapsed", queue[0]["mem_gb"],
+                                free_gb or 0, elapsed)
+                    time.sleep(30)
+                    continue
+                idle_since = None
+                done, _ = concurrent.futures.wait(
+                    running, timeout=30, return_when=concurrent.futures.FIRST_COMPLETED,
+                )
+                for fut in done:
+                    job, started = running.pop(fut)
+                    if fut is oversize_fut:
+                        release_oversize_admission()
+                        oversize_fut = None
+                    try:
+                        payload = fut.result()
+                    except Exception:
+                        LOG.exception("%s: worker raised", job["target"]["name"])
+                        payload = failed(job)
+                    record(job, payload, time.monotonic() - started)
+        finally:
+            if oversize_fut is not None:
+                release_oversize_admission()
 
 
 def _load_fit_mem(path: Path) -> dict[str, float]:
@@ -2313,66 +2429,17 @@ def main() -> int:
         # up its thread pool inside the worker. One fit per process so each
         # measures its own peak memory (and frees it on exit).
         import multiprocessing as _mp  # noqa: PLC0415
-        queue = list(pending)
-        running: dict[concurrent.futures.Future, tuple[dict[str, Any], float]] = {}
 
-        def failed(job: dict[str, Any]) -> dict[str, Any]:
-            return {"name": job["target"]["name"], "kind": job["target"]["kind"], "error": True}
-
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=args.parallelism,
-            mp_context=_mp.get_context("spawn"),
-            initializer=_pool_init,
-            initargs=(args.log_level,),
-            max_tasks_per_child=1,
-        ) as pool:
-            idle_since = None
-            while queue or running:
-                running_gb = sum(job["mem_gb"] for job, _ in running.values())
-                free_gb = fit_mem_budget_gb()
-                # A suite that started during pressure can use recovered RAM.
-                budget_gb = None if free_gb is None else running_gb + free_gb
-                while job := next_fit(
-                    queue, running_gb, len(running), budget_gb, args.parallelism, free_gb,
-                ):
-                    try:
-                        LOG.info("%s: starting (est %.1f GB)", job["target"]["name"], job["mem_gb"])
-                        fut = pool.submit(_fit_in_own_process, job)
-                    except concurrent.futures.BrokenExecutor:
-                        # A worker died (OOM kill) and took the pool down;
-                        # every remaining fit fails the same way, as it would
-                        # have had it been submitted up front.
-                        LOG.error("%s: not started, worker pool is broken", job["target"]["name"])
-                        record(job, failed(job), 0.0)
-                        continue
-                    running[fut] = (job, time.monotonic())
-                    running_gb += job["mem_gb"]
-                    if free_gb is not None:
-                        free_gb -= job["mem_gb"]
-                if not running and queue:
-                    if idle_since is None:
-                        idle_since = time.monotonic()
-                    elapsed = time.monotonic() - idle_since
-                    if elapsed >= fit_wait_seconds():
-                        raise MemoryError("specialist fit could not fit within available RAM; "
-                                          "reduce overlapping stages or the matrix footprint")
-                    LOG.warning("specialist admission waiting: next fit needs %.1f GiB, "
-                                "%.1f GiB available; %.0fs elapsed", queue[0]["mem_gb"],
-                                free_gb or 0, elapsed)
-                    time.sleep(30)
-                    continue
-                idle_since = None
-                done, _ = concurrent.futures.wait(
-                    running, timeout=30, return_when=concurrent.futures.FIRST_COMPLETED,
-                )
-                for fut in done:
-                    job, started = running.pop(fut)
-                    try:
-                        payload = fut.result()
-                    except Exception:
-                        LOG.exception("%s: worker raised", job["target"]["name"])
-                        payload = failed(job)
-                    record(job, payload, time.monotonic() - started)
+        _schedule_fits(
+            list(pending), args.parallelism, record,
+            lambda: concurrent.futures.ProcessPoolExecutor(
+                max_workers=args.parallelism,
+                mp_context=_mp.get_context("spawn"),
+                initializer=_pool_init,
+                initargs=(args.log_level,),
+                max_tasks_per_child=1,
+            ),
+        )
     else:
         for job in pending:
             results[slot_index[str(job["target"]["name"])]] = _train_target_worker(job)

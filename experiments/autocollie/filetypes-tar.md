@@ -1216,3 +1216,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T013744-filetypes-tar` — 2026-11-03T01:37:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d033dd90362b1abc` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9641 | 0.9889 | 0.9064 | 50 | [log](out/autocollie/runs/2026-11-03T01-39-50_20261103T013744-filetypes-tar_inherit_from_filetypes_dex_f70ec135.log) |
+| `bcbcd293341b9b8b` | hard_negative_fraction_002_weight_16 | ok | 0.9481 | 0.9849 | 0.8627 | 40 | [log](out/autocollie/runs/2026-11-03T01-40-47_20261103T013744-filetypes-tar_hard_negative_fraction_002_weight_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_negative_fraction_002_weight_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.7500 L25 recall ceiling by testing a higher hard-negative weight (16 vs 12) at a slightly larger fraction (0.02 vs 0.01) to better suppress the benign tail that causes the single FP, leveraging the route's saturated PR-AUC (0.94-0.96) to convert ranking strength into recall.
+
+</details>
+

@@ -2734,3 +2734,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T004305-filetypes-pdf` — 2026-11-03T00:43:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `729a1e42c68deb0f` | inherit_from_filetypes_bmp_42b0c946 | ok | 0.9366 | 0.8740 | 0.8568 | 18 | [log](out/autocollie/runs/2026-11-03T00-45-04_20261103T004305-filetypes-pdf_inherit_from_filetypes_bmp_42b0c946.log) |
+| `a28fd5f18e257ff7` | pdf_min_sample_score_zero_control | ok | 0.9998 | 0.9993 | 0.9952 | 14 | [log](out/autocollie/runs/2026-11-03T00-45-25_20261103T004305-filetypes-pdf_pdf_min_sample_score_zero_control.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_42b0c946`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=42b0c946a1b435a3, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_min_sample_score_zero_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the current min_sample_score=3 filter is discarding low-severity malware signals that the BMP-inherited config (min_sample_score=0) successfully leveraged to achieve 0.9870 recall, aiming to improve the current 0.8729 L25 recall by expanding the training corpus.
+
+</details>
+

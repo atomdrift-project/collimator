@@ -62,6 +62,7 @@ esac
 esac
 """,
         "make": """printf 'start %s\\n' "$1" >> "$TEST_EVENTS"
+[[ -n ${TEST_MAKE_ARGS:-} ]] && printf '%s\\n' "$*" >> "$TEST_MAKE_ARGS"
 if [[ ${TEST_REWRITE_NIGHTLY:-0} == 1 && $1 == azoth-publish-train ]]; then
     printf '#!/bin/bash\\nexit 97\\n' > scripts/nightly.sh
 fi
@@ -225,6 +226,38 @@ def test_parallel_failure_does_not_publish(shell_env):
 
 
 @needs_bash_4_4
+@pytest.mark.parametrize('first,fail', [('prod', False), ('fold', False), ('fold', True)])
+def test_surviving_chain_reclaims_share(shell_env, first, fail):
+    env, _, _ = shell_env
+    stub = Path(env['PATH'].split(':')[0]) / 'make'
+    stub.write_text('''#!/bin/bash
+case "$1" in
+  azoth-general) chain=prod ;;
+  azoth-general-fold-a) chain=fold ;;
+  *) exit 0 ;;
+esac
+if [[ $chain == "$TEST_FIRST_CHAIN" ]]; then
+    [[ $(cat "$COLLIMATOR_FIT_RESOURCE_DIR/memory-shares") == 2 ]] || exit 81
+    touch "$TEST_EVENTS.ready"
+    [[ ${TEST_CHAIN_FAIL:-0} == 0 ]] || exit 7
+else
+    for ((i=0; i<100; i++)); do
+        if [[ -f "$TEST_EVENTS.ready" && $(cat "$COLLIMATOR_FIT_RESOURCE_DIR/memory-shares") == 1 ]]; then
+            echo reclaimed >> "$TEST_EVENTS"
+            exit 0
+        fi
+        sleep 0.02
+    done
+    exit 82
+fi
+''')
+    env.update(TEST_FIRST_CHAIN=first, TEST_CHAIN_FAIL='1' if fail else '0')
+    result = run_pipeline(env)
+    assert result.returncode == (1 if fail else 0), result.stdout + result.stderr
+    assert Path(env['TEST_EVENTS']).read_text().strip() == 'reclaimed'
+
+
+@needs_bash_4_4
 @pytest.mark.parametrize("before,after", [(110, 200), (200, 110)])
 def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
     env, memory, events = shell_env
@@ -249,6 +282,24 @@ def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
     assert overlaps == (after == 200)
 
 
+@needs_bash_4_4
+def test_route_scoring_gets_the_rest_of_the_scoring_budget(shell_env, tmp_path):
+    env, _, _ = shell_env
+    models = tmp_path / "models"
+    for name in ("azoth", "azoth.oof-fold-a", "azoth.oof-fold-b"):
+        bundle = models / name
+        (bundle / "general").mkdir(parents=True)
+        (bundle / "specialists.json").write_text("{}\n")
+    args = tmp_path / "make-args"
+    env.update(OUT_ROOT=str(models), START_STAGE="3", STOP_STAGE="6", TEST_MAKE_ARGS=str(args))
+    result = run_pipeline(env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    calls = {line.split()[0]: line.split()[1:] for line in args.read_text().splitlines()}
+    # WORKERS=48: stage 3 keeps its half; stage 6 takes the rest of 64.
+    assert "WORKERS=24" in calls["azoth-oof-merge-general"]
+    assert "WORKERS=40" in calls["azoth-oof-route-scores"]
+
+
 @pytest.mark.parametrize("validate_only", [False, True])
 def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path, validate_only):
     env, _, events = shell_env
@@ -265,6 +316,31 @@ def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path, val
     assert result.returncode == 0, result.stdout + result.stderr
     target = "azoth-validate" if validate_only else "azoth-deploy"
     assert events.read_text().splitlines() == [f"start {target}", f"end {target}"]
+
+
+def test_publication_calibrates_with_the_whole_box(shell_env, tmp_path):
+    env, _, _ = shell_env
+    models = tmp_path / "models"
+    args = tmp_path / "make-args"
+    env.update(
+        OUT_ROOT=str(models), AZOTH_ROOT=str(models / "azoth"),
+        START_STAGE="7", STOP_STAGE="7", THRESHOLD_MAX_ID="123",
+        TEST_MAKE_ARGS=str(args),
+    )
+    result = run_pipeline(env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    deploy = args.read_text().split()
+    assert "AZOTH_CALIBRATE_PARALLELISM=4" in deploy
+    assert "AZOTH_CALIBRATE_WORKERS=64" in deploy
+    assert "AZOTH_THRESHOLD_WORKERS=64" in deploy
+
+    args.unlink()
+    env.update(AZOTH_PUBLISH_CALIBRATE_PARALLELISM="2", AZOTH_PUBLISH_CALIBRATE_WORKERS="32")
+    result = run_pipeline(env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    deploy = args.read_text().split()
+    assert "AZOTH_CALIBRATE_PARALLELISM=2" in deploy
+    assert "AZOTH_CALIBRATE_WORKERS=32" in deploy
 
 
 def test_admission_waits_and_recovers(shell_env):

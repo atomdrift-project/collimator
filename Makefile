@@ -352,6 +352,11 @@ EXP_LGBM_THREADS ?= 8
 # Scoring is limited by corpus/matrix memory and DB throughput, not fit cores.
 # Keep training concurrency independent of the conservative calibration default.
 AZOTH_CALIBRATE_PARALLELISM ?= 2
+# Total extraction workers azoth_calibrate_ensemble.py splits across its
+# concurrent routes (each capped by AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX, 16).
+# azoth_oof_pipeline.sh raises this and the parallelism for the publish tail,
+# which has the box to itself.
+AZOTH_CALIBRATE_WORKERS ?= $(EXP_WORKERS)
 AZOTH_POLICY_PARALLELISM ?= 0
 AZOTH_SPECIALIST_PARALLELISM ?= $(shell expr $(NPROC) / $(EXP_LGBM_THREADS))
 WORKERS ?= $(NPROC)
@@ -360,6 +365,7 @@ AZOTH_THRESHOLD_WORKERS ?= $(EXP_WORKERS)
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 AZOTH_THRESHOLD_WORKERS_ARG := $(if $(AZOTH_THRESHOLD_WORKERS),--workers $(AZOTH_THRESHOLD_WORKERS),)
+AZOTH_CALIBRATE_WORKERS_ARG := $(if $(AZOTH_CALIBRATE_WORKERS),--workers $(AZOTH_CALIBRATE_WORKERS),)
 SEED ?= 42
 # Training device. `auto` runs the pick_device() heuristic in
 # src/collimator/model.py: it picks CUDA only when the workload is dense
@@ -1274,7 +1280,7 @@ azoth-calibrate: venv check-db
 		--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
-		$(EXP_WORKERS_ARG) \
+		$(AZOTH_CALIBRATE_WORKERS_ARG) \
 		--azoth-root $(AZOTH_ROOT) \
 		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
 		--general-scores $(AZOTH_GENERAL_SCORES) \
@@ -1293,7 +1299,7 @@ azoth-calibrate: venv check-db
 	@# alongside config.json, reusing verified production score caches.
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
-		$(EXP_WORKERS_ARG) \
+		$(AZOTH_CALIBRATE_WORKERS_ARG) \
 		--azoth-root $(AZOTH_ROOT) \
 		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
 		--general-scores $(AZOTH_GENERAL_SCORES) \

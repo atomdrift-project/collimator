@@ -1134,3 +1134,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T014123-filetypes-jar` — 2026-11-03T01:41:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c904fb9cc214f848` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9876 | 0.9978 | 0.9622 | 54 | [log](out/autocollie/runs/2026-11-03T01-42-43_20261103T014123-filetypes-jar_inherit_from_filetypes_dex_f70ec135.log) |
+| `4db739c4f95aaa30` | jar_hard_neg_weight_15 | ok | 0.9879 | 0.9982 | 0.9510 | 45 | [log](out/autocollie/runs/2026-11-03T01-43-43_20261103T014123-filetypes-jar_jar_hard_neg_weight_15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_hard_neg_weight_15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.9177 L25 recall of the best historical run by increasing hard_negative_weight to 15 to further penalize false positives on the dominant benign class, potentially pushing recall higher within the 1-FP budget.
+
+</details>
+

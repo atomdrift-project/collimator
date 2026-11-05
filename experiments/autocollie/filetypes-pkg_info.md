@@ -51,3 +51,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T012919-filetypes-pkg_info` — 2026-11-03T01:29:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `88e634a5bee42d94` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9245 | 0.9925 | 0.8788 | 9 | [log](out/autocollie/runs/2026-11-03T01-34-11_20261103T012919-filetypes-pkg_info_inherit_from_filetypes_dex_f70ec135.log) |
+| `54cb3e54c9f2fdb8` | test_min_malware_score_0_depth2 | ok | 0.8978 | 0.9858 | 0.8615 | 6 | [log](out/autocollie/runs/2026-11-03T01-34-24_20261103T012919-filetypes-pkg_info_test_min_malware_score_0_depth2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_0_depth2`** `EXP_HARD_NEGATIVE_FRACTION=0 EXP_HARD_NEGATIVE_WEIGHT=1 EXP_LEARNING_RATE=0.05 EXP_MAX_DELTA_STEP=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_MIN_MALWARE_SCORE=0 EXP_NUM_LEAVES=96 …` — Aims to improve the measured L25 recall of 0.7576 by removing the min_malware_score=4 cutoff, which likely discards low-severity malware samples and inflates class weights, while retaining the trait_path_depth=2 setting that previously achieved the highest recall on this route.
+
+</details>
+

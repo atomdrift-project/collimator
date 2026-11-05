@@ -1268,3 +1268,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T013431-filetypes-rust` — 2026-11-03T01:34:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1c05eb4558447fbc` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9848 | 0.9975 | 0.9788 | 65 | [log](out/autocollie/runs/2026-11-03T01-36-18_20261103T013431-filetypes-rust_inherit_from_filetypes_dex_f70ec135.log) |
+| `a880428580d6996c` | rust_depth3_min_malware_score_1 | ok | 0.9669 | 0.9988 | 0.9234 | 60 | [log](out/autocollie/runs/2026-11-03T01-37-24_20261103T013431-filetypes-rust_rust_depth3_min_malware_score_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_depth3_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering low-severity malware (score < 1) from training improves L25 recall@1FP (currently 0.8776) by reducing class imbalance noise, while retaining the high-performing depth=3 feature surface.
+
+</details>
+

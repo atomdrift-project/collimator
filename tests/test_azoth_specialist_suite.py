@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import sqlite3
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -469,6 +470,117 @@ def test_fit_mem_budget_splits_headroom_across_concurrent_suites(
     assert suite.fit_mem_budget_gb() == pytest.approx(84)
     meminfo_at(8)  # less free than the reserve: nothing to spare, never negative
     assert suite.fit_mem_budget_gb() == 0
+
+
+def test_finished_chain_releases_memory_for_waiting_pe(meminfo_at, tmp_path, monkeypatch):
+    meminfo_at(110)
+    monkeypatch.setenv('AZOTH_MEM_RESERVE_GB', '32')
+    monkeypatch.setenv('AZOTH_CONCURRENT_SUITES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    policy = tmp_path / 'memory-shares'
+    policy.write_text('2\n')
+    queue = [{'mem_gb': 65.8}]
+    budget = suite.fit_mem_budget_gb()
+    assert budget == pytest.approx(39)
+    assert suite.next_fit(queue, 0, 0, budget, 4, budget) is None
+    policy.write_text('1\n')
+    budget = suite.fit_mem_budget_gb()
+    assert budget == pytest.approx(78)
+    assert suite.next_fit(queue, 0, 0, budget, 4, budget) == {'mem_gb': 65.8}
+
+
+def test_idle_suite_admits_fit_larger_than_its_share(meminfo_at, tmp_path, monkeypatch):
+    # 2026-11-04: PE needed 65.8 GiB, each of two suites saw half of ~113 GiB,
+    # so prod idled 5h until the fold chain exited.
+    meminfo_at(145)
+    monkeypatch.setenv('AZOTH_MEM_RESERVE_GB', '32')
+    monkeypatch.setenv('AZOTH_CONCURRENT_SUITES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    share = suite.fit_mem_budget_gb()
+    assert share == pytest.approx(56.5)
+    assert suite.next_fit([{'mem_gb': 65.8}], 0, 0, share, 4, share) is None
+    assert suite.admit_oversize_fit('pe', 65.8, share)
+    # The ticket is held: a sibling suite cannot also claim the whole box.
+    assert (tmp_path / 'oversize.json').exists()
+    suite.release_oversize_admission()
+    # A fit that fits its share takes the normal path, and one larger than
+    # the whole box's free RAM still waits.
+    assert not suite.admit_oversize_fit('small', 10, share)
+    assert not suite.admit_oversize_fit('huge', 120, share)
+    assert not (tmp_path / 'oversize.json').exists()
+
+
+def test_oversize_admission_respects_sibling_ticket(meminfo_at, tmp_path, monkeypatch):
+    import subprocess
+    import sys
+
+    meminfo_at(145)
+    monkeypatch.setenv('AZOTH_MEM_RESERVE_GB', '32')
+    monkeypatch.setenv('AZOTH_CONCURRENT_SUITES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    sibling = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+    try:
+        start = Path(f'/proc/{sibling.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
+        (tmp_path / 'oversize.json').write_text(json.dumps(dict(pid=sibling.pid, start=start)))
+        assert not suite.admit_oversize_fit('pe', 65.8, suite.fit_mem_budget_gb())
+    finally:
+        sibling.kill()
+        sibling.wait()
+
+
+def _fit_jobs(*sizes):
+    return [{'target': {'name': name, 'kind': 'filetype'}, 'mem_gb': gb} for name, gb in sizes]
+
+
+def _echo_fit(job):
+    return {'name': job['target']['name'], 'kind': 'filetype'}
+
+
+def test_scheduler_starts_oversize_head_while_sibling_chain_runs(meminfo_at, tmp_path, monkeypatch):
+    import concurrent.futures
+
+    meminfo_at(145)
+    monkeypatch.setenv('AZOTH_MEM_RESERVE_GB', '32')
+    monkeypatch.setenv('AZOTH_CONCURRENT_SUITES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setattr(suite.time, 'sleep', lambda _s: None)
+    recorded = []
+    suite._schedule_fits(
+        _fit_jobs(('pe', 65.8), ('scripts', 34.5), ('lua', 1.6)), 4,
+        lambda job, payload, _s: recorded.append((job['target']['name'], payload.get('error'))),
+        lambda: concurrent.futures.ThreadPoolExecutor(4), fit=_echo_fit,
+    )
+    assert sorted(recorded) == [('lua', None), ('pe', None), ('scripts', None)]
+    assert not (tmp_path / 'oversize.json').exists()
+
+
+def test_scheduler_still_waits_when_sibling_holds_the_ticket(meminfo_at, tmp_path, monkeypatch):
+    import concurrent.futures
+    import subprocess
+    import sys
+
+    meminfo_at(145)
+    monkeypatch.setenv('AZOTH_MEM_RESERVE_GB', '32')
+    monkeypatch.setenv('AZOTH_CONCURRENT_SUITES', '2')
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '0.05')
+    real_sleep = suite.time.sleep
+    monkeypatch.setattr(suite.time, 'sleep', lambda _s: real_sleep(0.02))
+    sibling = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+    try:
+        start = Path(f'/proc/{sibling.pid}/stat').read_text().rsplit(')', 1)[1].split()[19]
+        (tmp_path / 'oversize.json').write_text(json.dumps(dict(pid=sibling.pid, start=start)))
+        recorded = []
+        with pytest.raises(MemoryError):
+            suite._schedule_fits(
+                _fit_jobs(('pe', 65.8)), 4, lambda *a: recorded.append(a),
+                lambda: concurrent.futures.ThreadPoolExecutor(4), fit=_echo_fit,
+            )
+        assert recorded == []
+        assert json.loads((tmp_path / 'oversize.json').read_text())['pid'] == sibling.pid
+    finally:
+        sibling.kill()
+        sibling.wait()
 
 
 def test_fit_mem_budget_is_none_when_meminfo_unreadable(monkeypatch) -> None:

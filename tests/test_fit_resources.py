@@ -235,3 +235,28 @@ def test_fit_cleanup_preserves_returned_arrays_and_releases_reservation(tmp_path
     np.testing.assert_array_equal(matrix, X * 2)
     np.testing.assert_array_equal(labels, y)
     assert json.loads((tmp_path / 'fits.json').read_text()) == []
+
+
+def test_oversize_ticket_is_exclusive_across_live_processes(tmp_path, monkeypatch):
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    holder = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+    try:
+        start = resources._process(holder.pid)[0]
+        (tmp_path / 'oversize.json').write_text(json.dumps(dict(pid=holder.pid, start=start)))
+        assert not resources.claim_oversize_admission('pe')
+        # Releasing someone else's ticket is a no-op.
+        resources.release_oversize_admission()
+        assert (tmp_path / 'oversize.json').exists()
+    finally:
+        holder.kill()
+        holder.wait()
+    # A dead holder's ticket is stale and can be taken over.
+    assert resources.claim_oversize_admission('pe')
+    assert resources.claim_oversize_admission('pe')  # re-entrant for the holder
+    resources.release_oversize_admission()
+    assert not (tmp_path / 'oversize.json').exists()
+
+
+def test_oversize_ticket_needs_a_coordinated_run(monkeypatch):
+    monkeypatch.delenv('COLLIMATOR_FIT_RESOURCE_DIR', raising=False)
+    assert not resources.claim_oversize_admission('pe')

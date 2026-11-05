@@ -1496,3 +1496,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261103T005945-filetypes-macho` — 2026-11-03T00:59:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `78d042cd97bea3cc` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9871 | 0.9985 | 0.9461 | 43 | [log](out/autocollie/runs/2026-11-03T01-00-13_20261103T005945-filetypes-macho_inherit_from_filetypes_dex_f70ec135.log) |
+| `3a3d64b8a0fe568c` | macho_hardneg_fraction_001_weight_20 | ok | 0.9864 | 0.9986 | 0.9471 | 30 | [log](out/autocollie/runs/2026-11-03T01-01-00_20261103T005945-filetypes-macho_macho_hardneg_fraction_001_weight_20.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_hardneg_fraction_001_weight_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.8382 L25 recall ceiling by testing a sharper hard-negative focus (fraction 0.01, weight 20) to better separate the top-ranked malware from the benign tail without degrading PR_AUC.
+
+</details>
+

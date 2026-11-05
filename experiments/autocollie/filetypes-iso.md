@@ -33,3 +33,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T003018-filetypes-iso` — 2026-11-03T00:30:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aae3ab79ce89ed87` | inherit_from_filetypes_jsp_1eeb9561 | ok | 0.9851 | 0.5000 | 0.9925 | 14 | [log](out/autocollie/runs/2026-11-03T00-30-42_20261103T003018-filetypes-iso_inherit_from_filetypes_jsp_1eeb9561.log) |
+| `4f23b9b534f82330` | iso_min_malware_score_4 | ok | 0.9851 | 0.5000 | 0.9925 | 12 | [log](out/autocollie/runs/2026-11-03T00-31-00_20261103T003018-filetypes-iso_iso_min_malware_score_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_1eeb9561`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=1eeb95619a5c5492, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`iso_min_malware_score_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests if restoring the severity cutoff to 4 (matching the sister route baseline) improves L25 recall@1FP from 0.0000 by filtering low-severity noise that may be diluting the class signal, while keeping the feature matrix identical to the recent min_malware_score_0 control.
+
+</details>
+

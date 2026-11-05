@@ -2160,3 +2160,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261103T010606-filetypes-python` — 2026-11-03T01:06:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bf3769e282c2d08b` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9894 | 0.9959 | 0.9499 | 365 | [log](out/autocollie/runs/2026-11-03T01-12-09_20261103T010606-filetypes-python_inherit_from_filetypes_dex_f70ec135.log) |
+| `d21421cf839974fc` | python_kv_vocab_depth4_cutoff4_reg_lambda_2 | ok | 0.9853 | 0.9943 | 0.9346 | 66 | [log](out/autocollie/runs/2026-11-03T01-14-15_20261103T010606-filetypes-python_python_kv_vocab_depth4_cutoff4_reg_lambda_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_kv_vocab_depth4_cutoff4_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing L2 regularization to 2.0 improves the 0.6516 L25 recall of the best historical run by reducing overfitting on the high-dimensional KV vocabulary features, while keeping the effective leaf cap and other settings fixed.
+
+</details>
+
