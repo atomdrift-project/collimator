@@ -1314,3 +1314,77 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T014458-filetypes-kotlin` — 2026-11-06T01:44:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `27c22d87c82bbc97` | inherit_from_filetypes_mp3_3a351dd1 | ok | 0.9068 | 0.9406 | 0.8814 | 23 | [log](out/autocollie/runs/2026-11-06T01-46-52_20261106T014458-filetypes-kotlin_inherit_from_filetypes_mp3_3a351dd1.log) |
+| `168df38534bacb28` | kotlin_depth_5_min_malware_0 | ok | 0.9964 | 0.9985 | 0.9610 | 20 | [log](out/autocollie/runs/2026-11-06T01-47-20_20261106T014458-filetypes-kotlin_kotlin_depth_5_min_malware_0.log) |
+| `43bfc681049cc51e` | kotlin_depth_2_min_malware_0 | ok | 0.9940 | 0.9972 | 0.9557 | 17 | [log](out/autocollie/runs/2026-11-06T01-47-42_20261106T014458-filetypes-kotlin_kotlin_depth_2_min_malware_0.log) |
+| `ebba7322db061d89` | kotlin_min_malware_1_depth_3 | ok | 0.9936 | 0.9968 | 0.9553 | 18 | [log](out/autocollie/runs/2026-11-06T01-48-00_20261106T014458-filetypes-kotlin_kotlin_min_malware_1_depth_3.log) |
+| `e6d5a37310a9913e` | kotlin_min_malware_2_depth_3 | ok | 0.9936 | 0.9968 | 0.9553 | 10 | [log](out/autocollie/runs/2026-11-06T01-48-20_20261106T014458-filetypes-kotlin_kotlin_min_malware_2_depth_3.log) |
+| `84a488b3b5c872b1` | kotlin_min_malware_4_depth_3 | ok | 0.9806 | 0.9899 | 0.9114 | 19 | [log](out/autocollie/runs/2026-11-06T01-48-31_20261106T014458-filetypes-kotlin_kotlin_min_malware_4_depth_3.log) |
+| `f3344f0e46ebf95a` | kotlin_max_delta_step_1 | ok | 0.9953 | 0.9980 | 0.9658 | 10 | [log](out/autocollie/runs/2026-11-06T01-48-51_20261106T014458-filetypes-kotlin_kotlin_max_delta_step_1.log) |
+| `ca42510c81ffbb6f` | kotlin_max_delta_step_5 | ok | 0.9915 | 0.9967 | 0.9545 | 3 | [log](out/autocollie/runs/2026-11-06T01-49-02_20261106T014458-filetypes-kotlin_kotlin_max_delta_step_5.log) |
+| `c2ae2576ae3fa08c` | kotlin_min_child_samples_50 | ok | 0.9942 | 0.9977 | 0.9469 | 3 | [log](out/autocollie/runs/2026-11-06T01-49-06_20261106T014458-filetypes-kotlin_kotlin_min_child_samples_50.log) |
+| `a6cb274323c38d9b` | kotlin_reg_lambda_2 | ok | 0.9957 | 0.9979 | 0.9581 | 3 | [log](out/autocollie/runs/2026-11-06T01-49-10_20261106T014458-filetypes-kotlin_kotlin_reg_lambda_2.log) |
+| `b341eafad26aeac6` | kotlin_num_leaves_128 | ok | 0.9936 | 0.9968 | 0.9553 | 3 | [log](out/autocollie/runs/2026-11-06T01-49-15_20261106T014458-filetypes-kotlin_kotlin_num_leaves_128.log) |
+| `43e7b76228f40f71` | kotlin_hard_negative_weight_10 | ok | 0.9961 | 0.9978 | 0.9694 | 3 | [log](out/autocollie/runs/2026-11-06T01-49-18_20261106T014458-filetypes-kotlin_kotlin_hard_negative_weight_10.log) |
+| `9eca0c24f241fa0d` | kotlin_severity_fractions_depth_3 | ok | 0.9948 | 0.9978 | 0.9309 | 18 | [log](out/autocollie/runs/2026-11-06T01-49-23_20261106T014458-filetypes-kotlin_kotlin_severity_fractions_depth_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_3a351dd1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=3a351dd1ddbcd494, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_depth_5_min_malware_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if deeper trait prefixes (depth 5) capture more specific Kotlin malware patterns to improve L25 recall beyond the 0.7990 baseline.
+- **`kotlin_depth_2_min_malware_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if shallower trait prefixes (depth 2) generalize better across diverse Kotlin malware families to improve L25 recall.
+- **`kotlin_min_malware_1_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering out the lowest severity malware (score 1) reduces noise and improves L25 recall compared to the 0.7990 baseline.
+- **`kotlin_min_malware_2_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering out low severity malware (scores 0-1) sharpens the signal for high-confidence detections to improve L25 recall.
+- **`kotlin_min_malware_4_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if aggressive filtering of low severity malware (scores 0-3) allows the model to focus on high-severity patterns to improve L25 recall.
+- **`kotlin_max_delta_step_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a small leaf output cap (1) stabilizes training and improves L25 recall by preventing overfitting to noisy samples.
+- **`kotlin_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a moderate leaf output cap (5) allows faster convergence and better L25 recall than the default unconstrained step.
+- **`kotlin_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing the minimum leaf samples to 50 allows the model to capture finer-grained Kotlin malware patterns to improve L25 recall.
+- **`kotlin_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increased L2 regularization (2.0) reduces overfitting to specific malware variants and improves L25 recall robustness.
+- **`kotlin_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing tree complexity to 128 leaves captures more complex interactions in Kotlin malware to improve L25 recall.
+- **`kotlin_hard_negative_weight_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if upweighting hard negatives to 10.0 helps the model distinguish benign Kotlin code from malware to improve L25 recall.
+- **`kotlin_severity_fractions_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if adding size-invariant severity fraction features provides additional signal to improve L25 recall beyond the 0.7990 baseline.
+
+</details>
+
+## Cycle `20261106T123300-filetypes-kotlin` — 2026-11-06T12:33:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5b55a069cec3acad` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.6480 | 0.7621 | 0.6870 | 19 | [log](out/autocollie/runs/2026-11-06T12-34-55_20261106T123300-filetypes-kotlin_inherit_from_filetypes_bmp_71ba0177.log) |
+| `944e09b25421f8ee` | kotlin_num_leaves_160 | ok | 0.9815 | 0.9929 | 0.9160 | 19 | [log](out/autocollie/runs/2026-11-06T12-35-18_20261106T123300-filetypes-kotlin_kotlin_num_leaves_160.log) |
+| `e93c2e665d045e49` | kotlin_num_leaves_192 | ok | 0.9815 | 0.9929 | 0.9160 | 4 | [log](out/autocollie/runs/2026-11-06T12-35-38_20261106T123300-filetypes-kotlin_kotlin_num_leaves_192.log) |
+| `c20cd6e66fd1a1bf` | kotlin_learning_rate_0_03 | ok | 0.9881 | 0.9956 | 0.9515 | 3 | [log](out/autocollie/runs/2026-11-06T12-35-43_20261106T123300-filetypes-kotlin_kotlin_learning_rate_0_03.log) |
+| `6a6b03207af7a05c` | kotlin_learning_rate_0_07 | ok | 0.9943 | 0.9973 | 0.9577 | 3 | [log](out/autocollie/runs/2026-11-06T12-35-48_20261106T123300-filetypes-kotlin_kotlin_learning_rate_0_07.log) |
+| `c5ed1a6a9f70d0c0` | kotlin_min_child_samples_50 | ok | 0.9959 | 0.9982 | 0.9478 | 3 | [log](out/autocollie/runs/2026-11-06T12-35-52_20261106T123300-filetypes-kotlin_kotlin_min_child_samples_50.log) |
+| `0a584e244018d87b` | kotlin_min_child_samples_200 | ok | 0.9888 | 0.9961 | 0.9536 | 3 | [log](out/autocollie/runs/2026-11-06T12-35-56_20261106T123300-filetypes-kotlin_kotlin_min_child_samples_200.log) |
+| `9514a270750cbb7d` | kotlin_reg_lambda_2 | ok | 0.9910 | 0.9962 | 0.9247 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-00_20261106T123300-filetypes-kotlin_kotlin_reg_lambda_2.log) |
+| `b078aeee5f8b2b08` | kotlin_reg_alpha_0_5 | ok | 0.9938 | 0.9973 | 0.9236 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-04_20261106T123300-filetypes-kotlin_kotlin_reg_alpha_0_5.log) |
+| `9c2476eef3b5cdda` | kotlin_hard_negative_weight_8 | ok | 0.9940 | 0.9973 | 0.9565 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-08_20261106T123300-filetypes-kotlin_kotlin_hard_negative_weight_8.log) |
+| `b7214c026f1e7271` | kotlin_hard_negative_fraction_0_3 | ok | 0.9936 | 0.9972 | 0.9246 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-12_20261106T123300-filetypes-kotlin_kotlin_hard_negative_fraction_0_3.log) |
+| `bb42a8874af964b0` | kotlin_max_delta_step_2 | ok | 0.9958 | 0.9983 | 0.9435 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-17_20261106T123300-filetypes-kotlin_kotlin_max_delta_step_2.log) |
+| `3683256cba275060` | kotlin_subsample_0_7 | ok | 0.9877 | 0.9946 | 0.9230 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-21_20261106T123300-filetypes-kotlin_kotlin_subsample_0_7.log) |
+| `2c53a8fae7c3a553` | kotlin_colsample_bytree_0_6 | ok | 0.9770 | 0.9907 | 0.8992 | 3 | [log](out/autocollie/runs/2026-11-06T12-36-26_20261106T123300-filetypes-kotlin_kotlin_colsample_bytree_0_6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_num_leaves_160`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing model capacity beyond the 0.8073 L25 recall of num_leaves_128 captures more complex Kotlin malware patterns without overfitting.
+- **`kotlin_num_leaves_192`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Probes the upper bound of tree complexity to see if L25 recall can exceed the 0.8073 plateau observed at 128 leaves.
+- **`kotlin_learning_rate_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces learning rate to 0.03 to allow finer-grained updates, potentially improving the 0.8073 L25 recall by reducing variance in leaf splits.
+- **`kotlin_learning_rate_0_07`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases learning rate to 0.07 to accelerate convergence, testing if faster fitting improves L25 recall over the 0.8073 baseline.
+- **`kotlin_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers min_child_samples to 50 to allow more specific splits, aiming to improve L25 recall beyond 0.8073 by capturing smaller malware subgroups.
+- **`kotlin_min_child_samples_200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Raises min_child_samples to 200 to enforce stronger regularization, testing if reduced noise improves L25 recall stability around the 0.8073 mark.
+- **`kotlin_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases L2 regularization to 2 to penalize large weights, aiming to improve L25 recall by preventing overfitting to noisy benign features.
+- **`kotlin_reg_alpha_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Introduces L1 regularization (0.5) to sparsify the model, testing if feature selection improves L25 recall beyond the 0.8073 baseline.
+- **`kotlin_hard_negative_weight_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adjusts hard negative weight to 8 (between tested 5 and 10) to optimize the balance between benign suppression and malware recall at L25.
+- **`kotlin_hard_negative_fraction_0_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases hard negative fraction to 0.3 to expose the model to more difficult benign cases, aiming to improve L25 recall robustness.
+- **`kotlin_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sets max_delta_step to 2 to allow larger leaf updates, testing if this improves L25 recall over the 0.8073 baseline by enabling faster gradient descent.
+- **`kotlin_subsample_0_7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces row subsampling to 0.7 to increase stochasticity, aiming to improve L25 recall by reducing correlation between trees.
+- **`kotlin_colsample_bytree_0_6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces column subsampling to 0.6 to force diverse feature usage, testing if this improves L25 recall beyond 0.8073 by reducing feature redundancy.
+
+</details>
+

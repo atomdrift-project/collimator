@@ -1198,3 +1198,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T011247-filetypes-xml` — 2026-11-06T01:12:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5dc19859653e19fb` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9580 | 0.9964 | 0.9141 | 16 | [log](out/autocollie/runs/2026-11-06T01-14-52_20261106T011247-filetypes-xml_inherit_from_filetypes_dex_f70ec135.log) |
+| `7ec9a3b54354e9c6` | xml_trait_path_depth_5 | ok | 0.8862 | 0.9588 | 0.8987 | 12 | [log](out/autocollie/runs/2026-11-06T01-15-11_20261106T011247-filetypes-xml_xml_trait_path_depth_5.log) |
+| `ca379aadad14cca2` | xml_trait_path_depth_2 | ok | 0.8795 | 0.9585 | 0.8976 | 6 | [log](out/autocollie/runs/2026-11-06T01-15-24_20261106T011247-filetypes-xml_xml_trait_path_depth_2.log) |
+| `f13151e18f6a7a30` | xml_min_malware_score_2 | ok | 0.7495 | 0.9374 | 0.2819 | 7 | [log](out/autocollie/runs/2026-11-06T01-15-31_20261106T011247-filetypes-xml_xml_min_malware_score_2.log) |
+| `6297dbc27ed4dc7e` | xml_min_malware_score_1 | ok | 0.8885 | 0.9659 | 0.8948 | 7 | [log](out/autocollie/runs/2026-11-06T01-15-39_20261106T011247-filetypes-xml_xml_min_malware_score_1.log) |
+| `c728346af7803bf5` | xml_max_delta_step_2 | ok | 0.8770 | 0.9590 | 0.8760 | 3 | [log](out/autocollie/runs/2026-11-06T01-15-48_20261106T011247-filetypes-xml_xml_max_delta_step_2.log) |
+| `977041393c9697a9` | xml_max_delta_step_10 | ok | 0.8843 | 0.9649 | 0.8904 | 2 | [log](out/autocollie/runs/2026-11-06T01-15-52_20261106T011247-filetypes-xml_xml_max_delta_step_10.log) |
+| `c33193b2ea9bd265` | xml_scale_pos_weight_0.5 | ok | 0.8861 | 0.9690 | 0.8960 | 2 | [log](out/autocollie/runs/2026-11-06T01-15-54_20261106T011247-filetypes-xml_xml_scale_pos_weight_0_5.log) |
+| `4c2a345fe4280148` | xml_scale_pos_weight_2.0 | ok | 0.8813 | 0.9609 | 0.8987 | 2 | [log](out/autocollie/runs/2026-11-06T01-15-57_20261106T011247-filetypes-xml_xml_scale_pos_weight_2_0.log) |
+| `1223e2a74c171d1a` | xml_min_child_samples_50 | ok | 0.8845 | 0.9664 | 0.9008 | 2 | [log](out/autocollie/runs/2026-11-06T01-16-00_20261106T011247-filetypes-xml_xml_min_child_samples_50.log) |
+| `763aa14d9eb4011e` | xml_min_child_samples_200 | ok | 0.8900 | 0.9668 | 0.8933 | 2 | [log](out/autocollie/runs/2026-11-06T01-16-02_20261106T011247-filetypes-xml_xml_min_child_samples_200.log) |
+| `2e07967689433548` | xml_reg_lambda_5 | ok | 0.8872 | 0.9593 | 0.8951 | 2 | [log](out/autocollie/runs/2026-11-06T01-16-05_20261106T011247-filetypes-xml_xml_reg_lambda_5.log) |
+| `35eb7950ead96f27` | xml_num_leaves_64 | ok | 0.8885 | 0.9659 | 0.8948 | 2 | [log](out/autocollie/runs/2026-11-06T01-16-08_20261106T011247-filetypes-xml_xml_num_leaves_64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if deeper finding prefixes (depth 5) improve L25 recall beyond the 0.4093 achieved at depth 4 by capturing more specific XML attack patterns.
+- **`xml_trait_path_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if shallower prefixes (depth 2) improve L25 recall by increasing feature coverage for sparse XML malware, comparing against the depth 4 baseline of 0.4093.
+- **`xml_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering low-severity malware (score < 2) improves L25 recall by reducing noise in class weights, compared to the 0.1005 recall at score 4 and 0.2475 at score 0.
+- **`xml_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering only the lowest severity malware (score < 1) improves L25 recall by retaining more training signal while removing extreme noise, compared to the 0.2475 recall at score 0.
+- **`xml_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if capping leaf outputs (max_delta_step 2) improves L25 recall by stabilizing gradient updates, compared to the 0.0000 recall at step 5 and 0.4093 at step 0.
+- **`xml_max_delta_step_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a higher leaf output cap (max_delta_step 10) improves L25 recall by allowing larger updates, compared to the 0.0000 recall at step 5 and 0.4093 at step 0.
+- **`xml_scale_pos_weight_0.5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if down-weighting the positive class (scale_pos_weight_mult 0.5) improves L25 recall by reducing overfitting to the minority class, compared to the 0.4093 recall at mult 1.0.
+- **`xml_scale_pos_weight_2.0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if up-weighting the positive class (scale_pos_weight_mult 2.0) improves L25 recall by forcing the model to prioritize malware detection, compared to the 0.4093 recall at mult 1.0.
+- **`xml_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing the minimum samples per leaf (min_child_samples 50) improves L25 recall by allowing finer-grained splits on the small malware cohort, compared to the 0.4093 recall at 100.
+- **`xml_min_child_samples_200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing the minimum samples per leaf (min_child_samples 200) improves L25 recall by enforcing stronger regularization against overfitting, compared to the 0.4093 recall at 100.
+- **`xml_reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if stronger L2 regularization (reg_lambda 5) improves L25 recall by smoothing the decision boundary, compared to the 0.4093 recall at lambda 1.
+- **`xml_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing tree complexity (num_leaves 64) improves L25 recall by preventing overfitting to the 408 malware samples, compared to the 0.4093 recall at 96 leaves.
+
+</details>
+

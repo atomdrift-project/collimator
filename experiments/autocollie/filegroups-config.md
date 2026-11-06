@@ -1790,3 +1790,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T133232-filegroups-config` — 2026-11-06T13:32:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c337f1e1a32b5ba3` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.8964 | 0.9193 | 0.8940 | 22 | [log](out/autocollie/runs/2026-11-06T13-35-44_20261106T133232-filegroups-config_inherit_from_filetypes_bmp_71ba0177.log) |
+| `42f5b672d7deb68a` | bmp_transfer_depth4_min_sample_0 | ok | 0.9974 | 0.9988 | 0.9724 | 24 | [log](out/autocollie/runs/2026-11-06T13-36-11_20261106T133232-filegroups-config_bmp_transfer_depth4_min_sample_0.log) |
+| `41b8f8d32a135581` | bmp_transfer_min_child_10_leaves_32 | ok | 0.9738 | 0.9777 | 0.5608 | 23 | [log](out/autocollie/runs/2026-11-06T13-36-36_20261106T133232-filegroups-config_bmp_transfer_min_child_10_leaves_32.log) |
+| `ee881ebdf830ecc0` | bmp_transfer_scale_pos_025 | ok | 0.9773 | 0.9812 | 0.5737 | 5 | [log](out/autocollie/runs/2026-11-06T13-37-01_20261106T133232-filegroups-config_bmp_transfer_scale_pos_025.log) |
+| `bb782b39f5775e0c` | bmp_transfer_max_delta_step_2 | ok | 0.9744 | 0.9805 | 0.8282 | 5 | [log](out/autocollie/runs/2026-11-06T13-37-07_20261106T133232-filegroups-config_bmp_transfer_max_delta_step_2.log) |
+| `4745a4b841fb0576` | kv_vocab_min_freq_10 | ok | 0.9735 | 0.9802 | 0.8764 | 20 | [log](out/autocollie/runs/2026-11-06T13-37-13_20261106T133232-filegroups-config_kv_vocab_min_freq_10.log) |
+| `ad9e94a8cb6df617` | kv_vocab_max_10000 | ok | 0.9735 | 0.9802 | 0.8764 | 19 | [log](out/autocollie/runs/2026-11-06T13-37-34_20261106T133232-filegroups-config_kv_vocab_max_10000.log) |
+| `2292f69398e97acd` | text_metrics_full_enable | ok | 0.9699 | 0.9787 | 0.7306 | 20 | [log](out/autocollie/runs/2026-11-06T13-37-55_20261106T133232-filegroups-config_text_metrics_full_enable.log) |
+| `bd1ee77031f6cce1` | severity_fractions_enable | ok | 0.9791 | 0.9828 | 0.8032 | 19 | [log](out/autocollie/runs/2026-11-06T13-38-16_20261106T133232-filegroups-config_severity_fractions_enable.log) |
+| `223f9a84380a8da7` | min_malware_score_1 | ok | 0.9735 | 0.9802 | 0.8764 | 17 | [log](out/autocollie/runs/2026-11-06T13-38-36_20261106T133232-filegroups-config_min_malware_score_1.log) |
+| `dd7434f326911251` | min_malware_score_2 | ok | 0.9735 | 0.9802 | 0.8764 | 16 | [log](out/autocollie/runs/2026-11-06T13-38-55_20261106T133232-filegroups-config_min_malware_score_2.log) |
+| `e405385e2033d8c1` | learning_rate_003 | ok | 0.9754 | 0.9805 | 0.7567 | 6 | [log](out/autocollie/runs/2026-11-06T13-39-12_20261106T133232-filegroups-config_learning_rate_003.log) |
+| `a711953f581804f0` | seed_search_k3 | ok | 0.9735 | 0.9802 | 0.8764 | 11 | [log](out/autocollie/runs/2026-11-06T13-39-20_20261106T133232-filegroups-config_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`bmp_transfer_depth4_min_sample_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Transfers the 0.9006 recall@1FP settings from the bmp sister route (min_sample_score=0, depth=4) to test if removing low-severity noise and deepening paths improves L25 recall over the 0.8062 baseline.
+- **`bmp_transfer_min_child_10_leaves_32`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests the high-regularization training profile (min_child_samples=10, num_leaves=32, reg_lambda=5) from the bmp/dex sisters to see if tighter trees improve L25 recall on the config corpus.
+- **`bmp_transfer_scale_pos_025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates the scale_pos_weight_mult=0.25 used in high-performing sister routes to determine if down-weighting the positive class reduces FP pressure and improves L25 recall.
+- **`bmp_transfer_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Applies max_delta_step=2 from the bmp/dex sisters to constrain leaf outputs, aiming to stabilize training and improve L25 recall by preventing overfitting to rare config patterns.
+- **`kv_vocab_min_freq_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tightens the KV vocabulary frequency floor to 10 to filter out noisy key-value pairs, aiming to improve L25 recall by reducing feature noise in the config route.
+- **`kv_vocab_max_10000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Expands the KV vocabulary cap to 10000 to capture more distinct config keys, aiming to improve L25 recall by increasing feature coverage for rare but indicative settings.
+- **`text_metrics_full_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables text_metrics_full to expose structural text features (line lengths, entropy) that may distinguish malicious configs, aiming to improve L25 recall via better feature discrimination.
+- **`severity_fractions_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables severity_fractions to provide size-invariant severity distribution features, aiming to improve L25 recall by normalizing for config file size variations.
+- **`min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sets min_malware_score to 1 to drop the lowest severity malware from training, aiming to improve L25 recall by focusing the model on higher-confidence malicious patterns.
+- **`min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sets min_malware_score to 2 to further filter low-severity malware, aiming to improve L25 recall by reducing class imbalance noise in the training set.
+- **`learning_rate_003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces learning rate to 0.03 to allow more gradual convergence, aiming to improve L25 recall by finding a more robust decision boundary for config files.
+- **`seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables seed_search_k=3 to average the best 3 seeds, aiming to improve L25 recall by reducing variance in the model's performance on the config route.
+
+</details>
+

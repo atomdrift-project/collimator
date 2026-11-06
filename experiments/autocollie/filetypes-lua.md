@@ -378,3 +378,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T130555-filetypes-lua` — 2026-11-06T13:05:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f93b4dccf2484fd9` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.7241 | 0.9951 | 0.5333 | 12 | [log](out/autocollie/runs/2026-11-06T13-08-06_20261106T130555-filetypes-lua_inherit_from_filetypes_bmp_71ba0177.log) |
+| `c86077ce0b858e31` | control_depth3_cutoff4 | ok | 0.6936 | 0.9955 | 0.6667 | 7 | [log](out/autocollie/runs/2026-11-06T13-08-21_20261106T130555-filetypes-lua_control_depth3_cutoff4.log) |
+| `afe845b0a19d6045` | depth4_transfer_test | ok | 0.6933 | 0.9953 | 0.6667 | 12 | [log](out/autocollie/runs/2026-11-06T13-08-29_20261106T130555-filetypes-lua_depth4_transfer_test.log) |
+| `20d78daa4a5f676a` | depth5_specificity_test | ok | 0.7303 | 0.9954 | 0.6667 | 12 | [log](out/autocollie/runs/2026-11-06T13-08-42_20261106T130555-filetypes-lua_depth5_specificity_test.log) |
+| `d4f404c53d90b3d7` | cutoff0_recall_gain | ok | 0.7312 | 0.9978 | 0.5714 | 12 | [log](out/autocollie/runs/2026-11-06T13-08-55_20261106T130555-filetypes-lua_cutoff0_recall_gain.log) |
+| `bd0d428ef4cce5f0` | cutoff2_moderate_filter | ok | 0.7312 | 0.9978 | 0.5714 | 7 | [log](out/autocollie/runs/2026-11-06T13-09-08_20261106T130555-filetypes-lua_cutoff2_moderate_filter.log) |
+| `4312f3e272ca0c8c` | seed_search_k3 | ok | 0.6936 | 0.9955 | 0.6667 | 3 | [log](out/autocollie/runs/2026-11-06T13-09-17_20261106T130555-filetypes-lua_seed_search_k3.log) |
+| `d873a8fc5448e101` | hard_negative_transfer | ok | 0.8276 | 0.9946 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-06T13-09-20_20261106T130555-filetypes-lua_hard_negative_transfer.log) |
+| `adbcdb806476f7ea` | scale_pos_weight_2 | ok | 0.6729 | 0.9957 | 0.5714 | 2 | [log](out/autocollie/runs/2026-11-06T13-09-23_20261106T130555-filetypes-lua_scale_pos_weight_2.log) |
+| `846258030dc3024e` | rule_keywords_transfer | ok | 0.7298 | 0.9949 | 0.5714 | 14 | [log](out/autocollie/runs/2026-11-06T13-09-26_20261106T130555-filetypes-lua_rule_keywords_transfer.log) |
+| `21444ad397b42eee` | description_keywords_transfer | ok | 0.7258 | 0.9951 | 0.7500 | 14 | [log](out/autocollie/runs/2026-11-06T13-09-41_20261106T130555-filetypes-lua_description_keywords_transfer.log) |
+| `2610656c6050221f` | max_delta_step_2 | ok | 0.6867 | 0.9878 | 0.5000 | 2 | [log](out/autocollie/runs/2026-11-06T13-09-56_20261106T130555-filetypes-lua_max_delta_step_2.log) |
+| `c6dbebe02f6f0abe` | min_child_samples_50 | ok | 0.7299 | 0.9950 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-06T13-09-59_20261106T130555-filetypes-lua_min_child_samples_50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_depth3_cutoff4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Establishes the baseline L25 recall of 0.5556 (5/9) on the current revision bf7356f2c140 to validate that the trait_path_depth=2 transfer from the previous cycle did not degrade performance relative to the standard depth=3 configuration.
+- **`depth4_transfer_test`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests if increasing trait_path_depth to 4 improves L25 recall beyond the 0.5556 baseline by capturing more specific finding prefixes, reusing the existing feature matrix structure but rebuilding for the new depth.
+- **`depth5_specificity_test`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=5` — Investigates if trait_path_depth=5 further isolates malicious patterns to improve L25 recall from the 0.5556 baseline, checking if deeper hierarchy reduces noise in the small malware cohort.
+- **`cutoff0_recall_gain`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Tests if setting min_malware_score to 0 recovers low-severity malware samples to improve L25 recall from the 0.5556 baseline, addressing the potential loss of signal from the high cutoff in the current configuration.
+- **`cutoff2_moderate_filter`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Evaluates if a moderate min_malware_score of 2 balances noise reduction and recall retention to improve L25 recall from the 0.5556 baseline, potentially capturing more malware than the cutoff=4 setting.
+- **`seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Uses seed_search_k=3 to find a more robust model configuration that improves L25 recall from the 0.5556 baseline by averaging over multiple seeds, mitigating variance in the small malware cohort.
+- **`hard_negative_transfer`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Transfers the hard_negative_fraction=0.2 and weight=5 settings from the mp3 sister route to improve L25 recall from the 0.5556 baseline by better handling benign outliers that mimic malware.
+- **`scale_pos_weight_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_SCALE_POS_WEIGHT_MULT=2 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Tests if increasing scale_pos_weight_mult to 2 improves L25 recall from the 0.5556 baseline by upweighting the minority malware class, similar to the successful mp3 transfer configuration.
+- **`rule_keywords_transfer`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Enables rule_keywords to improve L25 recall from the 0.5556 baseline by leveraging rule ID vocabulary, which showed promise in previous runs with 0.8333 recall on older revisions.
+- **`description_keywords_transfer`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Enables description_keywords to improve L25 recall from the 0.5556 baseline by incorporating trait description vocabulary, testing if textual context aids detection in the lua route.
+- **`max_delta_step_2`** `EXP_MAX_DELTA_STEP=2 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Tests if max_delta_step=2 improves L25 recall from the 0.5556 baseline by allowing larger leaf updates, potentially helping the model fit the small malware cohort better without overfitting.
+- **`min_child_samples_50`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Reduces min_child_samples to 50 to improve L25 recall from the 0.5556 baseline by allowing smaller leaf nodes, which may be necessary to capture the limited number of malware samples in the training set.
+
+</details>
+

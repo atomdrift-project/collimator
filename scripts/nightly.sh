@@ -320,6 +320,11 @@ else
   echo "azoth-publish-train did not deploy — retrain failed, or the regression"
   echo "gate blocked a net-negative build (expected; nothing shipped). Full detail"
   echo "is above, or: journalctl --user -u azoth-nightly.service -b"
+  if [ -f out/models/azoth-last-built/info ]; then
+    echo "Last staged bundle is preserved (survives the next train's clean):"
+    sed 's/^/  /' out/models/azoth-last-built/info
+    echo "Ship it anyway with: make azoth-deploy-last-built AZOTH_ALLOW_REGRESSION=1"
+  fi
 fi
 
 if (( rc == 0 )); then

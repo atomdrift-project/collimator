@@ -933,3 +933,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T134600-filetypes-rtf` — 2026-11-06T13:46:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cbaa166bf2847b81` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.9965 | 0.9885 | 0.9918 | 7 | [log](out/autocollie/runs/2026-11-06T13-48-47_20261106T134600-filetypes-rtf_inherit_from_filetypes_bmp_71ba0177.log) |
+| `197d973cc26109d0` | rtf_depth_4_training_only | ok | 0.9965 | 0.9885 | 0.9918 | 6 | [log](out/autocollie/runs/2026-11-06T13-48-56_20261106T134600-filetypes-rtf_rtf_depth_4_training_only.log) |
+| `1571b5d6f4211f8d` | rtf_depth_5_training_only | ok | 0.9983 | 0.9943 | 0.9931 | 7 | [log](out/autocollie/runs/2026-11-06T13-49-04_20261106T134600-filetypes-rtf_rtf_depth_5_training_only.log) |
+| `33fc7d6e3c441464` | rtf_lr_005_depth_2 | ok | 0.9965 | 0.9886 | 0.9918 | 5 | [log](out/autocollie/runs/2026-11-06T13-49-12_20261106T134600-filetypes-rtf_rtf_lr_005_depth_2.log) |
+| `a28a805d10434361` | rtf_lr_005_depth_3 | ok | 0.9965 | 0.9886 | 0.9918 | 7 | [log](out/autocollie/runs/2026-11-06T13-49-18_20261106T134600-filetypes-rtf_rtf_lr_005_depth_3.log) |
+| `4efd12798cdccbfa` | rtf_min_malware_score_0 | ok | 0.9993 | 0.9969 | 0.9869 | 7 | [log](out/autocollie/runs/2026-11-06T13-49-25_20261106T134600-filetypes-rtf_rtf_min_malware_score_0.log) |
+| `77fb80e62c2f8013` | rtf_min_malware_score_2 | ok | 0.9985 | 0.9949 | 0.9943 | 7 | [log](out/autocollie/runs/2026-11-06T13-49-33_20261106T134600-filetypes-rtf_rtf_min_malware_score_2.log) |
+| `52842d2eec73bf58` | rtf_seed_search_k3 | ok | 0.9965 | 0.9886 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-41_20261106T134600-filetypes-rtf_rtf_seed_search_k3.log) |
+| `d5cf889654a18c35` | rtf_hard_negative_weight_5 | ok | 0.9978 | 0.9924 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-44_20261106T134600-filetypes-rtf_rtf_hard_negative_weight_5.log) |
+| `accf53fdb021c675` | rtf_scale_pos_weight_025 | ok | 0.9975 | 0.9916 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-46_20261106T134600-filetypes-rtf_rtf_scale_pos_weight_025.log) |
+| `5af4e049dccc19a1` | rtf_reg_lambda_2 | ok | 0.9965 | 0.9886 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-49_20261106T134600-filetypes-rtf_rtf_reg_lambda_2.log) |
+| `0b38e51af8d00c34` | rtf_min_child_samples_50 | ok | 0.9965 | 0.9885 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-51_20261106T134600-filetypes-rtf_rtf_min_child_samples_50.log) |
+| `ef6ab2984f6fbf42` | rtf_num_leaves_64 | ok | 0.9965 | 0.9886 | 0.9918 | 2 | [log](out/autocollie/runs/2026-11-06T13-49-54_20261106T134600-filetypes-rtf_rtf_num_leaves_64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_depth_4_training_only`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall over the 0.9899 baseline by capturing more specific finding prefixes without rebuilding the feature matrix.
+- **`rtf_depth_5_training_only`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Evaluates if trait_path_depth 5 further improves L25 recall by isolating deeper hierarchy signals, testing the upper bound of specificity for this route.
+- **`rtf_lr_005_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Re-tests learning_rate 0.05 with trait_path_depth 2 to determine if the higher learning rate from the RAR transfer (0.9899) is superior to the default 0.03 for L25 recall.
+- **`rtf_lr_005_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Combines learning_rate 0.05 with the default trait_path_depth 3 to check if the higher learning rate improves L25 recall on the standard depth configuration.
+- **`rtf_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if removing the min_malware_score=4 filter improves L25 recall by including lower-severity malware in training, countering the potential class weight inflation from the high cutoff.
+- **`rtf_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score to 2 improves L25 recall by including mid-severity malware, finding a balance between noise and signal compared to the current cutoff of 4.
+- **`rtf_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Uses seed_search_k=3 to improve L25 recall by selecting the best-performing seed from three candidates, addressing potential seed instability in the current single-seed configuration.
+- **`rtf_hard_negative_weight_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if hard_negative_weight=5 improves L25 recall by upweighting hard negatives, leveraging the transfer hypothesis from the CHM route which used similar hard negative settings.
+- **`rtf_scale_pos_weight_025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if scale_pos_weight_mult=0.25 improves L25 recall by reducing the positive class weight, potentially improving ranking and reducing false positives on the small benign cohort.
+- **`rtf_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if reg_lambda=2 improves L25 recall by increasing L2 regularization, potentially smoothing the decision boundary to reduce overfitting on the small dataset.
+- **`rtf_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if min_child_samples=50 improves L25 recall by allowing smaller leaf nodes, potentially capturing more granular patterns in the malware class without increasing noise.
+- **`rtf_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Tests if num_leaves=64 improves L25 recall by reducing model complexity, potentially improving generalization and reducing false positives on the small benign cohort.
+
+</details>
+

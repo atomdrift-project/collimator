@@ -1230,3 +1230,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T115651-filetypes-tar` — 2026-11-06T11:56:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ab431975ebd4001e` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.9345 | 0.9727 | 0.8512 | 55 | [log](out/autocollie/runs/2026-11-06T11-58-49_20261106T115651-filetypes-tar_inherit_from_filetypes_bmp_71ba0177.log) |
+| `8d3bc667e0afbcaa` | hard_negative_fraction_0005_weight_20 | ok | 0.9434 | 0.9842 | 0.8467 | 62 | [log](out/autocollie/runs/2026-11-06T11-59-59_20261106T115651-filetypes-tar_hard_negative_fraction_0005_weight_20.log) |
+| `4dd6688eb0d2b0b7` | hard_negative_fraction_0015_weight_18 | ok | 0.9466 | 0.9844 | 0.8452 | 30 | [log](out/autocollie/runs/2026-11-06T12-01-04_20261106T115651-filetypes-tar_hard_negative_fraction_0015_weight_18.log) |
+| `c2992b759240d6af` | hard_negative_fraction_001_weight_20 | ok | 0.9592 | 0.9880 | 0.8619 | 29 | [log](out/autocollie/runs/2026-11-06T12-01-35_20261106T115651-filetypes-tar_hard_negative_fraction_001_weight_20.log) |
+| `592cfada4a242fa8` | hard_negative_fraction_0005_weight_12 | ok | 0.9580 | 0.9864 | 0.8530 | 28 | [log](out/autocollie/runs/2026-11-06T12-02-06_20261106T115651-filetypes-tar_hard_negative_fraction_0005_weight_12.log) |
+| `12278918b2c95b2c` | hard_negative_fraction_0012_weight_16 | ok | 0.9530 | 0.9862 | 0.8716 | 29 | [log](out/autocollie/runs/2026-11-06T12-02-38_20261106T115651-filetypes-tar_hard_negative_fraction_0012_weight_16.log) |
+| `e1a6e0bd73889306` | min_malware_score_2 | ok | 0.9386 | 0.9793 | 0.8417 | 62 | [log](out/autocollie/runs/2026-11-06T12-03-10_20261106T115651-filetypes-tar_min_malware_score_2.log) |
+| `e0bc3de74c738c0b` | min_malware_score_4 | ok | 0.9428 | 0.9759 | 0.8706 | 63 | [log](out/autocollie/runs/2026-11-06T12-04-15_20261106T115651-filetypes-tar_min_malware_score_4.log) |
+| `56933195cbd00153` | trait_path_depth_4 | ok | 0.9583 | 0.9864 | 0.8763 | 63 | [log](out/autocollie/runs/2026-11-06T12-05-21_20261106T115651-filetypes-tar_trait_path_depth_4.log) |
+| `7d1b836e0b77eb87` | trait_path_depth_2 | ok | 0.9550 | 0.9864 | 0.7909 | 62 | [log](out/autocollie/runs/2026-11-06T12-06-27_20261106T115651-filetypes-tar_trait_path_depth_2.log) |
+| `58804e07704494d7` | max_delta_step_2 | ok | 0.9540 | 0.9858 | 0.8708 | 30 | [log](out/autocollie/runs/2026-11-06T12-07-32_20261106T115651-filetypes-tar_max_delta_step_2.log) |
+| `d40acbf5f3ae2f44` | min_child_samples_50 | ok | 0.9609 | 0.9859 | 0.8906 | 31 | [log](out/autocollie/runs/2026-11-06T12-08-05_20261106T115651-filetypes-tar_min_child_samples_50.log) |
+| `0a762f024854e3d9` | seed_search_k3 | ok | 0.9405 | 0.9824 | 0.8438 | 4 | [log](out/autocollie/runs/2026-11-06T12-08-10_20261106T115651-filetypes-tar_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_negative_fraction_0005_weight_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a sharper hard-negative penalty (0.005 fraction, weight 20) to push the L25 recall above the 0.6667 baseline by better separating the few benigns that cause the single FP.
+- **`hard_negative_fraction_0015_weight_18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores a mid-range hard-negative configuration (0.015 fraction, weight 18) to find a better operating point than the 0.6667 recall achieved with 0.02/16.
+- **`hard_negative_fraction_001_weight_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the 0.01 fraction from the 0.6742 run with a higher weight of 20 to see if stronger penalty on hard negatives improves L25 recall beyond 0.6742.
+- **`hard_negative_fraction_0005_weight_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a very low fraction (0.005) with moderate weight (12) to isolate the effect of targeting a smaller subset of benigns for hard-negative upweighting.
+- **`hard_negative_fraction_0012_weight_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Interpolates between the 0.01/12 and 0.02/16 runs to check for a non-linear improvement in L25 recall around the 0.67-0.68 range.
+- **`min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests dropping malware with severity < 2 from training to reduce noise and potentially improve L25 recall by focusing the model on higher-confidence malicious patterns.
+- **`min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a stricter cutoff (severity < 4) to see if removing low-severity malware improves the signal-to-noise ratio and L25 recall, similar to the chm transfer hypothesis.
+- **`trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests increasing trait path depth to 4 to capture more specific finding prefixes, aiming to improve L25 recall by reducing false positives from generic patterns.
+- **`trait_path_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests decreasing trait path depth to 2 to capture broader patterns, checking if less specificity helps recall on the small malware cohort.
+- **`max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests max_delta_step=2 to allow larger leaf updates, potentially improving L25 recall if the current model is underfitting due to constrained step sizes.
+- **`min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces min_child_samples to 50 to allow deeper splits on the small malware class, aiming to improve L25 recall by capturing more specific malicious signatures.
+- **`seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses best-of-3 seed search to mitigate seed instability and find a configuration that consistently achieves higher L25 recall than the single-seed baseline.
+
+</details>
+

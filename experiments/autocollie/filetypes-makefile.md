@@ -932,3 +932,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T131636-filetypes-makefile` — 2026-11-06T13:16:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a127754f80649308` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.1463 | 0.8986 | 0.1062 | 7 | [log](out/autocollie/runs/2026-11-06T13-22-20_20261106T131636-filetypes-makefile_inherit_from_filetypes_bmp_71ba0177.log) |
+| `9e6fe540599f9279` | rule_kw_depth4_min_malware_score_2 | ok | 0.1523 | 0.8179 | 0.1705 | 8 | [log](out/autocollie/runs/2026-11-06T13-22-31_20261106T131636-filetypes-makefile_rule_kw_depth4_min_malware_score_2.log) |
+| `5ca09e1a9a684824` | rule_kw_depth4_min_malware_score_4 | ok | 0.1271 | 0.8618 | 0.1200 | 8 | [log](out/autocollie/runs/2026-11-06T13-22-40_20261106T131636-filetypes-makefile_rule_kw_depth4_min_malware_score_4.log) |
+| `4647348f1c84a0b9` | rule_kw_depth4_seed_search_k3 | ok | 0.1157 | 0.7639 | 0.1263 | 3 | [log](out/autocollie/runs/2026-11-06T13-22-49_20261106T131636-filetypes-makefile_rule_kw_depth4_seed_search_k3.log) |
+| `ed1b2e46b8ac787a` | rule_kw_depth4_max_delta_step_2 | ok | 0.0154 | 0.5354 | 0.0595 | 2 | [log](out/autocollie/runs/2026-11-06T13-22-53_20261106T131636-filetypes-makefile_rule_kw_depth4_max_delta_step_2.log) |
+| `9917fdc2a0fe45f3` | rule_kw_depth4_reg_lambda_2 | ok | 0.1329 | 0.8731 | 0.1081 | 2 | [log](out/autocollie/runs/2026-11-06T13-22-56_20261106T131636-filetypes-makefile_rule_kw_depth4_reg_lambda_2.log) |
+| `64cc647048b96e81` | rule_kw_depth4_min_child_samples_50 | ok | 0.1279 | 0.8732 | 0.1008 | 2 | [log](out/autocollie/runs/2026-11-06T13-22-59_20261106T131636-filetypes-makefile_rule_kw_depth4_min_child_samples_50.log) |
+| `794ba67216f6052c` | rule_kw_depth4_num_leaves_64 | ok | 0.1271 | 0.8618 | 0.1200 | 2 | [log](out/autocollie/runs/2026-11-06T13-23-02_20261106T131636-filetypes-makefile_rule_kw_depth4_num_leaves_64.log) |
+| `43b06cc0cc898922` | rule_kw_depth4_learning_rate_0_03 | ok | 0.1256 | 0.8668 | 0.1111 | 2 | [log](out/autocollie/runs/2026-11-06T13-23-05_20261106T131636-filetypes-makefile_rule_kw_depth4_learning_rate_0_03.log) |
+| `3dbb4ceaa6596ff7` | rule_kw_depth4_hard_neg_0_2_w5 | ok | 0.1174 | 0.7263 | 0.1443 | 2 | [log](out/autocollie/runs/2026-11-06T13-23-08_20261106T131636-filetypes-makefile_rule_kw_depth4_hard_neg_0_2_w5.log) |
+| `01c52e4b7d6478b2` | rule_kw_depth4_spw_0_75 | ok | 0.1323 | 0.8620 | 0.1091 | 2 | [log](out/autocollie/runs/2026-11-06T13-23-11_20261106T131636-filetypes-makefile_rule_kw_depth4_spw_0_75.log) |
+| `5ca09e1a9a684824` | rule_kw_depth4_col_sample_0_8 | dup | 0.1271 | 0.8618 | 0.1200 | 1 | [log](out/autocollie/runs/2026-11-06T13-23-14_20261106T131636-filetypes-makefile_rule_kw_depth4_col_sample_0_8.log) |
+| `5ca09e1a9a684824` | rule_kw_depth4_subsample_0_8 | dup | 0.1271 | 0.8618 | 0.1200 | 1 | [log](out/autocollie/runs/2026-11-06T13-23-17_20261106T131636-filetypes-makefile_rule_kw_depth4_subsample_0_8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rule_kw_depth4_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Tests if filtering low-severity malware from training improves L25 recall@1FP (0.3258) by reducing class weight inflation without dropping evaluation rows.
+- **`rule_kw_depth4_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Investigates if a higher malware severity cutoff (4) further refines training signal to boost L25 recall@1FP beyond the 0.3258 baseline.
+- **`rule_kw_depth4_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses best-of-3 seed search to stabilize L25 recall@1FP (0.3258) against seed variance, potentially capturing a higher recall peak.
+- **`rule_kw_depth4_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Tests if allowing larger leaf outputs (max_delta_step=2) improves L25 recall@1FP (0.3258) by enabling stronger splits in the minority class.
+- **`rule_kw_depth4_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Increases L2 regularization to 2 to reduce overfitting on small malware cohort, aiming to improve L25 recall@1FP (0.3258) via better generalization.
+- **`rule_kw_depth4_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Lowers min_child_samples to 50 to allow finer-grained splits on the small malware set, targeting L25 recall@1FP (0.3258) improvement.
+- **`rule_kw_depth4_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Reduces num_leaves to 64 to constrain model complexity and prevent overfitting, aiming to stabilize L25 recall@1FP (0.3258).
+- **`rule_kw_depth4_learning_rate_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Lowers learning rate to 0.03 to allow more nuanced gradient updates, potentially improving L25 recall@1FP (0.3258) with fixed 250 trees.
+- **`rule_kw_depth4_hard_neg_0_2_w5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Applies hard negative mining (20% benigns, weight 5) to sharpen decision boundary, targeting L25 recall@1FP (0.3258) improvement.
+- **`rule_kw_depth4_spw_0_75`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Reduces positive class weight multiplier to 0.75 to mitigate over-prediction of malware, aiming to improve L25 recall@1FP (0.3258) by reducing FPs.
+- **`rule_kw_depth4_col_sample_0_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CONTEXT_KEYWORDS=0 …` — Applies 80% column subsampling to decorrelate features and reduce variance, targeting L25 recall@1FP (0.3258) improvement.
+- **`rule_kw_depth4_subsample_0_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 EXP_CONTEXT_KEYWORDS=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Applies 80% row subsampling to introduce stochasticity in training, aiming to improve L25 recall@1FP (0.3258) via regularization.
+
+</details>
+

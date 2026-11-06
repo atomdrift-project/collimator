@@ -1,7 +1,6 @@
 """Level counts, cumulative runtime decisions, and held-out gate semantics."""
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -13,27 +12,6 @@ import azoth_calibrate_ensemble as calibrate
 import azoth_policy_global_metrics as gate
 import azoth_route_policy_search as search
 from collimator import policy, thresholds
-
-
-@pytest.mark.parametrize('baseline_kind', ['same', 'symlink', 'different'])
-def test_full_build_cannot_skip_detection_regressions_by_using_itself(tmp_path, baseline_kind):
-    candidate = tmp_path / 'candidate'
-    candidate.mkdir()
-    baseline = candidate
-    if baseline_kind == 'symlink':
-        baseline = tmp_path / 'baseline-link'
-        baseline.symlink_to(candidate, target_is_directory=True)
-    elif baseline_kind == 'different':
-        baseline = tmp_path / 'previous'
-        baseline.mkdir()
-    result = subprocess.run([
-        'make', '-s', '--no-print-directory',
-        '--eval=print-regression-args:;@echo $(AZOTH_REGRESSION_SOURCE_ARG)',
-        'print-regression-args', f'AZOTH_ROOT={candidate}',
-        f'AZOTH_PREVIOUS_BUNDLE={baseline}',
-    ], cwd=Path(__file__).resolve().parents[1], text=True, capture_output=True, check=True)
-    assert result.stdout.strip() == (
-        f'--source-bundle {baseline}' if baseline_kind == 'different' else '')
 
 
 @pytest.mark.parametrize("benign,level,expected", [

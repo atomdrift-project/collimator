@@ -1252,3 +1252,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T113453-filetypes-png` — 2026-11-06T11:34:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `29edc0b1eaae9d19` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.1748 | 0.4961 | 0.1100 | 7 | [log](out/autocollie/runs/2026-11-06T11-37-46_20261106T113453-filetypes-png_inherit_from_filetypes_bmp_71ba0177.log) |
+| `dc8c9b2ae80a167d` | png_hard_neg_001_w10 | ok | 0.6505 | 0.9292 | 0.1157 | 3 | [log](out/autocollie/runs/2026-11-06T11-37-57_20261106T113453-filetypes-png_png_hard_neg_001_w10.log) |
+| `526e556deab5b24d` | png_hard_neg_002_w12 | ok | 0.6261 | 0.9289 | 0.1157 | 1 | [log](out/autocollie/runs/2026-11-06T11-38-01_20261106T113453-filetypes-png_png_hard_neg_002_w12.log) |
+| `248e9e6bfef26671` | png_hard_neg_0005_w16 | ok | 0.6364 | 0.9272 | 0.1157 | 2 | [log](out/autocollie/runs/2026-11-06T11-38-04_20261106T113453-filetypes-png_png_hard_neg_0005_w16.log) |
+| `1118e0a7123a7505` | png_hard_neg_0015_w18 | ok | 0.6258 | 0.9268 | 0.1157 | 1 | [log](out/autocollie/runs/2026-11-06T11-38-07_20261106T113453-filetypes-png_png_hard_neg_0015_w18.log) |
+| `7724945b30c26a0b` | png_hard_neg_001_w20 | ok | 0.6376 | 0.9289 | 0.1157 | 2 | [log](out/autocollie/runs/2026-11-06T11-38-10_20261106T113453-filetypes-png_png_hard_neg_001_w20.log) |
+| `736a0bad30e9d49f` | png_seed_search_k3 | ok | 0.2302 | 0.7202 | 0.1157 | 2 | [log](out/autocollie/runs/2026-11-06T11-38-12_20261106T113453-filetypes-png_png_seed_search_k3.log) |
+| `3a9298e415bd9de2` | png_seed_search_k5 | ok | 0.2302 | 0.7202 | 0.1157 | 2 | [log](out/autocollie/runs/2026-11-06T11-38-15_20261106T113453-filetypes-png_png_seed_search_k5.log) |
+| `50ae4fc05dce693f` | png_min_malware_score_2 | ok | 0.4601 | 0.8872 | 0.1231 | 7 | [log](out/autocollie/runs/2026-11-06T11-38-19_20261106T113453-filetypes-png_png_min_malware_score_2.log) |
+| `03595f6e1ef466c5` | png_min_malware_score_4 | ok | 0.1622 | 0.4821 | 0.1100 | 1 | [log](out/autocollie/runs/2026-11-06T11-38-27_20261106T113453-filetypes-png_png_min_malware_score_4.log) |
+| `f3bb7f31a32d65a2` | png_depth_2 | ok | 0.2651 | 0.6697 | 0.1100 | 4 | [log](out/autocollie/runs/2026-11-06T11-38-29_20261106T113453-filetypes-png_png_depth_2.log) |
+| `42ee816b08594310` | png_depth_4 | ok | 0.1810 | 0.5888 | 0.1100 | 4 | [log](out/autocollie/runs/2026-11-06T11-38-35_20261106T113453-filetypes-png_png_depth_4.log) |
+| `8d62eed4a70be9e3` | png_min_child_samples_50 | ok | 0.1636 | 0.5448 | 0.1100 | 1 | [log](out/autocollie/runs/2026-11-06T11-38-41_20261106T113453-filetypes-png_png_min_child_samples_50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_hard_neg_001_w10`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 with weight 10 to improve L25 recall from 0.7201 by sharpening the decision boundary against the dominant benign tail without over-penalizing.
+- **`png_hard_neg_002_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.02 with weight 12 to improve L25 recall from 0.7201 by increasing the penalty on hard negatives to better separate the 1FP threshold.
+- **`png_hard_neg_0005_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.005 with weight 16 to improve L25 recall from 0.7201 by applying a stronger but sparser hard-negative penalty to refine ranking.
+- **`png_hard_neg_0015_w18`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.015 with weight 18 to improve L25 recall from 0.7201 by balancing hard-negative coverage and penalty strength for optimal threshold placement.
+- **`png_hard_neg_001_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 with weight 20 to improve L25 recall from 0.7201 by maximizing the hard-negative penalty to push benign scores lower.
+- **`png_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests seed_search_k 3 to improve L25 recall from 0.7201 by selecting the best-performing seed from three candidates to reduce variance in the 1FP operating point.
+- **`png_seed_search_k5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=5 EXP_TRAIN_SAMPLES=30000` — Tests seed_search_k 5 to improve L25 recall from 0.7201 by expanding the seed search space to find a more robust model configuration for the 1FP budget.
+- **`png_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests min_malware_score 2 to improve L25 recall from 0.7201 by removing low-severity malware from training to reduce noise and focus on high-confidence patterns.
+- **`png_min_malware_score_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests min_malware_score 4 to improve L25 recall from 0.7201 by strictly filtering training malware to high-severity samples to sharpen the classifier's focus.
+- **`png_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests trait_path_depth 2 to improve L25 recall from 0.7201 by reducing feature specificity to capture broader patterns that may be missed at depth 3.
+- **`png_depth_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests trait_path_depth 4 to improve L25 recall from 0.7201 by increasing feature specificity to capture finer-grained malicious behaviors not visible at depth 3.
+- **`png_min_child_samples_50`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000` — Tests min_child_samples 50 to improve L25 recall from 0.7201 by allowing smaller leaf nodes to capture rare but high-impact malware patterns in the minority class.
+
+</details>
+

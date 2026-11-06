@@ -373,3 +373,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T120815-filetypes-deb` — 2026-11-06T12:08:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0aba0ebc2159ca49` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.2226 | 0.7939 | 0.1818 | 65 | [log](out/autocollie/runs/2026-11-06T12-10-09_20261106T120815-filetypes-deb_inherit_from_filetypes_bmp_71ba0177.log) |
+| `8154c598f3c0da65` | test_min_malware_score_1 | ok | 0.2302 | 0.7661 | 0.1111 | 46 | [log](out/autocollie/runs/2026-11-06T12-11-45_20261106T120815-filetypes-deb_test_min_malware_score_1.log) |
+| `a5e997a4c02de208` | test_min_malware_score_2 | ok | 0.2302 | 0.7661 | 0.1111 | 43 | [log](out/autocollie/runs/2026-11-06T12-12-48_20261106T120815-filetypes-deb_test_min_malware_score_2.log) |
+| `4ebd05e11b416b28` | test_min_malware_score_4 | ok | 0.2302 | 0.7661 | 0.1111 | 43 | [log](out/autocollie/runs/2026-11-06T12-13-39_20261106T120815-filetypes-deb_test_min_malware_score_4.log) |
+| `308b468eca166d70` | test_max_delta_step_2 | ok | 0.1898 | 0.7914 | 0.1132 | 4 | [log](out/autocollie/runs/2026-11-06T12-14-29_20261106T120815-filetypes-deb_test_max_delta_step_2.log) |
+| `a3856be87ede9a9c` | test_max_delta_step_5 | ok | 0.1889 | 0.8496 | 0.1200 | 4 | [log](out/autocollie/runs/2026-11-06T12-14-40_20261106T120815-filetypes-deb_test_max_delta_step_5.log) |
+| `6f51350ad49e08a7` | test_max_delta_step_10 | ok | 0.1874 | 0.8217 | 0.1364 | 4 | [log](out/autocollie/runs/2026-11-06T12-15-06_20261106T120815-filetypes-deb_test_max_delta_step_10.log) |
+| `19c3a86e458df9d5` | test_scale_pos_weight_0.5 | ok | 0.1776 | 0.7484 | 0.1212 | 4 | [log](out/autocollie/runs/2026-11-06T12-15-36_20261106T120815-filetypes-deb_test_scale_pos_weight_0_5.log) |
+| `7e1bcb9268003be2` | test_scale_pos_weight_2.0 | ok | 0.1827 | 0.7540 | 0.0833 | 4 | [log](out/autocollie/runs/2026-11-06T12-16-00_20261106T120815-filetypes-deb_test_scale_pos_weight_2_0.log) |
+| `020ddf940df6f6ac` | test_min_child_samples_50 | ok | 0.2608 | 0.8038 | 0.3158 | 4 | [log](out/autocollie/runs/2026-11-06T12-16-23_20261106T120815-filetypes-deb_test_min_child_samples_50.log) |
+| `37f4bdae3fca99e7` | test_min_child_samples_200 | ok | 0.1999 | 0.7790 | 0.1395 | 4 | [log](out/autocollie/runs/2026-11-06T12-16-42_20261106T120815-filetypes-deb_test_min_child_samples_200.log) |
+| `08fb291ad4aff1d4` | test_reg_lambda_2.0 | ok | 0.2081 | 0.8040 | 0.1714 | 4 | [log](out/autocollie/runs/2026-11-06T12-17-00_20261106T120815-filetypes-deb_test_reg_lambda_2_0.log) |
+| `69b2a241d77d0e8b` | test_seed_search_k3 | ok | 0.3133 | 0.8047 | 0.4000 | 7 | [log](out/autocollie/runs/2026-11-06T12-17-11_20261106T120815-filetypes-deb_test_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Tests if filtering low-severity malware (score 1) improves L25 recall@1FP by reducing class imbalance noise compared to the 0.4000 baseline.
+- **`test_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Evaluates if a stricter malware severity cutoff (score 2) yields higher L25 recall@1FP by focusing training on high-confidence threats.
+- **`test_min_malware_score_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Checks if excluding all but top-severity malware (score 4) improves L25 recall@1FP, addressing potential dilution from low-quality labels.
+- **`test_max_delta_step_2`** `EXP_MAX_DELTA_STEP=2 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Investigates if capping leaf output (max_delta_step=2) stabilizes training and improves L25 recall@1FP over the saturated 0.4000 baseline.
+- **`test_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests a moderate leaf output cap (max_delta_step=5) to see if it allows better gradient flow and improves L25 recall@1FP.
+- **`test_max_delta_step_10`** `EXP_MAX_DELTA_STEP=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Evaluates a higher leaf output cap (max_delta_step=10) to determine if it helps the model fit complex patterns and boost L25 recall@1FP.
+- **`test_scale_pos_weight_0.5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Reduces the positive class weight multiplier to 0.5 to see if down-weighting malware improves precision and L25 recall@1FP.
+- **`test_scale_pos_weight_2.0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=2 EXP_TRAIN_SAMPLES=30000` — Increases the positive class weight multiplier to 2.0 to force the model to prioritize recall, aiming to exceed the 0.4000 L25 baseline.
+- **`test_min_child_samples_50`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000` — Lowers min_child_samples to 50 to allow deeper splits on the small malware cohort, potentially improving L25 recall@1FP.
+- **`test_min_child_samples_200`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_TRAIN_SAMPLES=30000` — Raises min_child_samples to 200 to increase regularization and reduce overfitting, testing if it stabilizes L25 recall@1FP.
+- **`test_reg_lambda_2.0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases L2 regularization to 2.0 to smooth the model and check if it improves generalization and L25 recall@1FP.
+- **`test_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses best-of-3 seed search to find a more robust model configuration, aiming to confirm or exceed the 0.4000 L25 recall@1FP.
+
+</details>
+

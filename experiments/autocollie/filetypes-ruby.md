@@ -381,3 +381,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T132444-filetypes-ruby` — 2026-11-06T13:24:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4e0cd1a1bc222ee8` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.9299 | 0.9951 | 0.8889 | 14 | [log](out/autocollie/runs/2026-11-06T13-26-47_20261106T132444-filetypes-ruby_inherit_from_filetypes_bmp_71ba0177.log) |
+| `f6f6a1d60f64a56a` | depth_2_min_malware_score_1 | ok | 0.9355 | 0.9989 | 0.8974 | 13 | [log](out/autocollie/runs/2026-11-06T13-27-05_20261106T132444-filetypes-ruby_depth_2_min_malware_score_1.log) |
+| `0f56a20070add2e1` | depth_2_min_malware_score_2 | ok | 0.9541 | 0.9985 | 0.8889 | 13 | [log](out/autocollie/runs/2026-11-06T13-27-20_20261106T132444-filetypes-ruby_depth_2_min_malware_score_2.log) |
+| `e8fe34833ed2142a` | depth_2_min_malware_score_4 | ok | 0.9351 | 0.9954 | 0.8675 | 12 | [log](out/autocollie/runs/2026-11-06T13-27-34_20261106T132444-filetypes-ruby_depth_2_min_malware_score_4.log) |
+| `fe8a4050135ba244` | depth_2_seed_search_k3 | ok | 0.9351 | 0.9954 | 0.8675 | 3 | [log](out/autocollie/runs/2026-11-06T13-27-48_20261106T132444-filetypes-ruby_depth_2_seed_search_k3.log) |
+| `14379d19929f238b` | depth_2_seed_search_k5 | ok | 0.9351 | 0.9954 | 0.8675 | 3 | [log](out/autocollie/runs/2026-11-06T13-27-51_20261106T132444-filetypes-ruby_depth_2_seed_search_k5.log) |
+| `51ae284b77a890cc` | depth_2_lr_003 | ok | 0.9343 | 0.9954 | 0.8889 | 2 | [log](out/autocollie/runs/2026-11-06T13-27-56_20261106T132444-filetypes-ruby_depth_2_lr_003.log) |
+| `c1b2491eb92ac6e4` | depth_2_lr_01 | ok | 0.9308 | 0.9802 | 0.8718 | 2 | [log](out/autocollie/runs/2026-11-06T13-27-59_20261106T132444-filetypes-ruby_depth_2_lr_01.log) |
+| `a5dcf186e30ac31e` | depth_2_num_leaves_64 | ok | 0.9351 | 0.9954 | 0.8675 | 2 | [log](out/autocollie/runs/2026-11-06T13-28-02_20261106T132444-filetypes-ruby_depth_2_num_leaves_64.log) |
+| `995141afd29f817c` | depth_2_num_leaves_128 | ok | 0.9351 | 0.9954 | 0.8675 | 2 | [log](out/autocollie/runs/2026-11-06T13-28-05_20261106T132444-filetypes-ruby_depth_2_num_leaves_128.log) |
+| `601e78c72f96a90a` | depth_2_reg_lambda_5 | ok | 0.9373 | 0.9903 | 0.8889 | 2 | [log](out/autocollie/runs/2026-11-06T13-28-08_20261106T132444-filetypes-ruby_depth_2_reg_lambda_5.log) |
+| `a206979beaacffdf` | depth_2_min_child_samples_50 | ok | 0.9350 | 0.9976 | 0.8642 | 2 | [log](out/autocollie/runs/2026-11-06T13-28-12_20261106T132444-filetypes-ruby_depth_2_min_child_samples_50.log) |
+| `66f55b5a9ce1e688` | depth_2_min_child_samples_200 | ok | 0.9376 | 0.9968 | 0.8675 | 2 | [log](out/autocollie/runs/2026-11-06T13-28-15_20261106T132444-filetypes-ruby_depth_2_min_child_samples_200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`depth_2_min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if filtering low-severity malware (score 1) improves L25 recall@1FP over the 0.8947 baseline by reducing class imbalance noise while retaining depth-2 specificity.
+- **`depth_2_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Evaluates a stricter malware severity floor (score 2) to see if removing weaker signals boosts L25 recall@1FP beyond the 0.8947 control by sharpening the positive class definition.
+- **`depth_2_min_malware_score_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Investigates the upper bound of malware severity filtering (score 4) to determine if high-confidence-only training yields higher L25 recall@1FP than the 0.8947 baseline.
+- **`depth_2_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Uses best-of-3 seed search to mitigate variance in the 38-sample malware cohort, aiming to stabilize and potentially exceed the 0.8947 L25 recall@1FP observed in single-seed runs.
+- **`depth_2_seed_search_k5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=5 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Expands seed search to 5 models to further reduce stochastic variance in the small malware set, targeting a robust improvement in L25 recall@1FP over the 0.8947 single-seed result.
+- **`depth_2_lr_003`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests a lower learning rate (0.03) with the fixed 250 estimator budget to allow finer-grained optimization, potentially improving L25 recall@1FP beyond the 0.8947 baseline.
+- **`depth_2_lr_01`** `EXP_LEARNING_RATE=0.1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests a higher learning rate (0.1) to accelerate convergence within the fixed 250 trees, checking if faster boosting improves L25 recall@1FP over the 0.8947 control.
+- **`depth_2_num_leaves_64`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Reduces tree complexity (64 leaves) to prevent overfitting on the small malware cohort, aiming to improve generalization and L25 recall@1FP relative to the 0.8947 baseline.
+- **`depth_2_num_leaves_128`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Increases tree complexity (128 leaves) to capture more complex interactions in the depth-2 features, testing if this boosts L25 recall@1FP beyond the 0.8947 control.
+- **`depth_2_reg_lambda_5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=5 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Applies stronger L2 regularization (5.0) to penalize complex splits, potentially reducing noise sensitivity and improving L25 recall@1FP over the 0.8947 baseline.
+- **`depth_2_min_child_samples_50`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Lowers the minimum child samples (50) to allow deeper splits on the small malware class, testing if this increases L25 recall@1FP beyond the 0.8947 control.
+- **`depth_2_min_child_samples_200`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Raises the minimum child samples (200) to enforce smoother, more generalizable trees, checking if this regularization improves L25 recall@1FP over the 0.8947 baseline.
+
+</details>
+

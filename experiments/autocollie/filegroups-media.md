@@ -1262,3 +1262,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T125435-filegroups-media` — 2026-11-06T12:54:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7b54eb9e2dc7367f` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.1754 | 0.5478 | 0.1748 | 11 | [log](out/autocollie/runs/2026-11-06T12-57-30_20261106T125435-filegroups-media_inherit_from_filetypes_bmp_71ba0177.log) |
+| `421a835967f06b3d` | dex_transfer_depth_4 | ok | 0.5543 | 0.9122 | 0.2556 | 8 | [log](out/autocollie/runs/2026-11-06T12-57-45_20261106T125435-filegroups-media_dex_transfer_depth_4.log) |
+| `4eaa2b47238a019b` | dex_transfer_depth_2 | ok | 0.4394 | 0.8706 | 0.2429 | 5 | [log](out/autocollie/runs/2026-11-06T12-57-55_20261106T125435-filegroups-media_dex_transfer_depth_2.log) |
+| `ca017814983eba45` | dex_transfer_reg_lambda_5 | ok | 0.5141 | 0.9016 | 0.2589 | 5 | [log](out/autocollie/runs/2026-11-06T12-58-01_20261106T125435-filegroups-media_dex_transfer_reg_lambda_5.log) |
+| `75ac23fa99c94715` | dex_transfer_min_child_10 | ok | 0.3842 | 0.8507 | 0.2620 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-07_20261106T125435-filegroups-media_dex_transfer_min_child_10.log) |
+| `03ccc17c86f4d4ee` | dex_transfer_num_leaves_32 | ok | 0.5210 | 0.9065 | 0.2540 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-10_20261106T125435-filegroups-media_dex_transfer_num_leaves_32.log) |
+| `db5e2445f3d1601e` | dex_transfer_spw_025 | ok | 0.3830 | 0.8628 | 0.2340 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-13_20261106T125435-filegroups-media_dex_transfer_spw_025.log) |
+| `f46141b1405d830c` | dex_transfer_hard_neg_off | ok | 0.4020 | 0.8542 | 0.2465 | 1 | [log](out/autocollie/runs/2026-11-06T12-58-16_20261106T125435-filegroups-media_dex_transfer_hard_neg_off.log) |
+| `e19958e4eabc14f0` | min_malware_score_2 | ok | 0.5210 | 0.9065 | 0.2540 | 6 | [log](out/autocollie/runs/2026-11-06T12-58-19_20261106T125435-filegroups-media_min_malware_score_2.log) |
+| `9e899aacdf9e71a2` | min_malware_score_1 | ok | 0.5210 | 0.9065 | 0.2540 | 6 | [log](out/autocollie/runs/2026-11-06T12-58-26_20261106T125435-filegroups-media_min_malware_score_1.log) |
+| `7bdd6e0ec97599d8` | min_malware_score_0 | ok | 0.5210 | 0.9065 | 0.2540 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-33_20261106T125435-filegroups-media_min_malware_score_0.log) |
+| `6182782d0d23679b` | seed_search_k3 | ok | 0.5210 | 0.9065 | 0.2540 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-36_20261106T125435-filegroups-media_seed_search_k3.log) |
+| `0a64b0f10f103798` | learning_rate_003 | ok | 0.4785 | 0.8943 | 0.2551 | 2 | [log](out/autocollie/runs/2026-11-06T12-58-39_20261106T125435-filegroups-media_learning_rate_003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`dex_transfer_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the trait_path_depth=4 setting from the high-performing dex transfer (0.2272 recall) improves L25 recall by capturing more specific finding hierarchies than the current depth 3.
+- **`dex_transfer_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall by generalizing finding prefixes, potentially capturing broader malware patterns missed by the specific depth 3 setting.
+- **`dex_transfer_reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the higher regularization (reg_lambda=5) from the dex transfer improves L25 recall by reducing overfitting to noise in the small malware cohort, complementing the depth changes.
+- **`dex_transfer_min_child_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_child_samples to 10 (from dex transfer) improves L25 recall by allowing the model to fit rarer malware patterns that are currently smoothed out by the higher threshold.
+- **`dex_transfer_num_leaves_32`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 32 (from dex transfer) improves L25 recall by simplifying the model structure, which may help with the small sample size and prevent overfitting.
+- **`dex_transfer_spw_025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the lower scale_pos_weight_mult (0.25) from the dex transfer improves L25 recall by adjusting class imbalance handling, potentially reducing false positives while maintaining recall.
+- **`dex_transfer_hard_neg_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if disabling hard negative weighting (fraction=0, weight=1) from the dex transfer improves L25 recall by removing the potential bias introduced by upweighting specific benign samples.
+- **`min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score to 2 improves L25 recall by including more low-severity malware in training, which may help the model learn broader detection patterns.
+- **`min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_malware_score to 1 improves L25 recall by including even more low-severity malware in training, potentially capturing subtle indicators missed by higher cutoffs.
+- **`min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if setting min_malware_score to 0 improves L25 recall by including all malware in training, ensuring no potentially useful low-severity samples are excluded.
+- **`seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if seed search with k=3 improves L25 recall by selecting the best-performing seed from multiple runs, reducing variance and potentially finding a more robust model configuration.
+- **`learning_rate_003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering learning_rate to 0.03 (from bmp transfer) improves L25 recall by allowing the model to learn more gradually, which may help with the small sample size and improve generalization.
+
+</details>
+

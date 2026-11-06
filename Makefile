@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-backtest azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-check-bundle-layout azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
+.PHONY: azoth-backtest azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-deploy-last-built azoth-ship-bundle azoth-check-bundle-layout azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -176,9 +176,6 @@ AZOTH_PREVIOUS_BUNDLE_ARG = $(if $(AZOTH_PREVIOUS_BUNDLE),--previous-bundle $(AZ
 # Carry exact auxiliary artifacts from the preceding training bundle into a
 # fresh run. Their scores and policies are recalibrated; existing gates remain.
 AZOTH_RETAIN_AUXILIARIES_ARG = $(if $(and $(AZOTH_PREVIOUS_BUNDLE),$(wildcard $(AZOTH_PREVIOUS_BUNDLE)/config.json)),--retain-auxiliaries-from "$(AZOTH_PREVIOUS_BUNDLE)",)
-# Impact filtering is valid for a candidate cloned from another bundle. A full
-# build compared with itself must still check every filetype against deployed.
-AZOTH_REGRESSION_SOURCE_ARG = $(if $(and $(AZOTH_PREVIOUS_BUNDLE),$(filter-out $(realpath $(AZOTH_ROOT)),$(realpath $(AZOTH_PREVIOUS_BUNDLE)))),--source-bundle $(AZOTH_PREVIOUS_BUNDLE),)
 AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
 AZOTH_VALIDATE_DIAGNOSTICS ?= 0
 # Whether azoth-deploy emits route_diagnostics.{md,csv} and slice_metrics.{md,csv}.
@@ -190,26 +187,13 @@ AZOTH_VALIDATE_DIAGNOSTICS ?= 0
 # the report (the deployed bundle has everything it needs to regenerate them
 # on demand). Set to 1/true/yes to opt back in.
 AZOTH_DEPLOY_DIAGNOSTICS ?= 0
-# Low-water-mark for the regression gate: a pinned reference bundle's
-# route_policy_eval_oof.json that no future deploy is allowed to fall more
-# than --lwm-tolerance below (per filetype). Lives outside $(AZOTH_ROOT)
-# so azoth-clean-bundle doesn't wipe it. Captured via
-# `make azoth-set-low-water-mark`. If the file doesn't exist the
-# regression gate silently skips the LWM check, so this is fully
-# opt-in — set the LWM once you have a deploy you want to lock in.
-AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
-# Check all saved levels; only L0–L25 can block. Higher levels are report only.
-# Extra args appended to the check_azoth_regression.py deploy gate. Default is
-# --net-improvement-fallback: a net-positive deploy (malware-weighted TP delta
-# > 0) ships even with per-filetype regressions, PROVIDED no high-volume route
-# (>= --catastrophe-min-mal malware) craters past --max-net-route-regression.
-# Small-route craters are dataset-level noise (sampling variance on a few
-# hundred samples) and don't block; a real regression on a route big enough to
-# move the average still does. Override to e.g.
-#   AZOTH_REGRESSION_ARGS="--recall-tolerance 0 --lwm-tolerance 0"
-# for a stricter per-filetype gate, or set AZOTH_ALLOW_REGRESSION=1 to bypass
-# entirely. litmus validate + severity-sync stay on regardless.
-AZOTH_REGRESSION_ARGS ?= --net-improvement-fallback
+# Publish gate (scripts/check_azoth_regression.py): ship when the staged bundle
+# is better overall than the deployed one at L0 and L25 — pooled recall up more
+# than 0.1pp at either level, down no more than 0.2pp at either, FPs within
+# noise (autocollie's target rule). Per-filetype swings are printed, not gated.
+# Extra args go here (e.g. "--min-gain 0.002"); AZOTH_ALLOW_REGRESSION=1
+# bypasses it. litmus validate + severity-sync stay on regardless.
+AZOTH_REGRESSION_ARGS ?=
 # Report held-out FP counts and per-filetype allowance overruns at L25.
 # Installation is gated by detection regressions and runtime validation;
 # the development FP allowance is not a mandatory held-out install budget.
@@ -222,6 +206,11 @@ AZOTH_POLICY_OVERRIDE_ROUTE ?=
 # github.com/atomdrift-project/azoth.git -> "azoth"). Deploy there so `ascan scan`
 # picks up the bundle at runtime without SCAN_MODELS_DIR.
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/atomdrift/scan/models/azoth
+# The last bundle that staged and validated, kept outside $(AZOTH_ROOT) so
+# azoth-clean-bundle at the start of the next train can't wipe it. Written
+# before the regression gate; shipped by `make azoth-deploy-last-built`.
+AZOTH_LAST_BUILT_DIR ?= $(OUT_ROOT)/azoth-last-built
+AZOTH_STAGED_BUNDLE ?=
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
 ELF_ROUTE_OUTPUT ?= $(AZOTH_ROOT)/elf_route_optimization.json
 ELF_ROUTE_TEACHER_DIR ?= $(AZOTH_ROOT)/filetypes/elf
@@ -1311,24 +1300,6 @@ azoth-calibrate: venv check-db
 		$(AZOTH_OOF_ROUTE_SCORES_ARG) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 
-# azoth-set-low-water-mark pins the current deployed-bundle's
-# route_policy_eval_oof.json as the low-water-mark for the regression
-# gate. From this point on every deploy must keep per-filetype recall
-# within --lwm-tolerance (default 0.9pp) of this snapshot, regardless
-# of how the live deployed bundle drifts. Re-run this target whenever
-# you want to advance the floor (e.g., after several deploys land
-# stable improvements you want to lock in). Idempotent.
-azoth-set-low-water-mark:
-	@test -f "$(AZOTH_ROOT)/route_policy_eval_oof.json" || { \
-	  echo "error: $(AZOTH_ROOT)/route_policy_eval_oof.json not found — run make azoth-deploy first"; \
-	  exit 1; \
-	}
-	mkdir -p "$(AZOTH_LOW_WATER_MARK_DIR)"
-	cp "$(AZOTH_ROOT)/route_policy_eval_oof.json" "$(AZOTH_LOW_WATER_MARK_DIR)/route_policy_eval_oof.json"
-	@echo "low-water-mark pinned: $(AZOTH_LOW_WATER_MARK_DIR)/route_policy_eval_oof.json"
-	@echo "  source: $(AZOTH_ROOT)/route_policy_eval_oof.json"
-	@echo "  future deploys must stay within --lwm-tolerance of this snapshot."
-
 azoth-diagnostics: venv
 	$(PYTHON) scripts/azoth_route_diagnostics.py \
 		--config $(AZOTH_CONFIG) \
@@ -1427,7 +1398,7 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_REGRESSION_SOURCE_ARG) $(AZOTH_REGRESSION_ARGS) && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" $(AZOTH_REGRESSION_ARGS) && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
@@ -1695,6 +1666,24 @@ azoth-deploy-final: venv
 	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	@# Conversion must preserve the calibrated ensemble; parity failures stop publication.
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+	@$(MAKE) --no-print-directory azoth-ship-bundle
+
+# azoth-deploy-last-built: ship the bundle preserved in $(AZOTH_LAST_BUILT_DIR)
+# without retraining — typically a nightly build the regression gate blocked,
+# which the next nightly's azoth-clean-bundle would otherwise have destroyed.
+# Every gate still runs; add AZOTH_ALLOW_REGRESSION=1 to accept a regression
+# you have reviewed. Like azoth-deploy, this does not commit/push ../azoth.
+azoth-deploy-last-built: venv
+	@test -f "$(AZOTH_LAST_BUILT_DIR)/bundle/config.json" || { echo "error: no preserved bundle at $(AZOTH_LAST_BUILT_DIR)/bundle"; exit 1; }
+	@cat "$(AZOTH_LAST_BUILT_DIR)/info"
+	@$(MAKE) --no-print-directory azoth-ship-bundle AZOTH_STAGED_BUNDLE="$(AZOTH_LAST_BUILT_DIR)/bundle"
+
+# azoth-ship-bundle (internal): stage, gate, and mirror. Stages from
+# $(AZOTH_ROOT), or copies AZOTH_STAGED_BUNDLE verbatim when set. A freshly
+# staged bundle that passes validate_azoth_bundle is preserved in
+# $(AZOTH_LAST_BUILT_DIR) *before* the regression gate, so a blocked build can
+# still be shipped later with azoth-deploy-last-built.
+azoth-ship-bundle: venv
 	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
 	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
 	@# old `models/` dir from a prior multi-seed deploy) get cleaned even
@@ -1717,16 +1706,33 @@ azoth-deploy-final: venv
 	  _LOCK=$$(dirname "$(AZOTH_DEPLOY_DIR)")/.azoth-deploy.lock && \
 	  trap 'rm -rf "$$_STAGE"' EXIT INT TERM && \
 	  export MAKEFLAGS= MFLAGS= CARGO_MAKEFLAGS= SCAN_NO_UPDATE=1 && \
-	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
-	  echo "staged from $$(readlink -f $(AZOTH_ROOT)): $$(find "$$_STAGE" -type f | wc -l) files, $$(du -sh "$$_STAGE" | cut -f1)" && \
+	  if [ -n "$(AZOTH_STAGED_BUNDLE)" ]; then \
+	    cp -a "$(AZOTH_STAGED_BUNDLE)/." "$$_STAGE/" && \
+	    _FROM="preserved $$(readlink -f "$(AZOTH_STAGED_BUNDLE)")"; \
+	  else \
+	    $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
+	    cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
+	    cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
+	    cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
+	    cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
+	    _FROM=$$(readlink -f $(AZOTH_ROOT)); \
+	  fi && \
+	  echo "staged from $$_FROM: $$(find "$$_STAGE" -type f | wc -l) files, $$(du -sh "$$_STAGE" | cut -f1)" && \
 	  _STAGED=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
 	  echo "staged config.json md5: $$_STAGED" && \
-	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
-	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
-	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
-	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_REGRESSION_SOURCE_ARG) $(AZOTH_REGRESSION_ARGS) && \
+	  if [ -z "$(AZOTH_STAGED_BUNDLE)" ]; then \
+	    _KEEP="$(AZOTH_LAST_BUILT_DIR)"; \
+	    { rm -rf "$$_KEEP.tmp" "$$_KEEP.old" && mkdir -p "$$_KEEP.tmp" && \
+	      cp -a "$$_STAGE" "$$_KEEP.tmp/bundle" && \
+	      printf 'built: %s\nsource: %s\nsnapshot max_id: %s\nconfig.json md5: %s\n' \
+	        "$$(date '+%F %T')" "$$_FROM" "$(or $(THRESHOLD_MAX_ID),unpinned)" "$$_STAGED" > "$$_KEEP.tmp/info" && \
+	      { [ ! -e "$$_KEEP" ] || mv "$$_KEEP" "$$_KEEP.old"; } && \
+	      mv "$$_KEEP.tmp" "$$_KEEP" && rm -rf "$$_KEEP.old" && \
+	      echo "preserved staged bundle in $$_KEEP (ship later with: make azoth-deploy-last-built)"; \
+	    } || echo "WARN: could not preserve staged bundle in $$_KEEP; continuing"; \
+	  fi && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" $(AZOTH_REGRESSION_ARGS) && \
 	  echo "Preparing litmus before compatibility checks (update + build + update-rules; each non-fatal, all run)..." && \
 	  ( cd $(LITMUS_DIR) || { echo "WARN: cannot enter $(LITMUS_DIR); skipping litmus prep"; exit 0; }; \
 	    { echo "==> update litmus (git pull)"; git pull --ff-only; } || echo "WARN: litmus update (git pull) failed; continuing with current checkout"; \

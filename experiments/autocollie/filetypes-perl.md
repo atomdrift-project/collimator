@@ -404,3 +404,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T130209-filetypes-perl` — 2026-11-06T13:02:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff52875c11a1bace` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.7547 | 0.9888 | 0.8119 | 14 | [log](out/autocollie/runs/2026-11-06T13-04-49_20261106T130209-filetypes-perl_inherit_from_filetypes_bmp_71ba0177.log) |
+| `cbd87ff80f61d264` | perl_desc_kw_balanced_mi | ok | 0.7922 | 0.9938 | 0.6423 | 15 | [log](out/autocollie/runs/2026-11-06T13-05-07_20261106T130209-filetypes-perl_perl_desc_kw_balanced_mi.log) |
+| `3714e05b9ce615f1` | perl_desc_kw_vocab_5k | ok | 0.7922 | 0.9938 | 0.6423 | 15 | [log](out/autocollie/runs/2026-11-06T13-05-23_20261106T130209-filetypes-perl_perl_desc_kw_vocab_5k.log) |
+| `9c6f2f183b98fae0` | perl_desc_kw_min_freq_5 | ok | 0.7922 | 0.9938 | 0.6423 | 14 | [log](out/autocollie/runs/2026-11-06T13-05-39_20261106T130209-filetypes-perl_perl_desc_kw_min_freq_5.log) |
+| `1d4f6d96e597dcc9` | perl_desc_kw_min_freq_20 | ok | 0.7922 | 0.9938 | 0.6423 | 15 | [log](out/autocollie/runs/2026-11-06T13-05-56_20261106T130209-filetypes-perl_perl_desc_kw_min_freq_20.log) |
+| `80d396322f923153` | perl_desc_kw_candidate_50k | ok | 0.7922 | 0.9938 | 0.6423 | 15 | [log](out/autocollie/runs/2026-11-06T13-06-12_20261106T130209-filetypes-perl_perl_desc_kw_candidate_50k.log) |
+| `3d4277c6358b932c` | perl_desc_kw_reg_lambda_5 | ok | 0.7846 | 0.9940 | 0.5811 | 15 | [log](out/autocollie/runs/2026-11-06T13-06-28_20261106T130209-filetypes-perl_perl_desc_kw_reg_lambda_5.log) |
+| `5c868f857dd2a0b6` | perl_desc_kw_min_child_50 | ok | 0.7858 | 0.9926 | 0.6111 | 2 | [log](out/autocollie/runs/2026-11-06T13-06-45_20261106T130209-filetypes-perl_perl_desc_kw_min_child_50.log) |
+| `05a0805007da0076` | perl_desc_kw_lr_003 | ok | 0.7585 | 0.9901 | 0.8119 | 2 | [log](out/autocollie/runs/2026-11-06T13-06-48_20261106T130209-filetypes-perl_perl_desc_kw_lr_003.log) |
+| `513e8890bd8ae1f3` | perl_desc_kw_seed_search_3 | ok | 0.8090 | 0.9935 | 0.5000 | 3 | [log](out/autocollie/runs/2026-11-06T13-06-51_20261106T130209-filetypes-perl_perl_desc_kw_seed_search_3.log) |
+| `577730a01ffed626` | perl_desc_kw_mal_score_2 | ok | 0.8791 | 0.9960 | 0.8772 | 15 | [log](out/autocollie/runs/2026-11-06T13-06-55_20261106T130209-filetypes-perl_perl_desc_kw_mal_score_2.log) |
+| `97bfc3fec573185f` | perl_desc_kw_mal_score_0 | ok | 0.9226 | 0.9982 | 0.8148 | 15 | [log](out/autocollie/runs/2026-11-06T13-07-11_20261106T130209-filetypes-perl_perl_desc_kw_mal_score_0.log) |
+| `069f4b4f873d30a1` | perl_desc_kw_depth_4 | ok | 0.8026 | 0.9950 | 0.5946 | 15 | [log](out/autocollie/runs/2026-11-06T13-07-27_20261106T130209-filetypes-perl_perl_desc_kw_depth_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_desc_kw_balanced_mi`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=balanced_mi EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests if balanced_mi ranking improves L25 recall over the 0.7018 frequency baseline by selecting more discriminative description keywords.
+- **`perl_desc_kw_vocab_5k`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=5000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests if reducing description keyword vocabulary to 5k improves L25 recall by reducing noise compared to the 10k cap in the 0.7018 baseline.
+- **`perl_desc_kw_min_freq_5`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=5 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests if raising description keyword min_freq to 5 improves L25 recall by filtering rare noise terms from the 0.7018 baseline configuration.
+- **`perl_desc_kw_min_freq_20`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=20 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests if raising description keyword min_freq to 20 improves L25 recall by aggressively pruning low-support terms from the 0.7018 baseline.
+- **`perl_desc_kw_candidate_50k`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_CANDIDATE_MAX=50000 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 …` — Tests if expanding keyword candidate bank to 50k improves L25 recall by allowing more rare but potentially discriminative terms to be considered.
+- **`perl_desc_kw_reg_lambda_5`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_REG_LAMBDA=5 …` — Tests if increasing L2 regularization to 5 improves L25 recall by stabilizing the model against overfitting on the 0.7018 baseline features.
+- **`perl_desc_kw_min_child_50`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_MIN_MALWARE_SCORE=4 …` — Tests if reducing min_child_samples to 50 improves L25 recall by allowing deeper splits on the small malware cohort in the 0.7018 baseline.
+- **`perl_desc_kw_lr_003`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.03 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 …` — Tests if lowering learning rate to 0.03 improves L25 recall by refining the decision boundary on the 0.7018 baseline feature set.
+- **`perl_desc_kw_seed_search_3`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_SEED_SEARCH_K=3 …` — Tests if best-of-3 seed search improves L25 recall by mitigating seed instability in the 0.7018 baseline configuration.
+- **`perl_desc_kw_mal_score_2`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests if lowering min_malware_score to 2 improves L25 recall by including lower-severity malware samples in training for the 0.7018 baseline.
+- **`perl_desc_kw_mal_score_0`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if setting min_malware_score to 0 improves L25 recall by using all available malware samples in training for the 0.7018 baseline.
+- **`perl_desc_kw_depth_4`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_KEYWORD_SELECTION=frequency EXP_KEYWORD_VOCAB_MAX=10000 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000 …` — Tests if increasing trait_path_depth to 4 improves L25 recall by capturing more specific finding prefixes in the 0.7018 baseline.
+
+</details>
+

@@ -378,3 +378,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T114620-filegroups-archive` — 2026-11-06T11:46:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c19575b7c51322b0` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.9503 | 0.9304 | 0.8769 | 434 | [log](out/autocollie/runs/2026-11-06T11-49-36_20261106T114620-filegroups-archive_inherit_from_filetypes_bmp_71ba0177.log) |
+| `42dad53471ac01fa` | hard_neg_001_w12 | ok | 0.9570 | 0.9428 | 0.8813 | 86 | [log](out/autocollie/runs/2026-11-06T11-57-23_20261106T114620-filegroups-archive_hard_neg_001_w12.log) |
+| `3288978b6ade61d7` | hard_neg_002_w16 | ok | 0.9626 | 0.9504 | 0.8822 | 30 | [log](out/autocollie/runs/2026-11-06T11-59-32_20261106T114620-filegroups-archive_hard_neg_002_w16.log) |
+| `58fa0da28aac96ed` | hard_neg_0005_w20 | ok | 0.9554 | 0.9400 | 0.8801 | 29 | [log](out/autocollie/runs/2026-11-06T12-00-36_20261106T114620-filegroups-archive_hard_neg_0005_w20.log) |
+| `cb2ae5ec38f23f55` | hard_neg_0015_w18 | ok | 0.9607 | 0.9484 | 0.8824 | 27 | [log](out/autocollie/runs/2026-11-06T12-01-09_20261106T114620-filegroups-archive_hard_neg_0015_w18.log) |
+| `24f967d82c730cf7` | hard_neg_001_w8 | ok | 0.9556 | 0.9394 | 0.8776 | 26 | [log](out/autocollie/runs/2026-11-06T12-01-41_20261106T114620-filegroups-archive_hard_neg_001_w8.log) |
+| `d683b409c841920d` | hard_neg_002_w12 | ok | 0.9592 | 0.9450 | 0.8830 | 28 | [log](out/autocollie/runs/2026-11-06T12-02-11_20261106T114620-filegroups-archive_hard_neg_002_w12.log) |
+| `07fab91c0a096038` | hard_neg_0005_w16 | ok | 0.9566 | 0.9415 | 0.8812 | 28 | [log](out/autocollie/runs/2026-11-06T12-02-43_20261106T114620-filegroups-archive_hard_neg_0005_w16.log) |
+| `6585f121fd9697fe` | hard_neg_001_w20 | ok | 0.9615 | 0.9496 | 0.8821 | 28 | [log](out/autocollie/runs/2026-11-06T12-03-48_20261106T114620-filegroups-archive_hard_neg_001_w20.log) |
+| `3755a5221532125c` | hard_neg_0015_w20 | ok | 0.9654 | 0.9546 | 0.8845 | 28 | [log](out/autocollie/runs/2026-11-06T12-04-54_20261106T114620-filegroups-archive_hard_neg_0015_w20.log) |
+| `ee5e149e29cf69d4` | hard_neg_002_w20 | ok | 0.9571 | 0.9435 | 0.8756 | 28 | [log](out/autocollie/runs/2026-11-06T12-06-00_20261106T114620-filegroups-archive_hard_neg_002_w20.log) |
+| `ff990e3002d5003b` | hard_neg_0005_w12 | ok | 0.9559 | 0.9410 | 0.8767 | 28 | [log](out/autocollie/runs/2026-11-06T12-07-05_20261106T114620-filegroups-archive_hard_neg_0005_w12.log) |
+| `5829e664d091e922` | hard_neg_0015_w8 | ok | 0.9614 | 0.9492 | 0.8828 | 28 | [log](out/autocollie/runs/2026-11-06T12-07-37_20261106T114620-filegroups-archive_hard_neg_0015_w8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_neg_001_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 with weight 12 to improve L25 recall by suppressing the specific benign tail causing the single FP, building on the 0.5318 baseline.
+- **`hard_neg_002_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.02 with weight 16 to improve L25 recall by more aggressively penalizing the hardest benign examples without over-regularizing.
+- **`hard_neg_0005_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.005 with weight 20 to improve L25 recall by applying a very high penalty to a tiny subset of benigns, targeting the specific FP outlier.
+- **`hard_neg_0015_w18`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.015 with weight 18 to improve L25 recall by balancing the fraction of hard negatives against the penalty strength for optimal FP suppression.
+- **`hard_neg_001_w8`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 with weight 8 to improve L25 recall by using a lower penalty to avoid overfitting to the hard negatives while still guiding the threshold.
+- **`hard_neg_002_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.02 with weight 12 to improve L25 recall by increasing the fraction of hard negatives while keeping the penalty moderate to maintain generalization.
+- **`hard_neg_0005_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.005 with weight 16 to improve L25 recall by focusing on a very small set of benigns with a strong penalty to shift the decision boundary.
+- **`hard_neg_001_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.01 with weight 20 to improve L25 recall by applying the maximum allowed penalty to the 1% hardest benigns to maximize separation.
+- **`hard_neg_0015_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.015 with weight 20 to improve L25 recall by combining a larger hard-negative fraction with the maximum penalty for aggressive FP elimination.
+- **`hard_neg_002_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.02 with weight 20 to improve L25 recall by using the largest fraction and highest penalty to see if the model can learn to distinguish the top 2% benigns.
+- **`hard_neg_0005_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.005 with weight 12 to improve L25 recall by using a small fraction with a moderate penalty to avoid overfitting while still addressing the FP tail.
+- **`hard_neg_0015_w8`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard_negative_fraction 0.015 with weight 8 to improve L25 recall by using a larger fraction with a lower penalty to ensure the model doesn't overfit to the hard negatives.
+
+</details>
+

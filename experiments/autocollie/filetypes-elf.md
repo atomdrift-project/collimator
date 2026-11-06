@@ -1896,3 +1896,66 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T013951-filetypes-elf` — 2026-11-06T01:39:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cc80625a67d1e45e` | inherit_from_filetypes_dex_f70ec135 | ok | 0.9999 | 0.9999 | 0.9963 | 72 | [log](out/autocollie/runs/2026-11-06T01-42-30_20261106T013951-filetypes-elf_inherit_from_filetypes_dex_f70ec135.log) |
+
+Rejected before run:
+
+- `elf_depth4_training_only` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth5_training_only` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_reg_lambda_2` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_min_child_50` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_num_leaves_128` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_lr_01` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_spw_05` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_hardneg_04_w10` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_max_delta_10` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_subsample_09` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_col_sample_09` — training.trait_path_depth: unknown knob (not in allowlist)
+- `elf_depth2_seed_search_3` — training.trait_path_depth: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_f70ec135`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=f70ec1359c05e184, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261106T111132-filetypes-elf` — 2026-11-06T11:11:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4061b3ac9d752d33` | inherit_from_filetypes_mp3_3a351dd1 | ok | 0.9999 | 0.9999 | 0.9958 | 72 | [log](out/autocollie/runs/2026-11-06T11-13-49_20261106T111132-filetypes-elf_inherit_from_filetypes_mp3_3a351dd1.log) |
+| `72ca20a78c1329b0` | elf_depth4_min_child_50 | ok | 0.9999 | 0.9999 | 0.9965 | 71 | [log](out/autocollie/runs/2026-11-06T11-15-09_20261106T111132-filetypes-elf_elf_depth4_min_child_50.log) |
+| `751a0c47a8065d00` | elf_depth4_reg_lambda_2 | ok | 0.9999 | 0.9999 | 0.9961 | 21 | [log](out/autocollie/runs/2026-11-06T11-16-22_20261106T111132-filetypes-elf_elf_depth4_reg_lambda_2.log) |
+| `4d92bb13d8331f52` | elf_depth4_num_leaves_64 | ok | 0.9999 | 0.9999 | 0.9962 | 21 | [log](out/autocollie/runs/2026-11-06T11-16-45_20261106T111132-filetypes-elf_elf_depth4_num_leaves_64.log) |
+| `ce40c9370c4d69f1` | elf_depth4_seed_search_3 | ok | 0.9999 | 0.9999 | 0.9962 | 13 | [log](out/autocollie/runs/2026-11-06T11-17-07_20261106T111132-filetypes-elf_elf_depth4_seed_search_3.log) |
+| `ace77abb4bfa77b4` | elf_depth4_lr_01 | ok | 0.9990 | 0.9989 | 0.9923 | 11 | [log](out/autocollie/runs/2026-11-06T11-17-22_20261106T111132-filetypes-elf_elf_depth4_lr_01.log) |
+| `9164f428c0530090` | elf_depth4_max_delta_10 | ok | 0.9999 | 0.9999 | 0.9962 | 13 | [log](out/autocollie/runs/2026-11-06T11-17-35_20261106T111132-filetypes-elf_elf_depth4_max_delta_10.log) |
+| `a89783ddea4be576` | elf_depth4_subsample_09 | ok | 0.9999 | 0.9999 | 0.9962 | 24 | [log](out/autocollie/runs/2026-11-06T11-17-50_20261106T111132-filetypes-elf_elf_depth4_subsample_09.log) |
+| `ab14cbc2b4dba428` | elf_depth4_col_sample_09 | ok | 0.9999 | 0.9999 | 0.9963 | 27 | [log](out/autocollie/runs/2026-11-06T11-18-16_20261106T111132-filetypes-elf_elf_depth4_col_sample_09.log) |
+| `a00a369edf6de782` | elf_depth4_hardneg_04_w10 | ok | 0.9999 | 0.9999 | 0.9970 | 29 | [log](out/autocollie/runs/2026-11-06T11-18-44_20261106T111132-filetypes-elf_elf_depth4_hardneg_04_w10.log) |
+| `9d2458638f385237` | elf_depth4_spw_05 | ok | 0.9999 | 0.9999 | 0.9972 | 27 | [log](out/autocollie/runs/2026-11-06T11-19-15_20261106T111132-filetypes-elf_elf_depth4_spw_05.log) |
+| `78a15bb103c698c9` | elf_depth5_min_child_50 | ok | 0.9998 | 0.9998 | 0.9959 | 65 | [log](out/autocollie/runs/2026-11-06T11-19-44_20261106T111132-filetypes-elf_elf_depth5_min_child_50.log) |
+| `cd9d07d932f38840` | elf_depth4_min_malware_score_1 | ok | 0.9999 | 0.9999 | 0.9962 | 28 | [log](out/autocollie/runs/2026-11-06T11-20-51_20261106T111132-filetypes-elf_elf_depth4_min_malware_score_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_3a351dd1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=3a351dd1ddbcd494, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_depth4_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the depth-4 feature surface from the dex transfer (0.9762) benefits from stronger leaf regularization (min_child_samples 50) to reduce overfitting on the 10k benign cohort, aiming to push L25 recall above 0.9762.
+- **`elf_depth4_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if L2 regularization (reg_lambda 2) stabilizes the depth-4 feature space to improve L25 recall beyond the 0.9762 baseline by preventing noisy splits on rare ELF traits.
+- **`elf_depth4_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces model complexity (num_leaves 64) on the depth-4 surface to see if a simpler tree structure captures the essential ELF malware signals more robustly, targeting L25 recall improvement over 0.9762.
+- **`elf_depth4_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses best-of-3 seed search on the depth-4 configuration to mitigate seed variance and identify a more robust operating point, aiming to secure L25 recall gains above 0.9762.
+- **`elf_depth4_lr_01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a lower learning rate (0.01) with the depth-4 features to allow finer-grained optimization of the decision boundary, potentially improving L25 recall beyond the current 0.9762 ceiling.
+- **`elf_depth4_max_delta_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases max_delta_step to 10 to allow larger leaf updates in the depth-4 space, checking if the model was under-fitting due to step constraints, with the goal of raising L25 recall above 0.9762.
+- **`elf_depth4_subsample_09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Applies row subsampling (0.9) to the depth-4 training process to introduce stochasticity and reduce overfitting to specific benign/malware pairs, aiming to improve L25 recall over 0.9762.
+- **`elf_depth4_col_sample_09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests column subsampling (0.9) on the depth-4 feature set to decorrelate splits and improve generalization, targeting an L25 recall increase above the 0.9762 baseline.
+- **`elf_depth4_hardneg_04_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases hard negative fraction (0.4) and weight (10) on the depth-4 surface to force the model to better distinguish subtle benign ELF variants, aiming to lift L25 recall beyond 0.9762.
+- **`elf_depth4_spw_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adjusts the positive class weight multiplier to 0.5 on the depth-4 configuration to balance the class distribution differently, testing if this improves L25 recall over the 0.9762 mark.
+- **`elf_depth5_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores deeper trait path specificity (depth 5) with strong regularization (min_child_samples 50) to capture more granular ELF malware patterns, aiming to break the 0.9762 L25 recall plateau.
+- **`elf_depth4_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Filters out low-severity malware (min_malware_score 1) from training on the depth-4 surface to reduce noise and class imbalance, targeting an L25 recall improvement above 0.9762.
+
+</details>
+

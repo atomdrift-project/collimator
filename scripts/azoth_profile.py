@@ -135,7 +135,6 @@ def plan(args):
         "AZOTH_PROMOTED_BASELINES": str(ROOT / "out/models/azoth/.autocollie/promoted_baselines.json"),
         "AZOTH_AUTOCOLLIE_RUNS_DIR": str(ROOT / "out/experiments/azoth/runs"),
         "AZOTH_PREVIOUS_BUNDLE": str(ROOT / "out/models/azoth"),
-        "AZOTH_LOW_WATER_MARK_DIR": str(ROOT / "out/models/azoth_low_water_mark"),
     }
     command = ["make", "azoth-publish-train", *(f"{k}={v}" for k, v in variables.items())]
     if args.profiler == "perf":
