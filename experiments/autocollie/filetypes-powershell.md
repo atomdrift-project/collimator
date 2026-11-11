@@ -1299,3 +1299,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T231753-filetypes-powershell` — 2026-11-06T23:17:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `93da140f5cedf8af` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9889 | 0.9888 | 0.9486 | 31 | [log](out/autocollie/runs/2026-11-06T23-20-51_20261106T231753-filetypes-powershell_inherit_from_filetypes_chm_a07a95a3.log) |
+| `b89398f614a4360b` | mp3_winner_depth4 | ok | 0.9959 | 0.9962 | 0.9768 | 28 | [log](out/autocollie/runs/2026-11-06T23-21-26_20261106T231753-filetypes-powershell_mp3_winner_depth4.log) |
+| `3649e3c905c6b84b` | mp3_winner_depth2 | ok | 0.9958 | 0.9962 | 0.9743 | 25 | [log](out/autocollie/runs/2026-11-06T23-21-55_20261106T231753-filetypes-powershell_mp3_winner_depth2.log) |
+| `12fd183d58a86f32` | mp3_winner_kv_vocab | ok | 0.9960 | 0.9964 | 0.9761 | 28 | [log](out/autocollie/runs/2026-11-06T23-22-21_20261106T231753-filetypes-powershell_mp3_winner_kv_vocab.log) |
+| `aeadd7db09accc47` | mp3_winner_text_metrics | ok | 0.9961 | 0.9963 | 0.9761 | 26 | [log](out/autocollie/runs/2026-11-06T23-22-49_20261106T231753-filetypes-powershell_mp3_winner_text_metrics.log) |
+| `d8993e60998b307d` | mp3_winner_severity_fractions | ok | 0.9961 | 0.9964 | 0.9755 | 28 | [log](out/autocollie/runs/2026-11-06T23-23-16_20261106T231753-filetypes-powershell_mp3_winner_severity_fractions.log) |
+| `0056acbb6f51ed6d` | mp3_winner_min_malware_score_2 | ok | 0.9944 | 0.9945 | 0.9628 | 79 | [log](out/autocollie/runs/2026-11-06T23-33-34_20261106T231753-filetypes-powershell_mp3_winner_min_malware_score_2.log) |
+| `5bb159e27243cb61` | mp3_winner_min_malware_score_4 | ok | 0.9927 | 0.9923 | 0.9572 | 64 | [log](out/autocollie/runs/2026-11-06T23-40-54_20261106T231753-filetypes-powershell_mp3_winner_min_malware_score_4.log) |
+| `6add0fbf346ab37d` | mp3_winner_max_delta_step_5 | ok | 0.9964 | 0.9968 | 0.9762 | 29 | [log](out/autocollie/runs/2026-11-06T23-42-24_20261106T231753-filetypes-powershell_mp3_winner_max_delta_step_5.log) |
+| `977a058bc126a42f` | mp3_winner_scale_pos_weight_1 | ok | 0.9964 | 0.9968 | 0.9762 | 8 | [log](out/autocollie/runs/2026-11-06T23-49-27_20261106T231753-filetypes-powershell_mp3_winner_scale_pos_weight_1.log) |
+| `90e1a6222439cf6f` | mp3_winner_min_child_samples_10 | ok | 0.9963 | 0.9967 | 0.9741 | 8 | [log](out/autocollie/runs/2026-11-06T23-50-23_20261106T231753-filetypes-powershell_mp3_winner_min_child_samples_10.log) |
+| `d1cf6c586bed3732` | mp3_winner_num_leaves_16 | ok | 0.9959 | 0.9963 | 0.9754 | 44 | [log](out/autocollie/runs/2026-11-06T23-54-59_20261106T231753-filetypes-powershell_mp3_winner_num_leaves_16.log) |
+| `062fa8e206170b11` | mp3_winner_learning_rate_002 | ok | 0.9955 | 0.9958 | 0.9735 | 161 | [log](out/autocollie/runs/2026-11-07T00-01-31_20261106T231753-filetypes-powershell_mp3_winner_learning_rate_002.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`mp3_winner_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP beyond the 0.8150 baseline by capturing more specific finding prefixes for PowerShell scripts.
+- **`mp3_winner_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall@1FP by generalizing finding prefixes, following the nupkg sister route success with depth 2.
+- **`mp3_winner_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables kv_vocab features to improve L25 recall@1FP by adding key-value pair signals that may distinguish PowerShell obfuscation patterns.
+- **`mp3_winner_text_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables text_metrics_full to improve L25 recall@1FP by adding text structural features relevant to PowerShell script analysis.
+- **`mp3_winner_severity_fractions`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables severity_fractions to improve L25 recall@1FP by adding size-invariant severity distribution features for better malware characterization.
+- **`mp3_winner_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising min_malware_score to 2 improves L25 recall@1FP by filtering low-severity malware from training, reducing noise in class weights.
+- **`mp3_winner_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising min_malware_score to 4 improves L25 recall@1FP by aggressively filtering low-severity malware, following jsp/nupkg sister route settings.
+- **`mp3_winner_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if max_delta_step=5 improves L25 recall@1FP by allowing larger leaf updates, following chm sister route success with max_delta_step=5.
+- **`mp3_winner_scale_pos_weight_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing scale_pos_weight_mult to 1 improves L25 recall@1FP by balancing class weights differently than the 2.0 baseline.
+- **`mp3_winner_min_child_samples_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing min_child_samples to 10 improves L25 recall@1FP by allowing more flexible tree splits, following chm sister route settings.
+- **`mp3_winner_num_leaves_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 16 improves L25 recall@1FP by simplifying trees, following chm sister route success with num_leaves=16.
+- **`mp3_winner_learning_rate_002`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing learning_rate to 0.02 improves L25 recall@1FP by allowing more gradual convergence, following chm sister route settings.
+
+</details>
+

@@ -1170,3 +1170,30 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T172705-filetypes-java_class` — 2026-11-06T17:27:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7955ca99d8c7337f` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.8468 | 0.9249 | 0.8935 | 80 | [log](out/autocollie/runs/2026-11-06T17-33-34_20261106T172705-filetypes-java_class_inherit_from_filetypes_mp3_d29c13e7.log) |
+
+Rejected before run:
+
+- `rule_kw_balanced_mi` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_freq_floor_5` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_vocab_5k` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_candidate_50k` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_depth_4` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_lr_003` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_reg_lambda_05` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_min_child_50` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_seed_search_3` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_hard_neg_0` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_num_leaves_64` — profile.min_malware_training_score: unknown knob (not in allowlist)
+- `rule_kw_subsample_07` — profile.min_malware_training_score: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

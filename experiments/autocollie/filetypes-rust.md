@@ -1318,3 +1318,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T202649-filetypes-rust` — 2026-11-06T20:26:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a3f82d9f6b18f256` | inherit_from_filetypes_jsp_bb6d8dbb | ok | 0.3965 | 0.9800 | 0.1520 | 87 | [log](out/autocollie/runs/2026-11-06T20-32-04_20261106T202649-filetypes-rust_inherit_from_filetypes_jsp_bb6d8dbb.log) |
+| `04060334fa211f9a` | rust_depth4_mcs50 | ok | 0.9706 | 0.9987 | 0.9666 | 84 | [log](out/autocollie/runs/2026-11-06T20-33-54_20261106T202649-filetypes-rust_rust_depth4_mcs50.log) |
+| `74f02bde6fe8b6fd` | rust_depth2_mcs50 | ok | 0.9718 | 0.9984 | 0.9598 | 89 | [log](out/autocollie/runs/2026-11-06T20-35-25_20261106T202649-filetypes-rust_rust_depth2_mcs50.log) |
+| `5bf1a0d47fd37e56` | rust_mcs25_depth3 | ok | 0.9786 | 0.9990 | 0.9708 | 104 | [log](out/autocollie/runs/2026-11-06T20-37-15_20261106T202649-filetypes-rust_rust_mcs25_depth3.log) |
+| `d2417b8d5f8c5773` | rust_reg_lambda05_mcs50 | ok | 0.9779 | 0.9990 | 0.9666 | 35 | [log](out/autocollie/runs/2026-11-06T20-37-58_20261106T202649-filetypes-rust_rust_reg_lambda05_mcs50.log) |
+| `16a56d2df9c5b221` | rust_reg_lambda2_mcs50 | ok | 0.9731 | 0.9987 | 0.9666 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-04_20261106T202649-filetypes-rust_rust_reg_lambda2_mcs50.log) |
+| `242c44942ad46735` | rust_leaves64_mcs50 | ok | 0.9737 | 0.9981 | 0.9666 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-09_20261106T202649-filetypes-rust_rust_leaves64_mcs50.log) |
+| `fe3e47bc39daab7a` | rust_leaves128_mcs50 | ok | 0.9737 | 0.9981 | 0.9666 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-13_20261106T202649-filetypes-rust_rust_leaves128_mcs50.log) |
+| `2c4c34370c4b2cbb` | rust_lr003_mcs50 | ok | 0.9695 | 0.9989 | 0.9623 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-18_20261106T202649-filetypes-rust_rust_lr003_mcs50.log) |
+| `6bc42fc7a9ffffe2` | rust_lr01_mcs50 | ok | 0.9801 | 0.9986 | 0.9666 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-23_20261106T202649-filetypes-rust_rust_lr01_mcs50.log) |
+| `a7176a4768f6bbb0` | rust_mcs50_depth3_control | ok | 0.9737 | 0.9981 | 0.9666 | 3 | [log](out/autocollie/runs/2026-11-06T20-38-27_20261106T202649-filetypes-rust_rust_mcs50_depth3_control.log) |
+| `f5d557948384a7a5` | rust_mcs50_depth3_seed123 | ok | 0.9841 | 0.9993 | 0.9688 | 23 | [log](out/autocollie/runs/2026-11-06T20-38-32_20261106T202649-filetypes-rust_rust_mcs50_depth3_seed123.log) |
+| `2700f780c71f083f` | rust_mcs50_depth3_seed456 | ok | 0.9816 | 0.9992 | 0.8571 | 17 | [log](out/autocollie/runs/2026-11-06T20-38-57_20261106T202649-filetypes-rust_rust_mcs50_depth3_seed456.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_bb6d8dbb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=bb6d8dbbb4d66333, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_depth4_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall over the 0.6486 baseline by capturing more specific finding prefixes, while keeping min_child_samples at 50 to maintain sensitivity.
+- **`rust_depth2_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall by generalizing finding prefixes, potentially capturing broader malware patterns missed by depth 3.
+- **`rust_mcs25_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_child_samples to 25 improves L25 recall by allowing the model to fit smaller malware subgroups, building on the 0.6486 recall at mcs=50.
+- **`rust_reg_lambda05_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing reg_lambda to 0.5 improves L25 recall by allowing more complex tree structures, building on the 0.5991 recall at mcs=100.
+- **`rust_reg_lambda2_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing reg_lambda to 2.0 improves L25 recall by regularizing the model more strongly, potentially reducing overfitting to noisy malware samples.
+- **`rust_leaves64_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 64 improves L25 recall by simplifying the model structure, potentially improving generalization on the small malware cohort.
+- **`rust_leaves128_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing num_leaves to 128 improves L25 recall by allowing more complex decision boundaries, potentially capturing subtle malware features.
+- **`rust_lr003_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering learning_rate to 0.03 improves L25 recall by making the boosting process more stable, potentially improving convergence on the small malware set.
+- **`rust_lr01_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing learning_rate to 0.1 improves L25 recall by accelerating convergence, potentially allowing the model to fit the malware patterns faster within the fixed estimator budget.
+- **`rust_mcs50_depth3_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Re-runs the best historical configuration (depth 3, mcs 50) to establish a stable baseline for comparison against new training hyperparameter variations.
+- **`rust_mcs50_depth3_seed123`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests seed stability of the best configuration by using a different seed (123) to confirm that the 0.6486 recall is not an artifact of seed 43.
+- **`rust_mcs50_depth3_seed456`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests seed stability of the best configuration by using another different seed (456) to further confirm the robustness of the 0.6486 recall result.
+
+</details>
+

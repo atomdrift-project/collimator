@@ -2748,3 +2748,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T211353-filetypes-pdf` — 2026-11-06T21:13:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aae94b24bb8a3081` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9980 | 0.9961 | 0.9931 | 26 | [log](out/autocollie/runs/2026-11-06T21-15-58_20261106T211353-filetypes-pdf_inherit_from_filetypes_chm_a07a95a3.log) |
+| `fd588192a07c8d8f` | pdf_depth4_transfer_from_jsp | ok | 0.9981 | 0.9939 | 0.9881 | 14 | [log](out/autocollie/runs/2026-11-06T21-16-28_20261106T211353-filetypes-pdf_pdf_depth4_transfer_from_jsp.log) |
+| `d35d7b14e07b5a46` | pdf_depth2_transfer_from_nupkg | ok | 0.9986 | 0.9955 | 0.9902 | 13 | [log](out/autocollie/runs/2026-11-06T21-16-45_20261106T211353-filetypes-pdf_pdf_depth2_transfer_from_nupkg.log) |
+| `6054eda059f51de4` | pdf_max_delta_step_5_transfer | ok | 0.9982 | 0.9944 | 0.9890 | 11 | [log](out/autocollie/runs/2026-11-06T21-17-00_20261106T211353-filetypes-pdf_pdf_max_delta_step_5_transfer.log) |
+| `f49e0c388648a545` | pdf_scale_pos_weight_0_25_transfer | ok | 0.9983 | 0.9950 | 0.9895 | 3 | [log](out/autocollie/runs/2026-11-06T21-17-13_20261106T211353-filetypes-pdf_pdf_scale_pos_weight_0_25_transfer.log) |
+| `573fefcc05e3f48d` | pdf_min_child_samples_10_transfer | ok | 0.9988 | 0.9963 | 0.9898 | 3 | [log](out/autocollie/runs/2026-11-06T21-17-18_20261106T211353-filetypes-pdf_pdf_min_child_samples_10_transfer.log) |
+| `73f204a6a9aad640` | pdf_num_leaves_16_transfer | ok | 0.9984 | 0.9949 | 0.9900 | 3 | [log](out/autocollie/runs/2026-11-06T21-17-22_20261106T211353-filetypes-pdf_pdf_num_leaves_16_transfer.log) |
+| `9bfa01f3b73d80d4` | pdf_learning_rate_0_02_transfer | ok | 0.9981 | 0.9941 | 0.9895 | 3 | [log](out/autocollie/runs/2026-11-06T21-17-26_20261106T211353-filetypes-pdf_pdf_learning_rate_0_02_transfer.log) |
+| `a72a706d3b827b26` | pdf_hardneg_frac_0_05_weight_3 | ok | 0.9981 | 0.9940 | 0.9885 | 3 | [log](out/autocollie/runs/2026-11-06T21-17-31_20261106T211353-filetypes-pdf_pdf_hardneg_frac_0_05_weight_3.log) |
+| `e730a8890179ef08` | pdf_kv_vocab_enable | ok | 0.9984 | 0.9949 | 0.9900 | 10 | [log](out/autocollie/runs/2026-11-06T21-17-35_20261106T211353-filetypes-pdf_pdf_kv_vocab_enable.log) |
+| `74af8517b634d2f3` | pdf_text_metrics_full_enable | ok | 0.9984 | 0.9949 | 0.9900 | 9 | [log](out/autocollie/runs/2026-11-06T21-17-47_20261106T211353-filetypes-pdf_pdf_text_metrics_full_enable.log) |
+| `1b2a71b1f6f8485d` | pdf_severity_fractions_enable | ok | 0.9987 | 0.9959 | 0.9894 | 12 | [log](out/autocollie/runs/2026-11-06T21-17-57_20261106T211353-filetypes-pdf_pdf_severity_fractions_enable.log) |
+| `52406b8bc565aa31` | pdf_min_malware_score_1 | ok | 0.9984 | 0.9949 | 0.9900 | 7 | [log](out/autocollie/runs/2026-11-06T21-18-11_20261106T211353-filetypes-pdf_pdf_min_malware_score_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_depth4_transfer_from_jsp`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4, as done in the jsp route, improves L25 recall beyond the 0.9861 baseline by capturing more specific finding hierarchies.
+- **`pdf_depth2_transfer_from_nupkg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if reducing trait_path_depth to 2, similar to the nupkg route, improves L25 recall by generalizing over broader finding prefixes.
+- **`pdf_max_delta_step_5_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if max_delta_step=5, used in chm and markdown routes, improves L25 recall by allowing larger leaf updates to better fit the minority class.
+- **`pdf_scale_pos_weight_0_25_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing scale_pos_weight_mult to 0.25, as in chm/markdown, improves L25 recall by adjusting class balance sensitivity.
+- **`pdf_min_child_samples_10_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if lowering min_child_samples to 10, as in chm, improves L25 recall by allowing deeper splits on smaller subsets of malware.
+- **`pdf_num_leaves_16_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 16, as in chm, improves L25 recall by increasing model regularity and reducing overfitting on noise.
+- **`pdf_learning_rate_0_02_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if lowering learning_rate to 0.02, as in chm, improves L25 recall by taking smaller, more stable gradient steps.
+- **`pdf_hardneg_frac_0_05_weight_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if hard_negative_fraction=0.05 and weight=3, as in chm, improves L25 recall by focusing on a smaller set of difficult benigns.
+- **`pdf_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if enabling kv_vocab features, as in chm/html, improves L25 recall by capturing key-value pair patterns specific to PDF metadata.
+- **`pdf_text_metrics_full_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if enabling text_metrics_full, as in chm/html, improves L25 recall by adding text structural features relevant to PDF content.
+- **`pdf_severity_fractions_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if enabling severity_fractions, as in chm, improves L25 recall by providing size-invariant severity distribution features.
+- **`pdf_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising min_malware_score to 1 improves L25 recall by filtering out low-severity malware that may add noise to training.
+
+</details>
+

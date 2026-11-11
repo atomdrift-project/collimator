@@ -1348,3 +1348,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T165530-filetypes-zip` — 2026-11-06T16:55:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1c33b7875069ac0d` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.9688 | 0.9679 | 0.8354 | 414 | [log](out/autocollie/runs/2026-11-06T16-59-01_20261106T165530-filetypes-zip_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `fb7ba0ff0b448ec5` | zip_dex_transfer_hardneg_0015_w12 | ok | 0.9977 | 0.9975 | 0.9798 | 361 | [log](out/autocollie/runs/2026-11-06T17-06-40_20261106T165530-filetypes-zip_zip_dex_transfer_hardneg_0015_w12.log) |
+| `a2ee9d4dbdb7251d` | zip_dex_transfer_hardneg_002_w8 | ok | 0.9978 | 0.9975 | 0.9805 | 32 | [log](out/autocollie/runs/2026-11-06T17-12-21_20261106T165530-filetypes-zip_zip_dex_transfer_hardneg_002_w8.log) |
+| `4f1e9e33acbcad00` | zip_dex_transfer_hardneg_001_w16 | ok | 0.9978 | 0.9975 | 0.9791 | 30 | [log](out/autocollie/runs/2026-11-06T17-12-56_20261106T165530-filetypes-zip_zip_dex_transfer_hardneg_001_w16.log) |
+| `925d6038f8fc058b` | zip_dex_transfer_hardneg_0012_w20 | ok | 0.9977 | 0.9974 | 0.9788 | 29 | [log](out/autocollie/runs/2026-11-06T17-13-28_20261106T165530-filetypes-zip_zip_dex_transfer_hardneg_0012_w20.log) |
+| `1025b1b1df6a14a8` | zip_dex_transfer_hardneg_0005_w12 | ok | 0.9977 | 0.9975 | 0.9785 | 36 | [log](out/autocollie/runs/2026-11-06T17-14-07_20261106T165530-filetypes-zip_zip_dex_transfer_hardneg_0005_w12.log) |
+| `ac82e81c10f2e444` | zip_dex_transfer_depth3 | ok | 0.9978 | 0.9975 | 0.9783 | 54 | [log](out/autocollie/runs/2026-11-06T17-15-02_20261106T165530-filetypes-zip_zip_dex_transfer_depth3.log) |
+| `035f270e2d3b93c6` | zip_dex_transfer_depth5 | ok | 0.9978 | 0.9976 | 0.9808 | 358 | [log](out/autocollie/runs/2026-11-06T17-15-35_20261106T165530-filetypes-zip_zip_dex_transfer_depth5.log) |
+| `c581277d560fac70` | zip_dex_transfer_lr_003 | ok | 0.9975 | 0.9972 | 0.9774 | 30 | [log](out/autocollie/runs/2026-11-06T17-21-37_20261106T165530-filetypes-zip_zip_dex_transfer_lr_003.log) |
+| `6c3467e2399393d8` | zip_dex_transfer_lr_01 | ok | 0.9979 | 0.9976 | 0.9803 | 29 | [log](out/autocollie/runs/2026-11-06T17-22-09_20261106T165530-filetypes-zip_zip_dex_transfer_lr_01.log) |
+| `41cf1aff0756ec90` | zip_dex_transfer_reg_lambda_1 | ok | 0.9979 | 0.9976 | 0.9813 | 27 | [log](out/autocollie/runs/2026-11-06T17-22-39_20261106T165530-filetypes-zip_zip_dex_transfer_reg_lambda_1.log) |
+| `501dea2ce0f23d52` | zip_dex_transfer_num_leaves_64 | ok | 0.9978 | 0.9975 | 0.9782 | 27 | [log](out/autocollie/runs/2026-11-06T17-23-08_20261106T165530-filetypes-zip_zip_dex_transfer_num_leaves_64.log) |
+| `12e108a8e5950005` | zip_dex_transfer_min_child_50 | ok | 0.9977 | 0.9974 | 0.9805 | 28 | [log](out/autocollie/runs/2026-11-06T17-23-39_20261106T165530-filetypes-zip_zip_dex_transfer_min_child_50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_dex_transfer_hardneg_0015_w12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the dex route's hard-negative tuning (0.015/12) improves L25 recall over the 0.8237 baseline by sharpening the decision boundary without changing features.
+- **`zip_dex_transfer_hardneg_002_w8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores a higher hard-negative fraction (0.02) with lower weight (8) to see if aggressive benign upweighting boosts L25 recall beyond the 0.8237 baseline.
+- **`zip_dex_transfer_hardneg_001_w16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a lower hard-negative fraction (0.01) with higher weight (16) to isolate the effect of weight vs fraction on L25 recall for the dex-inherited config.
+- **`zip_dex_transfer_hardneg_0012_w20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates a mid-range hard-negative fraction (0.012) with maximum weight (20) to check if extreme penalty on hard negatives improves L25 recall.
+- **`zip_dex_transfer_hardneg_0005_w12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a very low hard-negative fraction (0.005) with weight 12 to determine if a smaller subset of hard negatives is sufficient to boost L25 recall.
+- **`zip_dex_transfer_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces trait_path_depth from 4 to 3 to test if less specific prefixes improve L25 recall by capturing broader malware patterns in the dex-inherited config.
+- **`zip_dex_transfer_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases trait_path_depth from 4 to 5 to test if more specific prefixes improve L25 recall by reducing noise in the dex-inherited config.
+- **`zip_dex_transfer_lr_003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers learning rate to 0.03 to test if slower convergence improves L25 recall by allowing finer-grained splits in the dex-inherited config.
+- **`zip_dex_transfer_lr_01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Raises learning rate to 0.1 to test if faster convergence improves L25 recall by capturing dominant patterns more aggressively in the dex-inherited config.
+- **`zip_dex_transfer_reg_lambda_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces reg_lambda from 5 to 1 to test if less regularization improves L25 recall by allowing more complex trees in the dex-inherited config.
+- **`zip_dex_transfer_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves from 32 to 64 to test if more complex trees improve L25 recall by capturing finer interactions in the dex-inherited config.
+- **`zip_dex_transfer_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases min_child_samples from 10 to 50 to test if stronger leaf regularization improves L25 recall by reducing overfitting in the dex-inherited config.
+
+</details>
+

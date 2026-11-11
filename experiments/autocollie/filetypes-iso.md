@@ -47,3 +47,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T194306-filetypes-iso` — 2026-11-06T19:43:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e3eff34c2831f545` | inherit_from_filetypes_nupkg_436c71f9 | ok | 0.9850 | 0.5000 | 0.9924 | 13 | [log](out/autocollie/runs/2026-11-06T19-46-23_20261106T194306-filetypes-iso_inherit_from_filetypes_nupkg_436c71f9.log) |
+| `92b68a7281942aac` | iso_depth2_transfer | ok | 0.9850 | 0.5000 | 0.9924 | 4 | [log](out/autocollie/runs/2026-11-06T19-46-39_20261106T194306-filetypes-iso_iso_depth2_transfer.log) |
+| `6b0bab811b006ebd` | iso_depth4_transfer | ok | 0.9850 | 0.5000 | 0.9924 | 14 | [log](out/autocollie/runs/2026-11-06T19-46-44_20261106T194306-filetypes-iso_iso_depth4_transfer.log) |
+| `404da588a36594ad` | iso_max_delta_step_2 | ok | 0.9850 | 0.5000 | 0.9924 | 13 | [log](out/autocollie/runs/2026-11-06T19-46-59_20261106T194306-filetypes-iso_iso_max_delta_step_2.log) |
+| `b92c3f5711aa3944` | iso_max_delta_step_5 | ok | 0.9850 | 0.5000 | 0.9924 | 3 | [log](out/autocollie/runs/2026-11-06T19-47-13_20261106T194306-filetypes-iso_iso_max_delta_step_5.log) |
+| `990002a00b5242e0` | iso_min_child_samples_10 | ok | 0.9850 | 0.5000 | 0.9924 | 3 | [log](out/autocollie/runs/2026-11-06T19-47-17_20261106T194306-filetypes-iso_iso_min_child_samples_10.log) |
+| `b8315425a5744e3e` | iso_num_leaves_16 | ok | 0.9850 | 0.5000 | 0.9924 | 3 | [log](out/autocollie/runs/2026-11-06T19-47-21_20261106T194306-filetypes-iso_iso_num_leaves_16.log) |
+| `a9c2b3e03e7d30be` | iso_reg_lambda_0_5 | ok | 0.9850 | 0.5000 | 0.9924 | 2 | [log](out/autocollie/runs/2026-11-06T19-47-25_20261106T194306-filetypes-iso_iso_reg_lambda_0_5.log) |
+| `6d47f5a971626962` | iso_scale_pos_weight_0_25 | ok | 0.9850 | 0.5000 | 0.9924 | 2 | [log](out/autocollie/runs/2026-11-06T19-47-28_20261106T194306-filetypes-iso_iso_scale_pos_weight_0_25.log) |
+| `a21b02f84de3dbe7` | iso_hard_negative_0_2 | ok | 0.9850 | 0.5000 | 0.9924 | 3 | [log](out/autocollie/runs/2026-11-06T19-47-31_20261106T194306-filetypes-iso_iso_hard_negative_0_2.log) |
+| `695e979afd041928` | iso_rule_keywords_enabled | ok | 0.9850 | 0.5000 | 0.9924 | 15 | [log](out/autocollie/runs/2026-11-06T19-47-34_20261106T194306-filetypes-iso_iso_rule_keywords_enabled.log) |
+| `aac3f9a7336ddf8f` | iso_text_metrics_full | ok | 0.9850 | 0.5000 | 0.9924 | 13 | [log](out/autocollie/runs/2026-11-06T19-47-50_20261106T194306-filetypes-iso_iso_text_metrics_full.log) |
+| `00152f6e2e93fa1c` | iso_min_malware_score_2 | ok | 0.9850 | 0.5000 | 0.9924 | 12 | [log](out/autocollie/runs/2026-11-06T19-48-04_20261106T194306-filetypes-iso_iso_min_malware_score_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_nupkg_436c71f9`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/nupkg (key=436c71f9e055e055, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`iso_depth2_transfer`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if the trait_path_depth=2 setting from the nupkg route's perfect recall run improves L25 recall by increasing finding-prefix specificity for ISO malware signatures.
+- **`iso_depth4_transfer`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests if the trait_path_depth=4 setting from the tar route's accepted configuration improves L25 recall by capturing more specific hierarchical context in ISO findings.
+- **`iso_max_delta_step_2`** `EXP_MAX_DELTA_STEP=2 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if max_delta_step=2 from the tar and cab routes improves L25 recall by allowing larger leaf outputs to better separate the tiny benign cohort from malware.
+- **`iso_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if max_delta_step=5 from the dmg route improves L25 recall by further relaxing leaf output constraints to capture stronger signal in the high-PR_AUC but zero-recall regime.
+- **`iso_min_child_samples_10`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=10 EXP_TRAIN_SAMPLES=30000` — Tests if min_child_samples=10 from the dmg route improves L25 recall by allowing smaller leaf nodes to fit the sparse benign class more precisely.
+- **`iso_num_leaves_16`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=16 EXP_TRAIN_SAMPLES=30000` — Tests if num_leaves=16 from the dmg route improves L25 recall by reducing model complexity to prevent overfitting on the extremely small benign holdout.
+- **`iso_reg_lambda_0_5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=0.5 EXP_TRAIN_SAMPLES=30000` — Tests if reg_lambda=0.5 from the mp3 route improves L25 recall by reducing L2 regularization to allow the model to fit the distinct malware patterns more aggressively.
+- **`iso_scale_pos_weight_0_25`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_TRAIN_SAMPLES=30000` — Tests if scale_pos_weight_mult=0.25 from the dmg route improves L25 recall by down-weighting the positive class to reduce false positives on the tiny benign set.
+- **`iso_hard_negative_0_2`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if hard_negative_fraction=0.2 from the tar route improves L25 recall by upweighting difficult benign examples to sharpen the decision boundary.
+- **`iso_rule_keywords_enabled`** `EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Tests if enabling rule_keywords from the tar and asar routes improves L25 recall by adding binary rule-ID features that may distinguish ISO malware families.
+- **`iso_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Tests if enabling text_metrics_full from the 7z and dmg routes improves L25 recall by adding text-based features that may capture obfuscation patterns in ISO payloads.
+- **`iso_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests if min_malware_score=2 improves L25 recall by including lower-severity malware in training to provide more diverse positive examples without dropping all signal.
+
+</details>
+

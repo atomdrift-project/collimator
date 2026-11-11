@@ -2628,3 +2628,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T161151-filegroups-documents` — 2026-11-06T16:11:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `99c00dead9ca2ae4` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.9645 | 0.9609 | 0.8672 | 26 | [log](out/autocollie/runs/2026-11-06T16-15-27_20261106T161151-filegroups-documents_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `c9ebc5c8d5e2954a` | test_trait_path_depth_5 | ok | 0.9954 | 0.9952 | 0.9587 | 30 | [log](out/autocollie/runs/2026-11-06T16-15-59_20261106T161151-filegroups-documents_test_trait_path_depth_5.log) |
+| `9b26d7abc477fd26` | test_scale_pos_weight_mult_2 | ok | 0.9940 | 0.9939 | 0.9381 | 23 | [log](out/autocollie/runs/2026-11-06T16-16-31_20261106T161151-filegroups-documents_test_scale_pos_weight_mult_2.log) |
+| `4f86f1bf98969335` | test_min_malware_score_2 | ok | 0.9945 | 0.9944 | 0.9376 | 18 | [log](out/autocollie/runs/2026-11-06T16-16-57_20261106T161151-filegroups-documents_test_min_malware_score_2.log) |
+| `f5b0d915612155d0` | test_min_malware_score_4 | ok | 0.9893 | 0.9894 | 0.8679 | 28 | [log](out/autocollie/runs/2026-11-06T16-17-16_20261106T161151-filegroups-documents_test_min_malware_score_4.log) |
+| `7b51723fde58a77b` | test_max_delta_step_5 | ok | 0.9944 | 0.9943 | 0.9182 | 5 | [log](out/autocollie/runs/2026-11-06T16-17-46_20261106T161151-filegroups-documents_test_max_delta_step_5.log) |
+| `fb3538e2bf50a1f6` | test_max_delta_step_10 | ok | 0.9944 | 0.9943 | 0.9182 | 5 | [log](out/autocollie/runs/2026-11-06T16-17-53_20261106T161151-filegroups-documents_test_max_delta_step_10.log) |
+| `9d7ed7b89c8faa5d` | test_reg_lambda_0_5 | ok | 0.9946 | 0.9944 | 0.9362 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-00_20261106T161151-filegroups-documents_test_reg_lambda_0_5.log) |
+| `55c8459aee5b3571` | test_learning_rate_0_03 | ok | 0.9929 | 0.9928 | 0.9143 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-06_20261106T161151-filegroups-documents_test_learning_rate_0_03.log) |
+| `62b83e3c365a3f5c` | test_min_child_samples_50 | ok | 0.9935 | 0.9933 | 0.9365 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-13_20261106T161151-filegroups-documents_test_min_child_samples_50.log) |
+| `fd2844ff1eb601a5` | test_num_leaves_128 | ok | 0.9945 | 0.9944 | 0.9376 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-19_20261106T161151-filegroups-documents_test_num_leaves_128.log) |
+| `cf00820073fa675a` | test_hard_negative_fraction_0_1 | ok | 0.9946 | 0.9945 | 0.9380 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-26_20261106T161151-filegroups-documents_test_hard_negative_fraction_0_1.log) |
+| `47bec199aebd63a7` | test_hard_negative_weight_10 | ok | 0.9947 | 0.9946 | 0.9351 | 5 | [log](out/autocollie/runs/2026-11-06T16-18-33_20261106T161151-filegroups-documents_test_hard_negative_weight_10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`test_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Extends the trait_path_depth sweep from 4 to 5 to test if deeper finding prefixes improve L25 recall beyond the 0.7168 measured at depth 4.
+- **`test_scale_pos_weight_mult_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Transfers the scale_pos_weight_mult=2 setting from the best historical run (0.8550 recall) to test if higher class weighting improves L25 recall on the current cohort.
+- **`test_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests lowering min_malware_score from 0 to 2 to include lower-severity malware in training, potentially improving L25 recall by increasing training diversity.
+- **`test_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests raising min_malware_score to 4 to filter out low-severity noise from training, potentially improving L25 recall by focusing on high-confidence malware patterns.
+- **`test_max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests max_delta_step=5 to allow larger leaf updates, potentially improving L25 recall by enabling faster convergence on hard-to-learn patterns.
+- **`test_max_delta_step_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests max_delta_step=10 for even larger leaf updates, exploring if aggressive boosting improves L25 recall without overfitting.
+- **`test_reg_lambda_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests reg_lambda=0.5 to reduce L2 regularization, potentially improving L25 recall by allowing more complex models to fit training data better.
+- **`test_learning_rate_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests learning_rate=0.03 for slower boosting, potentially improving L25 recall by reducing variance and improving generalization.
+- **`test_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests min_child_samples=50 to allow smaller leaf nodes, potentially improving L25 recall by capturing more specific patterns in the minority class.
+- **`test_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests num_leaves=128 to increase model complexity, potentially improving L25 recall by allowing more nuanced decision boundaries.
+- **`test_hard_negative_fraction_0_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests hard_negative_fraction=0.1 to reduce the proportion of hard negatives, potentially improving L25 recall by reducing noise in the training signal.
+- **`test_hard_negative_weight_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests hard_negative_weight=10 to increase the penalty for misclassifying hard negatives, potentially improving L25 recall by better separating difficult benign cases.
+
+</details>
+

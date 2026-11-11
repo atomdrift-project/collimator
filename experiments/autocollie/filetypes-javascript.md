@@ -1925,3 +1925,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T212519-filetypes-javascript` — 2026-11-06T21:25:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `95fe2c9ca24d461d` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9951 | 0.9940 | 0.9658 | 266 | [log](out/autocollie/runs/2026-11-06T21-29-55_20261106T212519-filetypes-javascript_inherit_from_filetypes_chm_a07a95a3.log) |
+| `868d4ad537ea3c0b` | js_depth5_rule_kw | ok | 0.9963 | 0.9954 | 0.9707 | 379 | [log](out/autocollie/runs/2026-11-06T21-36-02_20261106T212519-filetypes-javascript_js_depth5_rule_kw.log) |
+| `9377c95614773ffb` | js_depth4_desc_kw | ok | 0.9963 | 0.9954 | 0.9689 | 332 | [log](out/autocollie/runs/2026-11-06T21-43-12_20261106T212519-filetypes-javascript_js_depth4_desc_kw.log) |
+| `c92b0ae86000ed6d` | js_depth4_rule_kw_bal_mi | ok | 0.9959 | 0.9950 | 0.9681 | 355 | [log](out/autocollie/runs/2026-11-06T21-49-12_20261106T212519-filetypes-javascript_js_depth4_rule_kw_bal_mi.log) |
+| `a04b6539aa76b740` | js_depth4_rule_kw_min_freq_1 | ok | 0.9959 | 0.9950 | 0.9681 | 291 | [log](out/autocollie/runs/2026-11-06T21-54-32_20261106T212519-filetypes-javascript_js_depth4_rule_kw_min_freq_1.log) |
+| `d6b27eda1f0765b2` | js_depth4_rule_kw_kv_vocab | ok | 0.9961 | 0.9952 | 0.9671 | 263 | [log](out/autocollie/runs/2026-11-06T21-58-55_20261106T212519-filetypes-javascript_js_depth4_rule_kw_kv_vocab.log) |
+| `02bd72267d269e21` | js_depth4_rule_kw_text_metrics | ok | 0.9961 | 0.9952 | 0.9679 | 293 | [log](out/autocollie/runs/2026-11-06T22-03-55_20261106T212519-filetypes-javascript_js_depth4_rule_kw_text_metrics.log) |
+| `1440ef703dc3ea29` | js_depth4_rule_kw_sev_frac | ok | 0.9963 | 0.9955 | 0.9701 | 252 | [log](out/autocollie/runs/2026-11-06T22-08-09_20261106T212519-filetypes-javascript_js_depth4_rule_kw_sev_frac.log) |
+| `7ad652694951ea43` | js_depth4_rule_kw_lr_01 | ok | 0.9874 | 0.9847 | 0.9127 | 211 | [log](out/autocollie/runs/2026-11-06T22-12-28_20261106T212519-filetypes-javascript_js_depth4_rule_kw_lr_01.log) |
+| `bd5f87cb7ff136aa` | js_depth4_rule_kw_mcs_50 | ok | 0.9958 | 0.9949 | 0.9670 | 132 | [log](out/autocollie/runs/2026-11-06T22-16-00_20261106T212519-filetypes-javascript_js_depth4_rule_kw_mcs_50.log) |
+| `8064b331766fd5ed` | js_depth4_rule_kw_reg_lambda_5 | ok | 0.9957 | 0.9947 | 0.9707 | 24 | [log](out/autocollie/runs/2026-11-06T22-16-28_20261106T212519-filetypes-javascript_js_depth4_rule_kw_reg_lambda_5.log) |
+| `dd303e89ab5e86b1` | js_depth4_rule_kw_hard_neg_05 | ok | 0.9958 | 0.9947 | 0.9698 | 23 | [log](out/autocollie/runs/2026-11-06T22-16-54_20261106T212519-filetypes-javascript_js_depth4_rule_kw_hard_neg_05.log) |
+| `a68a7163db2ea498` | js_depth4_rule_kw_seed_search | ok | 0.9956 | 0.9947 | 0.9669 | 53 | [log](out/autocollie/runs/2026-11-06T22-17-18_20261106T212519-filetypes-javascript_js_depth4_rule_kw_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_depth5_rule_kw`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if deeper trait prefixes (depth 5) capture more specific JS malware patterns to improve L25 recall beyond the 0.8129 baseline.
+- **`js_depth4_desc_kw`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds description keywords to the depth-4 winner to see if trait descriptions provide complementary signal for L25 recall improvement.
+- **`js_depth4_rule_kw_bal_mi`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Switches keyword selection to balanced_mi to potentially select more discriminative rule words, aiming to boost L25 recall over frequency-based selection.
+- **`js_depth4_rule_kw_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers keyword min_freq to 1 to include rarer but potentially high-signal rule words, targeting L25 recall gains from expanded vocabulary.
+- **`js_depth4_rule_kw_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables kv_vocab features alongside depth-4 rule keywords to test if key-value pairs add orthogonal signal for L25 recall.
+- **`js_depth4_rule_kw_text_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables text_metrics_full to capture structural text anomalies in JS files, aiming to improve L25 recall beyond trait-based features.
+- **`js_depth4_rule_kw_sev_frac`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds severity_fractions to provide size-invariant severity distribution signals, potentially improving L25 recall for obfuscated JS.
+- **`js_depth4_rule_kw_lr_01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces learning rate to 0.01 with fixed 250 estimators to allow finer-grained optimization, targeting L25 recall stability and gain.
+- **`js_depth4_rule_kw_mcs_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers min_child_samples to 50 to allow deeper splits on smaller JS malware subsets, aiming to improve L25 recall for rare variants.
+- **`js_depth4_rule_kw_reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases L2 regularization to 5 to reduce overfitting on small JS cohorts, potentially improving L25 recall generalization.
+- **`js_depth4_rule_kw_hard_neg_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces hard_negative_fraction to 0.5 to focus more on true positives, aiming to improve L25 recall by reducing noise from hard negatives.
+- **`js_depth4_rule_kw_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses seed_search_k=3 to average over multiple seeds, reducing variance and potentially improving L25 recall consistency.
+
+</details>
+

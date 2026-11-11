@@ -1290,3 +1290,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T191841-filetypes-plist` — 2026-11-06T19:18:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `078109f90f252d04` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.0332 | 0.2540 | 0.0800 | 5 | [log](out/autocollie/runs/2026-11-06T19-20-40_20261106T191841-filetypes-plist_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `4a7ca6086aa7be46` | plist_rulekw_depth4 | ok | 0.8793 | 0.9996 | 0.6800 | 6 | [log](out/autocollie/runs/2026-11-06T19-20-48_20261106T191841-filetypes-plist_plist_rulekw_depth4.log) |
+| `d9fecc341ea87afc` | plist_rulekw_depth2 | ok | 0.8608 | 0.9995 | 0.7158 | 5 | [log](out/autocollie/runs/2026-11-06T19-20-55_20261106T191841-filetypes-plist_plist_rulekw_depth2.log) |
+| `5d24bb2f50709a49` | plist_rulekw_depth5 | ok | 0.8780 | 0.9996 | 0.7083 | 5 | [log](out/autocollie/runs/2026-11-06T19-21-01_20261106T191841-filetypes-plist_plist_rulekw_depth5.log) |
+| `49d4b69cce57ffe7` | plist_rulekw_mds_50 | ok | 0.8656 | 0.9995 | 0.7391 | 5 | [log](out/autocollie/runs/2026-11-06T19-21-08_20261106T191841-filetypes-plist_plist_rulekw_mds_50.log) |
+| `db382602f13b59fc` | plist_rulekw_mds_200 | ok | 0.8618 | 0.9995 | 0.5812 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-14_20261106T191841-filetypes-plist_plist_rulekw_mds_200.log) |
+| `df07c8a39f3d11be` | plist_rulekw_reg_lambda_0_5 | ok | 0.8799 | 0.9996 | 0.6939 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-18_20261106T191841-filetypes-plist_plist_rulekw_reg_lambda_0_5.log) |
+| `346aa922574b7229` | plist_rulekw_reg_lambda_2 | ok | 0.8717 | 0.9995 | 0.7010 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-22_20261106T191841-filetypes-plist_plist_rulekw_reg_lambda_2.log) |
+| `948e1cb85d0b31de` | plist_rulekw_lr_0_03 | ok | 0.8621 | 0.9995 | 0.6538 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-26_20261106T191841-filetypes-plist_plist_rulekw_lr_0_03.log) |
+| `263137aa90775056` | plist_rulekw_lr_0_1 | ok | 0.8657 | 0.9995 | 0.7391 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-30_20261106T191841-filetypes-plist_plist_rulekw_lr_0_1.log) |
+| `2294e0dba9e281d8` | plist_rulekw_num_leaves_64 | ok | 0.8762 | 0.9996 | 0.5965 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-34_20261106T191841-filetypes-plist_plist_rulekw_num_leaves_64.log) |
+| `6ff61d719831432b` | plist_rulekw_num_leaves_128 | ok | 0.8762 | 0.9996 | 0.5965 | 3 | [log](out/autocollie/runs/2026-11-06T19-21-38_20261106T191841-filetypes-plist_plist_rulekw_num_leaves_128.log) |
+| `037086ed72cfd037` | plist_rulekw_seed_search_3 | ok | 0.8655 | 0.9995 | 0.3696 | 4 | [log](out/autocollie/runs/2026-11-06T19-21-41_20261106T191841-filetypes-plist_plist_rulekw_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_rulekw_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 4 improves L25 recall@1FP (0.5094) by capturing more specific finding prefixes for plist malware.
+- **`plist_rulekw_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing trait_path_depth to 2 improves L25 recall@1FP (0.5094) by generalizing finding prefixes to catch more diverse plist variants.
+- **`plist_rulekw_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 5 improves L25 recall@1FP (0.5094) by isolating highly specific malicious path sequences.
+- **`plist_rulekw_mds_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_child_samples to 50 improves L25 recall@1FP (0.5094) by allowing deeper splits on the small malware cohort.
+- **`plist_rulekw_mds_200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising min_child_samples to 200 improves L25 recall@1FP (0.5094) by regularizing against noise in the small malware set.
+- **`plist_rulekw_reg_lambda_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing reg_lambda to 0.5 improves L25 recall@1FP (0.5094) by allowing more complex trees to fit the minority class.
+- **`plist_rulekw_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing reg_lambda to 2 improves L25 recall@1FP (0.5094) by smoothing leaf values to reduce overfitting to benign noise.
+- **`plist_rulekw_lr_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering learning_rate to 0.03 improves L25 recall@1FP (0.5094) by taking smaller steps to avoid overshooting optimal splits.
+- **`plist_rulekw_lr_0_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising learning_rate to 0.1 improves L25 recall@1FP (0.5094) by accelerating convergence within the fixed 250-tree budget.
+- **`plist_rulekw_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 64 improves L25 recall@1FP (0.5094) by constraining model complexity to prevent overfitting.
+- **`plist_rulekw_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing num_leaves to 128 improves L25 recall@1FP (0.5094) by allowing more complex decision boundaries for malware detection.
+- **`plist_rulekw_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if seed_search_k=3 improves L25 recall@1FP (0.5094) by selecting the best-performing seed from multiple training runs.
+
+</details>
+

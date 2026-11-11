@@ -1826,3 +1826,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261110T113215-filegroups-config` — 2026-11-10T11:32:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc8ea32f6ab010e7` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9818 | 0.9863 | 0.9750 | 23 | [log](out/autocollie/runs/2026-11-10T11-35-30_20261110T113215-filegroups-config_inherit_from_filetypes_chm_a07a95a3.log) |
+| `6ac64aec3ecb71d7` | scale_pos_025_lr_003 | ok | 0.9694 | 0.9784 | 0.7425 | 23 | [log](out/autocollie/runs/2026-11-10T11-35-58_20261110T113215-filegroups-config_scale_pos_025_lr_003.log) |
+| `22cef17de295a628` | scale_pos_025_sev_frac | ok | 0.9810 | 0.9859 | 0.8170 | 19 | [log](out/autocollie/runs/2026-11-10T11-36-23_20261110T113215-filegroups-config_scale_pos_025_sev_frac.log) |
+| `d870f06f7997f0da` | scale_pos_025_depth_2 | ok | 0.9720 | 0.9790 | 0.5373 | 17 | [log](out/autocollie/runs/2026-11-10T11-36-43_20261110T113215-filegroups-config_scale_pos_025_depth_2.log) |
+| `a78f01161af383e2` | scale_pos_025_depth_4 | ok | 0.9735 | 0.9817 | 0.7220 | 21 | [log](out/autocollie/runs/2026-11-10T11-37-01_20261110T113215-filegroups-config_scale_pos_025_depth_4.log) |
+| `f12d177c47fa2452` | scale_pos_025_max_delta_2 | ok | 0.9728 | 0.9811 | 0.5971 | 5 | [log](out/autocollie/runs/2026-11-10T11-37-24_20261110T113215-filegroups-config_scale_pos_025_max_delta_2.log) |
+| `f327eba41e7809b9` | scale_pos_025_min_child_10 | ok | 0.9754 | 0.9813 | 0.5267 | 6 | [log](out/autocollie/runs/2026-11-10T11-37-31_20261110T113215-filegroups-config_scale_pos_025_min_child_10.log) |
+| `06ea0a1f0e6272c1` | scale_pos_025_leaves_16 | ok | 0.9015 | 0.9315 | 0.8915 | 4 | [log](out/autocollie/runs/2026-11-10T11-37-38_20261110T113215-filegroups-config_scale_pos_025_leaves_16.log) |
+| `0f9e9d1b400ea074` | scale_pos_025_reg_lambda_5 | ok | 0.9706 | 0.9801 | 0.7584 | 5 | [log](out/autocollie/runs/2026-11-10T11-37-44_20261110T113215-filegroups-config_scale_pos_025_reg_lambda_5.log) |
+| `5d280a34e1226a69` | scale_pos_025_seed_search_3 | ok | 0.9744 | 0.9816 | 0.5665 | 13 | [log](out/autocollie/runs/2026-11-10T11-37-50_20261110T113215-filegroups-config_scale_pos_025_seed_search_3.log) |
+| `74ec99ea95e0eb26` | scale_pos_025_hard_neg_0 | ok | 0.9736 | 0.9831 | 0.6879 | 3 | [log](out/autocollie/runs/2026-11-10T11-38-04_20261110T113215-filegroups-config_scale_pos_025_hard_neg_0.log) |
+| `ada7d21b3581429f` | scale_pos_025_subsample_06 | ok | 0.9647 | 0.9782 | 0.7890 | 5 | [log](out/autocollie/runs/2026-11-10T11-38-09_20261110T113215-filegroups-config_scale_pos_025_subsample_06.log) |
+| `9cbf84db8e28ac6f` | scale_pos_025_col_sample_06 | ok | 0.9743 | 0.9819 | 0.7772 | 7 | [log](out/autocollie/runs/2026-11-10T11-38-16_20261110T113215-filegroups-config_scale_pos_025_col_sample_06.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scale_pos_025_lr_003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the best measured recall (0.8385) from scale_pos_weight_mult=0.25 with the best PR_AUC (0.9754) from learning_rate=0.03 to improve L25 recall beyond 0.8385.
+- **`scale_pos_025_sev_frac`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the severity_fractions feature gain (0.8260) is additive to the scale_pos_weight_mult=0.25 gain (0.8385) to push L25 recall higher.
+- **`scale_pos_025_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if reducing trait_path_depth to 2 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if increasing trait_path_depth to 4 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_max_delta_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if max_delta_step=2 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_min_child_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing min_child_samples to 10 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_leaves_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 16 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing reg_lambda to 5 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if seed_search_k=3 improves L25 recall stability and value when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_hard_neg_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if disabling hard negatives (fraction=0) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_subsample_06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing subsample to 0.6 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+- **`scale_pos_025_col_sample_06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing colsample_bytree to 0.6 (sister route hypothesis) improves L25 recall when combined with the effective scale_pos_weight_mult=0.25 setting.
+
+</details>
+

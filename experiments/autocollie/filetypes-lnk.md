@@ -1064,3 +1064,76 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T164228-filetypes-lnk` — 2026-11-06T16:42:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fff9362f1038cb31` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.9903 | 0.9634 | 0.8980 | 7 | [log](out/autocollie/runs/2026-11-06T16-44-12_20261106T164228-filetypes-lnk_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `171f93daf023d477` | lnk_dex_transfer_depth5 | ok | 0.9939 | 0.9782 | 0.8986 | 8 | [log](out/autocollie/runs/2026-11-06T16-44-21_20261106T164228-filetypes-lnk_lnk_dex_transfer_depth5.log) |
+| `ae33d0c85e0c0a32` | lnk_dex_transfer_depth3 | ok | 0.9950 | 0.9820 | 0.8984 | 7 | [log](out/autocollie/runs/2026-11-06T16-44-30_20261106T164228-filetypes-lnk_lnk_dex_transfer_depth3.log) |
+| `e0216b9db67caa0e` | lnk_dex_transfer_lr003 | ok | 0.9968 | 0.9889 | 0.9773 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-38_20261106T164228-filetypes-lnk_lnk_dex_transfer_lr003.log) |
+| `7c83863f60c8bdbc` | lnk_dex_transfer_lr007 | ok | 0.9979 | 0.9930 | 0.9814 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-41_20261106T164228-filetypes-lnk_lnk_dex_transfer_lr007.log) |
+| `aca74d407fd36686` | lnk_dex_transfer_leaves64 | ok | 0.9950 | 0.9820 | 0.8984 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-44_20261106T164228-filetypes-lnk_lnk_dex_transfer_leaves64.log) |
+| `9c6cc95a710af872` | lnk_dex_transfer_leaves16 | ok | 0.9950 | 0.9820 | 0.8984 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-47_20261106T164228-filetypes-lnk_lnk_dex_transfer_leaves16.log) |
+| `ae33d0c85e0c0a32` | lnk_dex_transfer_reg_lambda1 | dup | 0.9950 | 0.9820 | 0.8984 | 1 | [log](out/autocollie/runs/2026-11-06T16-44-49_20261106T164228-filetypes-lnk_lnk_dex_transfer_reg_lambda1.log) |
+| `501ad6d02f981c7f` | lnk_dex_transfer_mcs50 | ok | 0.9973 | 0.9905 | 0.9790 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-52_20261106T164228-filetypes-lnk_lnk_dex_transfer_mcs50.log) |
+| `9d56e4d7198b2a01` | lnk_dex_transfer_mds10 | ok | 0.9950 | 0.9820 | 0.8984 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-54_20261106T164228-filetypes-lnk_lnk_dex_transfer_mds10.log) |
+| `acd4e5a07e2785b2` | lnk_dex_transfer_mds14 | ok | 0.9950 | 0.9820 | 0.8984 | 2 | [log](out/autocollie/runs/2026-11-06T16-44-57_20261106T164228-filetypes-lnk_lnk_dex_transfer_mds14.log) |
+
+Rejected before run:
+
+- `lnk_dex_transfer_reg_lambda10` — training.reg_lambda: 10 above max 5
+- `lnk_dex_transfer_mcs5` — training.min_child_samples: 5 below min 10
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_dex_transfer_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if increasing trait_path_depth to 5 improves L25 recall beyond the 0.9459 achieved at depth 4 by capturing more specific finding prefixes.
+- **`lnk_dex_transfer_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Verifies if depth 3 offers a better trade-off than depth 4 for L25 recall, given the 0.9380 historical result on a slightly older cohort.
+- **`lnk_dex_transfer_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if a lower learning rate of 0.03 improves L25 recall by allowing finer-grained updates with the fixed 250 estimator budget.
+- **`lnk_dex_transfer_lr007`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if a higher learning rate of 0.07 improves L25 recall by accelerating convergence within the fixed 250 estimator budget.
+- **`lnk_dex_transfer_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if increasing num_leaves to 64 improves L25 recall by allowing more complex decision boundaries than the current 32.
+- **`lnk_dex_transfer_leaves16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 16 improves L25 recall by acting as stronger regularization against overfitting on the small cohort.
+- **`lnk_dex_transfer_reg_lambda1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if reducing reg_lambda to 1 improves L25 recall by allowing larger leaf weights compared to the current strong regularization of 5.
+- **`lnk_dex_transfer_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if increasing min_child_samples to 50 improves L25 recall by preventing splits on very small, potentially noisy subsets of the training data.
+- **`lnk_dex_transfer_mds10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if reducing max_depth to 10 improves L25 recall by limiting tree complexity and reducing variance in the ensemble.
+- **`lnk_dex_transfer_mds14`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if increasing max_depth to 14 improves L25 recall by allowing deeper interactions between features that might be missed at depth 12.
+
+</details>
+
+## Cycle `20261110T105404-filetypes-lnk` — 2026-11-10T10:54:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5eef5bde56d6549` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9964 | 0.9885 | 0.9784 | 9 | [log](out/autocollie/runs/2026-11-10T10-56-47_20261110T105404-filetypes-lnk_inherit_from_filetypes_chm_a07a95a3.log) |
+| `fad76d0d869f5da5` | lnk_dex_transfer_lr007_mcs50 | ok | 0.9970 | 0.9907 | 0.9813 | 7 | [log](out/autocollie/runs/2026-11-10T10-56-58_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_mcs50.log) |
+| `25a8a8be6d3ff76d` | lnk_dex_transfer_lr007_depth4 | ok | 0.9936 | 0.9765 | 0.9517 | 7 | [log](out/autocollie/runs/2026-11-10T10-57-05_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_depth4.log) |
+| `1317ce0d41093368` | lnk_dex_transfer_lr007_mds2 | ok | 0.9978 | 0.9919 | 0.9846 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-13_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_mds2.log) |
+| `d2b5d6adc436b4be` | lnk_dex_transfer_lr007_reg_lambda5 | ok | 0.9980 | 0.9928 | 0.9838 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-15_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_reg_lambda5.log) |
+| `8445d374cacfca2d` | lnk_dex_transfer_lr007_leaves64 | ok | 0.9967 | 0.9889 | 0.9773 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-17_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_leaves64.log) |
+| `89d34012b54f3a63` | lnk_dex_transfer_lr007_hnw10 | ok | 0.9967 | 0.9881 | 0.9603 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-20_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_hnw10.log) |
+| `ccf36643a7aed96a` | lnk_dex_transfer_lr007_subsample09 | ok | 0.9962 | 0.9861 | 0.9554 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-22_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_subsample09.log) |
+| `e0a022fa4931af38` | lnk_dex_transfer_lr007_col09 | ok | 0.9959 | 0.9858 | 0.9552 | 1 | [log](out/autocollie/runs/2026-11-10T10-57-24_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_col09.log) |
+| `b1121d062d1ee319` | lnk_dex_transfer_lr007_mms0 | ok | 0.9985 | 0.9946 | 0.9839 | 7 | [log](out/autocollie/runs/2026-11-10T10-57-26_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_mms0.log) |
+| `639d5f6fab241512` | lnk_dex_transfer_lr007_mms2 | ok | 0.9974 | 0.9904 | 0.9265 | 7 | [log](out/autocollie/runs/2026-11-10T10-57-34_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_mms2.log) |
+| `2c1c654e4cf79296` | lnk_dex_transfer_lr007_seed_search | ok | 0.9980 | 0.9923 | 0.9847 | 2 | [log](out/autocollie/runs/2026-11-10T10-57-42_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_seed_search.log) |
+| `455c8a30fc36bd9e` | lnk_dex_transfer_lr007_depth2 | ok | 0.9905 | 0.9692 | 0.9006 | 7 | [log](out/autocollie/runs/2026-11-10T10-57-45_20261110T105404-filetypes-lnk_lnk_dex_transfer_lr007_depth2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_dex_transfer_lr007_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Combines the 0.9197 recall learning rate 0.07 with the 0.7897 recall min_child_samples 50 to test if reduced leaf constraints amplify the faster convergence benefit on the 5bad142ef693 cohort.
+- **`lnk_dex_transfer_lr007_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests if the 0.9197 recall learning rate 0.07 benefits from the deeper trait path depth 4 that achieved 0.8760 recall in the previous cohort, potentially capturing more specific finding prefixes.
+- **`lnk_dex_transfer_lr007_mds2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Evaluates if the 0.9197 recall learning rate 0.07 requires the max_delta_step 2 constraint used in the 0.9459 historical best to prevent score saturation and improve ranking stability.
+- **`lnk_dex_transfer_lr007_reg_lambda5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Applies the stronger L2 regularization (5.0) from the 0.9459 historical best to the 0.9197 recall learning rate 0.07 to check if it reduces overfitting on the small benign cohort.
+- **`lnk_dex_transfer_lr007_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Reduces num_leaves to 64 with learning rate 0.07 to test if a simpler tree structure complements the faster learning rate, contrasting with the 0.7239 recall seen at leaves 64 with lr 0.04.
+- **`lnk_dex_transfer_lr007_hnw10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Adjusts hard_negative_weight to 10 with learning rate 0.07 to find an optimal penalty for benign misclassification, balancing the 15.0 weight used in the 0.9197 recall run.
+- **`lnk_dex_transfer_lr007_subsample09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Increases row subsampling to 0.9 with learning rate 0.07 to introduce more noise per iteration, potentially improving generalization on the small 150-benign cohort.
+- **`lnk_dex_transfer_lr007_col09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Raises column subsampling to 0.9 with learning rate 0.07 to allow more feature interactions per tree, testing if the current 0.8 cap is limiting the model's ability to combine signals.
+- **`lnk_dex_transfer_lr007_mms0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Sets min_malware_score to 0 with learning rate 0.07 to include low-severity malware in training, testing if the 0.9197 recall run was limited by the current cutoff of 4.
+- **`lnk_dex_transfer_lr007_mms2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Lowers min_malware_score to 2 with learning rate 0.07 to include medium-severity malware, checking if the 0.9197 recall can be improved by adding more training signal without the noise of score 0.
+- **`lnk_dex_transfer_lr007_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Uses seed_search_k 3 with learning rate 0.07 to mitigate seed instability observed in the 0.7239 vs 0.9197 recall variance, aiming to find a more robust operating point.
+- **`lnk_dex_transfer_lr007_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Tests trait path depth 2 with learning rate 0.07 to see if broader, less specific finding prefixes help the faster learning rate, contrasting with the 0.7175 recall at depth 5.
+
+</details>
+

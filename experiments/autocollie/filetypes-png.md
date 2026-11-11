@@ -1288,3 +1288,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261110T103337-filetypes-png` — 2026-11-10T10:33:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cbf48250254c9c84` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9267 | 0.9764 | 0.8843 | 8 | [log](out/autocollie/runs/2026-11-10T10-34-54_20261110T103337-filetypes-png_inherit_from_filetypes_chm_a07a95a3.log) |
+| `9d68ab72371c8193` | png_ruletext_mcs50 | ok | 0.9738 | 0.9962 | 0.9345 | 11 | [log](out/autocollie/runs/2026-11-10T10-35-05_20261110T103337-filetypes-png_png_ruletext_mcs50.log) |
+| `d9d38e5549a87475` | png_ruletext_reglambda3 | ok | 0.9739 | 0.9959 | 0.9337 | 7 | [log](out/autocollie/runs/2026-11-10T10-35-18_20261110T103337-filetypes-png_png_ruletext_reglambda3.log) |
+| `1fa026c7d6977afc` | png_ruletext_hnw15 | ok | 0.9722 | 0.9950 | 0.9293 | 6 | [log](out/autocollie/runs/2026-11-10T10-35-26_20261110T103337-filetypes-png_png_ruletext_hnw15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ruletext_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing min_child_samples from 100 to 50 improves L25 recall beyond the 0.6042 baseline by allowing finer-grained splits on the small malware cohort (945 samples) without changing the feature matrix.
+- **`png_ruletext_reglambda3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Evaluates if increasing L2 regularization (reg_lambda) from 1 to 3 improves L25 recall by reducing overfitting on the noisy rule-description keyword features, targeting the 0.6042 baseline.
+- **`png_ruletext_hnw15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Investigates if increasing hard_negative_weight from 10 to 15 improves L25 recall by more aggressively penalizing false positives on the hard-negative subset, aiming to exceed the 0.6042 baseline.
+
+</details>
+

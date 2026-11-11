@@ -540,3 +540,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T134956-filetypes-crx` — 2026-11-06T13:49:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2c463b9492ee8b98` | inherit_from_filetypes_bmp_71ba0177 | ok | 0.8588 | 0.9847 | 0.5979 | 47 | [log](out/autocollie/runs/2026-11-06T13-54-41_20261106T134956-filetypes-crx_inherit_from_filetypes_bmp_71ba0177.log) |
+| `d373adda4b75b5b3` | hardneg_weight12_mds5 | ok | 0.9124 | 0.9885 | 0.8035 | 62 | [log](out/autocollie/runs/2026-11-06T13-55-31_20261106T134956-filetypes-crx_hardneg_weight12_mds5.log) |
+| `b88a95d7e084aa32` | hardneg_weight16_mds5 | ok | 0.9114 | 0.9882 | 0.8221 | 14 | [log](out/autocollie/runs/2026-11-06T13-56-34_20261106T134956-filetypes-crx_hardneg_weight16_mds5.log) |
+| `0ed6e92ec261015c` | hardneg_weight20_mds5 | ok | 0.9065 | 0.9886 | 0.8253 | 16 | [log](out/autocollie/runs/2026-11-06T13-56-49_20261106T134956-filetypes-crx_hardneg_weight20_mds5.log) |
+| `92508bb9270f5dba` | hardneg_frac001_weight8_mds5 | ok | 0.9121 | 0.9891 | 0.7855 | 16 | [log](out/autocollie/runs/2026-11-06T13-57-05_20261106T134956-filetypes-crx_hardneg_frac001_weight8_mds5.log) |
+| `5e5eb81ca66e3b5f` | hardneg_frac002_weight8_mds5 | ok | 0.9068 | 0.9889 | 0.7933 | 14 | [log](out/autocollie/runs/2026-11-06T13-57-22_20261106T134956-filetypes-crx_hardneg_frac002_weight8_mds5.log) |
+| `311ab999ced056d4` | hardneg_weight8_mds10 | ok | 0.9075 | 0.9886 | 0.8218 | 16 | [log](out/autocollie/runs/2026-11-06T13-57-38_20261106T134956-filetypes-crx_hardneg_weight8_mds10.log) |
+| `f7d43a449b003c5e` | hardneg_weight8_mds20 | ok | 0.9002 | 0.9875 | 0.7953 | 13 | [log](out/autocollie/runs/2026-11-06T13-57-55_20261106T134956-filetypes-crx_hardneg_weight8_mds20.log) |
+| `d5f857a57e7ce5ff` | hardneg_weight8_mds5_lr003 | ok | 0.9091 | 0.9886 | 0.7843 | 16 | [log](out/autocollie/runs/2026-11-06T13-58-09_20261106T134956-filetypes-crx_hardneg_weight8_mds5_lr003.log) |
+| `aad08e9d695a0edd` | hardneg_weight8_mds5_lr007 | ok | 0.8986 | 0.9875 | 0.8108 | 11 | [log](out/autocollie/runs/2026-11-06T13-58-27_20261106T134956-filetypes-crx_hardneg_weight8_mds5_lr007.log) |
+| `c12ca1730f567d90` | hardneg_weight8_mds5_leaves96 | ok | 0.9045 | 0.9883 | 0.7920 | 14 | [log](out/autocollie/runs/2026-11-06T13-58-39_20261106T134956-filetypes-crx_hardneg_weight8_mds5_leaves96.log) |
+| `0be321bdf10918a8` | hardneg_weight8_mds5_mcs50 | ok | 0.8908 | 0.9869 | 0.7581 | 12 | [log](out/autocollie/runs/2026-11-06T13-58-53_20261106T134956-filetypes-crx_hardneg_weight8_mds5_mcs50.log) |
+| `9887e48199c3bf6e` | hardneg_weight8_mds5_reglambda1 | ok | 0.9072 | 0.9886 | 0.7954 | 12 | [log](out/autocollie/runs/2026-11-06T13-59-06_20261106T134956-filetypes-crx_hardneg_weight8_mds5_reglambda1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_71ba0177`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=71ba01774553f14c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hardneg_weight12_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing hard-negative weight to 12 from the best 0.4233 baseline improves L25 recall by better penalizing benign confusion without over-regularizing.
+- **`hardneg_weight16_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates a stronger hard-negative penalty of 16 to see if it pushes L25 recall higher than the 0.4233 baseline by sharpening the decision boundary.
+- **`hardneg_weight20_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Probes the upper bound of hard-negative weighting at 20 to determine if extreme penalty improves L25 recall or causes overfitting on the 163 malware samples.
+- **`hardneg_frac001_weight8_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a lower hard-negative fraction of 0.01 with weight 8 to isolate if a smaller subset of hard negatives yields better L25 recall than the 0.2 fraction baseline.
+- **`hardneg_frac002_weight8_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Compares a 0.02 hard-negative fraction with weight 8 to find the optimal balance between hard-negative exposure and L25 recall improvement.
+- **`hardneg_weight8_mds10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases max_delta_step to 10 from the 0.4233 baseline to allow larger leaf updates, potentially improving L25 recall by capturing more complex patterns.
+- **`hardneg_weight8_mds20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests max_delta_step 20 to see if removing the leaf-output cap entirely improves L25 recall or destabilizes the model on the small malware cohort.
+- **`hardneg_weight8_mds5_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces learning rate to 0.03 with the best hard-negative settings to check if slower convergence improves L25 recall by reducing variance.
+- **`hardneg_weight8_mds5_lr007`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases learning rate to 0.07 to test if faster boosting improves L25 recall by fitting the minority class more aggressively within the 250 estimator budget.
+- **`hardneg_weight8_mds5_leaves96`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces num_leaves to 96 from 128 to test if simpler trees improve L25 recall by reducing overfitting on the 163 malware samples.
+- **`hardneg_weight8_mds5_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers min_child_samples to 50 to allow deeper splits on the small malware class, aiming to improve L25 recall by capturing more specific patterns.
+- **`hardneg_weight8_mds5_reglambda1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces reg_lambda to 1 from 2 to test if less L2 regularization improves L25 recall by allowing the model to fit the hard-negative signal more closely.
+
+</details>
+

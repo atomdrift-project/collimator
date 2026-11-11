@@ -1260,3 +1260,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261106T162900-filetypes-php` — 2026-11-06T16:29:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `18b87ad8e6110706` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.9346 | 0.9856 | 0.8944 | 44 | [log](out/autocollie/runs/2026-11-06T16-33-09_20261106T162900-filetypes-php_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `2280ee469e6b347f` | dex_transfer_depth3 | ok | 0.9932 | 0.9991 | 0.9187 | 42 | [log](out/autocollie/runs/2026-11-06T16-33-58_20261106T162900-filetypes-php_dex_transfer_depth3.log) |
+| `17ce731084d1d365` | dex_transfer_depth4 | ok | 0.9942 | 0.9994 | 0.9358 | 41 | [log](out/autocollie/runs/2026-11-06T16-35-23_20261106T162900-filetypes-php_dex_transfer_depth4.log) |
+| `4a039d38041380db` | dex_transfer_depth5 | ok | 0.9929 | 0.9990 | 0.9190 | 41 | [log](out/autocollie/runs/2026-11-06T16-36-54_20261106T162900-filetypes-php_dex_transfer_depth5.log) |
+| `2896baff6e86b2f9` | dex_transfer_depth2 | ok | 0.9929 | 0.9992 | 0.9273 | 39 | [log](out/autocollie/runs/2026-11-06T16-37-43_20261106T162900-filetypes-php_dex_transfer_depth2.log) |
+| `e69b4f96003ea826` | dex_transfer_lr003 | ok | 0.9925 | 0.9990 | 0.9423 | 6 | [log](out/autocollie/runs/2026-11-06T16-38-31_20261106T162900-filetypes-php_dex_transfer_lr003.log) |
+| `af629cba6e74b537` | dex_transfer_reg_lambda_1 | ok | 0.9940 | 0.9993 | 0.9269 | 6 | [log](out/autocollie/runs/2026-11-06T16-39-23_20261106T162900-filetypes-php_dex_transfer_reg_lambda_1.log) |
+| `c3d055fffdfcef3f` | dex_transfer_leaves64 | ok | 0.9931 | 0.9991 | 0.9350 | 6 | [log](out/autocollie/runs/2026-11-06T16-40-12_20261106T162900-filetypes-php_dex_transfer_leaves64.log) |
+| `c0d31d8bc4c260b4` | dex_transfer_mcs50 | ok | 0.9940 | 0.9994 | 0.9080 | 6 | [log](out/autocollie/runs/2026-11-06T16-40-38_20261106T162900-filetypes-php_dex_transfer_mcs50.log) |
+| `2281ceb638999699` | dex_transfer_spw05 | ok | 0.9936 | 0.9992 | 0.9139 | 6 | [log](out/autocollie/runs/2026-11-06T16-41-31_20261106T162900-filetypes-php_dex_transfer_spw05.log) |
+| `2c0ca45f8ffdcb91` | dex_transfer_mds10 | ok | 0.9938 | 0.9993 | 0.9128 | 6 | [log](out/autocollie/runs/2026-11-06T16-41-45_20261106T162900-filetypes-php_dex_transfer_mds10.log) |
+| `2555af275c329f96` | dex_transfer_subsample09 | ok | 0.9943 | 0.9994 | 0.9203 | 6 | [log](out/autocollie/runs/2026-11-06T16-41-59_20261106T162900-filetypes-php_dex_transfer_subsample09.log) |
+| `bf431eb60a517299` | dex_transfer_colsample09 | ok | 0.9939 | 0.9993 | 0.9208 | 6 | [log](out/autocollie/runs/2026-11-06T16-42-15_20261106T162900-filetypes-php_dex_transfer_colsample09.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`dex_transfer_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the dex-inherited training configuration (min_child_samples=10, num_leaves=32, reg_lambda=5) generalizes to the standard depth-3 feature matrix to improve the 0.9116 L25 recall baseline.
+- **`dex_transfer_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Replicates the exact feature and training settings of the best historical run (0.9116 recall) to verify stability and establish a control for depth variations on the current cohort.
+- **`dex_transfer_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores deeper trait path specificity (depth 5) with the dex-inherited training knobs to see if finer-grained finding prefixes improve the 0.9116 L25 recall.
+- **`dex_transfer_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests shallower trait path depth (2) with the dex-inherited training configuration to check if broader prefix matching captures more malware variants for L25 recall.
+- **`dex_transfer_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the dex-inherited training structure with a lower learning rate (0.03) to potentially refine decision boundaries and improve the 0.9116 L25 recall.
+- **`dex_transfer_reg_lambda_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces L2 regularization from 5 to 1 in the dex-inherited setup to allow more complex models, aiming to boost the 0.9116 L25 recall.
+- **`dex_transfer_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves from 32 to 64 in the dex-inherited configuration to capture more complex interactions, targeting an improvement over 0.9116 L25 recall.
+- **`dex_transfer_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Raises min_child_samples from 10 to 50 in the dex-inherited setup to reduce overfitting on small leaf nodes, potentially stabilizing and improving the 0.9116 L25 recall.
+- **`dex_transfer_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases scale_pos_weight_mult from 0.25 to 0.5 in the dex-inherited configuration to upweight the minority malware class, aiming to lift the 0.9116 L25 recall.
+- **`dex_transfer_mds10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests max_delta_step=10 in the dex-inherited setup to allow larger leaf output updates, potentially improving convergence and the 0.9116 L25 recall.
+- **`dex_transfer_subsample09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases row subsampling to 0.9 in the dex-inherited configuration to use more data per iteration, aiming to refine the 0.9116 L25 recall.
+- **`dex_transfer_colsample09`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases column subsampling to 0.9 in the dex-inherited setup to reduce feature variance, potentially improving the stability and level of the 0.9116 L25 recall.
+
+</details>
+

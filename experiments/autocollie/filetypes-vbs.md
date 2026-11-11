@@ -1306,3 +1306,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T161840-filetypes-vbs` — 2026-11-06T16:18:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60d59086a7c29e48` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.9791 | 0.9413 | 0.9230 | 14 | [log](out/autocollie/runs/2026-11-06T16-20-21_20261106T161840-filetypes-vbs_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `37f5cfe26b6fc7fb` | vbs_rulekw_depth4 | ok | 0.9998 | 0.9992 | 0.9917 | 16 | [log](out/autocollie/runs/2026-11-06T16-20-38_20261106T161840-filetypes-vbs_vbs_rulekw_depth4.log) |
+| `77ae183cea712dc5` | vbs_rulekw_depth2 | ok | 0.9997 | 0.9990 | 0.9906 | 14 | [log](out/autocollie/runs/2026-11-06T16-20-55_20261106T161840-filetypes-vbs_vbs_rulekw_depth2.log) |
+| `4df1033c95c9d41b` | vbs_rulekw_minfreq5 | ok | 0.9997 | 0.9990 | 0.9892 | 15 | [log](out/autocollie/runs/2026-11-06T16-21-10_20261106T161840-filetypes-vbs_vbs_rulekw_minfreq5.log) |
+| `aa6a8fd0b1cab511` | vbs_rulekw_balanced_mi | ok | 0.9997 | 0.9990 | 0.9892 | 15 | [log](out/autocollie/runs/2026-11-06T16-21-26_20261106T161840-filetypes-vbs_vbs_rulekw_balanced_mi.log) |
+| `968c0e56119f9a01` | vbs_rulekw_vocab5k | ok | 0.9997 | 0.9990 | 0.9892 | 15 | [log](out/autocollie/runs/2026-11-06T16-21-42_20261106T161840-filetypes-vbs_vbs_rulekw_vocab5k.log) |
+| `5d37e7904b96cea3` | vbs_rulekw_lr003 | ok | 0.9989 | 0.9963 | 0.9868 | 3 | [log](out/autocollie/runs/2026-11-06T16-21-58_20261106T161840-filetypes-vbs_vbs_rulekw_lr003.log) |
+| `013d00f637097d2f` | vbs_rulekw_reg_lambda05 | ok | 0.9997 | 0.9990 | 0.9892 | 4 | [log](out/autocollie/runs/2026-11-06T16-22-02_20261106T161840-filetypes-vbs_vbs_rulekw_reg_lambda05.log) |
+| `bc00c5e0a00806fc` | vbs_rulekw_hardneg005 | ok | 0.9997 | 0.9990 | 0.9906 | 4 | [log](out/autocollie/runs/2026-11-06T16-22-07_20261106T161840-filetypes-vbs_vbs_rulekw_hardneg005.log) |
+| `535613b42e32b736` | vbs_rulekw_min_child_50 | ok | 0.9995 | 0.9985 | 0.9823 | 4 | [log](out/autocollie/runs/2026-11-06T16-22-12_20261106T161840-filetypes-vbs_vbs_rulekw_min_child_50.log) |
+| `780531d3cd26c472` | vbs_rulekw_seed_search_3 | ok | 0.9997 | 0.9990 | 0.9892 | 6 | [log](out/autocollie/runs/2026-11-06T16-22-17_20261106T161840-filetypes-vbs_vbs_rulekw_seed_search_3.log) |
+| `bc5dc3cfe9fdbd8d` | vbs_rulekw_max_depth14 | ok | 0.9997 | 0.9991 | 0.9914 | 3 | [log](out/autocollie/runs/2026-11-06T16-22-24_20261106T161840-filetypes-vbs_vbs_rulekw_max_depth14.log) |
+| `10e2c622d55a935c` | vbs_rulekw_num_leaves128 | ok | 0.9997 | 0.9990 | 0.9892 | 3 | [log](out/autocollie/runs/2026-11-06T16-22-28_20261106T161840-filetypes-vbs_vbs_rulekw_num_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_rulekw_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if deeper finding prefixes (depth 4) improve L25 recall over the 0.9695 baseline by isolating specific VBS attack paths while keeping rule keywords enabled.
+- **`vbs_rulekw_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if shallower finding prefixes (depth 2) improve L25 recall by increasing feature coverage for generic VBS behaviors, comparing against the depth 3 baseline.
+- **`vbs_rulekw_minfreq5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising keyword min_freq to 5 improves L25 recall by filtering noisy low-support rule words, leveraging the 2637 candidate pool to select more robust features.
+- **`vbs_rulekw_balanced_mi`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if balanced_mi selection improves L25 recall over frequency selection by prioritizing discriminative rule keywords rather than just frequent ones in the VBS corpus.
+- **`vbs_rulekw_vocab5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing keyword vocab cap to 5000 improves L25 recall by forcing a tighter, higher-signal feature set from the 2637 available rule words.
+- **`vbs_rulekw_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a lower learning rate (0.03) improves L25 recall by allowing more nuanced splits on the rule keyword features, reusing the existing feature matrix.
+- **`vbs_rulekw_reg_lambda05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reduced L2 regularization (0.5) improves L25 recall by allowing the model to fit the rule keyword signal more closely, transferring a successful mp3 hypothesis.
+- **`vbs_rulekw_hardneg005`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a smaller hard negative fraction (0.05) improves L25 recall by reducing the weight of benign VBS files that might share superficial rule keywords with malware.
+- **`vbs_rulekw_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering min_child_samples to 50 improves L25 recall by allowing the model to capture smaller, specific VBS malware subgroups in the leaf nodes.
+- **`vbs_rulekw_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if best-of-3 seed search improves L25 recall by mitigating seed instability in the rule keyword feature space, selecting the most robust model for deployment.
+- **`vbs_rulekw_max_depth14`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing max_depth to 14 improves L25 recall by allowing deeper interactions between rule keywords and other VBS structural features.
+- **`vbs_rulekw_num_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing num_leaves to 128 improves L25 recall by increasing model capacity to capture complex VBS malware patterns without changing the feature set.
+
+</details>
+

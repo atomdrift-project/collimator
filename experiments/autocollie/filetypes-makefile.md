@@ -968,3 +968,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261110T103337-filetypes-makefile` — 2026-11-10T10:33:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f783db0a633f9188` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9050 | 0.9984 | 0.6091 | 9 | [log](out/autocollie/runs/2026-11-10T10-35-00_20261110T103337-filetypes-makefile_inherit_from_filetypes_chm_a07a95a3.log) |
+| `58ab35034416f8a1` | makefile_hnm01w10_ctxmi_s789_confirm | ok | 0.8791 | 0.9964 | 0.8066 | 18 | [log](out/autocollie/runs/2026-11-10T10-35-14_20261110T103337-filetypes-makefile_makefile_hnm01w10_ctxmi_s789_confirm.log) |
+| `7fd314ab99920013` | makefile_hnm01w10_ctxmi_vocab1k | ok | 0.9097 | 0.9983 | 0.8471 | 19 | [log](out/autocollie/runs/2026-11-10T10-35-33_20261110T103337-filetypes-makefile_makefile_hnm01w10_ctxmi_vocab1k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_hnm01w10_ctxmi_s789_confirm`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Confirms the 0.6104 L25 recall from the single-seed run by testing the hard_negative_fraction=0.1/weight=10 and context_keyword_vocab_max=5000/balanced_mi combination across ensemble seeds 7,8,9 to verify stability against the 0.5714 baseline.
+- **`makefile_hnm01w10_ctxmi_vocab1k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing context_keyword_vocab_max to 1000 improves L25 recall over the 0.6104 baseline by filtering out low-signal context words that may introduce noise, while retaining the strong hard-negative weighting.
+
+</details>
+

@@ -68,3 +68,30 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T193140-filetypes-cab` — 2026-11-06T19:31:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c12783694bc2ff58` | inherit_from_filetypes_asar_8c1d60ee | ok | 0.8917 | 0.5000 | 0.9427 | 18 | [log](out/autocollie/runs/2026-11-06T19-38-28_20261106T193140-filetypes-cab_inherit_from_filetypes_asar_8c1d60ee.log) |
+
+Rejected before run:
+
+- `cab_nupkg_depth3_mds20` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_depth4_mds20` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_depth5_mds20` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_mds10` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_mds5` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_reg_lambda_0_5` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_lr_0_03` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_subsample_0_6` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_col_sample_0_6` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_min_child_50` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_leaves_64` — training.min_child_weight: int expected, got fractional 0.1
+- `cab_nupkg_seed_search_3` — training.min_child_weight: int expected, got fractional 0.1
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_asar_8c1d60ee`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/asar (key=8c1d60ee6d019592, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

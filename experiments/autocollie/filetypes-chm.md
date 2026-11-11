@@ -50,3 +50,41 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T204440-filetypes-chm` — 2026-11-06T20:44:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `879278ad817221b2` | inherit_from_filetypes_jsp_bb6d8dbb | ok | 0.8000 | 0.5000 | 0.8889 | 21 | [log](out/autocollie/runs/2026-11-06T20-46-41_20261106T204440-filetypes-chm_inherit_from_filetypes_jsp_bb6d8dbb.log) |
+| `7b7c57ea473db33e` | chm_depth4_training | ok | 0.9957 | 0.9815 | 0.9714 | 40 | [log](out/autocollie/runs/2026-11-06T20-47-24_20261106T204440-filetypes-chm_chm_depth4_training.log) |
+| `26fecdf81ae994b3` | chm_depth2_training | ok | 0.9950 | 0.9784 | 0.9714 | 41 | [log](out/autocollie/runs/2026-11-06T20-48-10_20261106T204440-filetypes-chm_chm_depth2_training.log) |
+| `443cbab19cf7d87f` | chm_depth5_training | ok | 0.9957 | 0.9815 | 0.9565 | 29 | [log](out/autocollie/runs/2026-11-06T20-48-45_20261106T204440-filetypes-chm_chm_depth5_training.log) |
+| `86261d043a09bfd9` | chm_max_delta_step_10 | ok | 0.9971 | 0.9877 | 0.9565 | 17 | [log](out/autocollie/runs/2026-11-06T20-49-02_20261106T204440-filetypes-chm_chm_max_delta_step_10.log) |
+| `1e4d7717dd21ff94` | chm_max_delta_step_2 | ok | 0.9950 | 0.9784 | 0.9565 | 12 | [log](out/autocollie/runs/2026-11-06T20-49-24_20261106T204440-filetypes-chm_chm_max_delta_step_2.log) |
+| `438ffd4d81071c11` | chm_leaves32 | ok | 0.9971 | 0.9877 | 0.9565 | 11 | [log](out/autocollie/runs/2026-11-06T20-49-40_20261106T204440-filetypes-chm_chm_leaves32.log) |
+| `58169c4605d097c5` | chm_lr_001 | ok | 0.9978 | 0.9907 | 0.9565 | 11 | [log](out/autocollie/runs/2026-11-06T20-49-55_20261106T204440-filetypes-chm_chm_lr_001.log) |
+| `78495305ce41b090` | chm_lr_005 | ok | 0.9957 | 0.9815 | 0.9565 | 4 | [log](out/autocollie/runs/2026-11-06T20-50-04_20261106T204440-filetypes-chm_chm_lr_005.log) |
+| `9952897aa9941098` | chm_min_child_samples_50 | ok | 0.9957 | 0.9815 | 0.9565 | 5 | [log](out/autocollie/runs/2026-11-06T20-50-10_20261106T204440-filetypes-chm_chm_min_child_samples_50.log) |
+| `b3cbc68b13f0fa16` | chm_reg_lambda_2 | ok | 0.9972 | 0.9877 | 0.9565 | 5 | [log](out/autocollie/runs/2026-11-06T20-50-16_20261106T204440-filetypes-chm_chm_reg_lambda_2.log) |
+| `a07a95a35c0643c0` | chm_subsample_06 | ok | 1.0000 | 1.0000 | 0.9714 | 5 | [log](out/autocollie/runs/2026-11-06T20-50-22_20261106T204440-filetypes-chm_chm_subsample_06.log) |
+
+Rejected before run:
+
+- `chm_leaves8` — training.num_leaves: 8 below min 16
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_bb6d8dbb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=bb6d8dbbb4d66333, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`chm_depth4_training`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=0 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing trait_path_depth to 4 improves L25 recall by capturing more specific finding prefixes for CHM malware, building on the 1.0000 L25 recall of the depth-3 baseline.
+- **`chm_depth2_training`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=0 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if decreasing trait_path_depth to 2 improves L25 recall by generalizing over broader finding prefixes, potentially capturing malware missed by the specific depth-3 configuration.
+- **`chm_depth5_training`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=0 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing trait_path_depth to 5 improves L25 recall by capturing highly specific finding paths, investigating if deeper hierarchy helps distinguish CHM malware from benigns.
+- **`chm_max_delta_step_10`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing max_delta_step to 10 improves L25 recall by allowing larger leaf output updates, potentially helping the model fit the small CHM malware cohort better than the current cap of 5.
+- **`chm_max_delta_step_2`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if decreasing max_delta_step to 2 improves L25 recall by constraining leaf outputs to prevent overfitting on the small CHM dataset, potentially improving generalization to the dev set.
+- **`chm_leaves32`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing num_leaves to 32 improves L25 recall by allowing more complex tree structures to capture non-linear interactions in CHM features, while maintaining the current depth of 6.
+- **`chm_lr_001`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if decreasing learning_rate to 0.01 improves L25 recall by taking smaller gradient steps, which may help the model converge to a better local minimum on the small CHM dataset.
+- **`chm_lr_005`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing learning_rate to 0.05 improves L25 recall by taking larger gradient steps, potentially allowing the model to fit the CHM malware patterns faster within the fixed estimator budget.
+- **`chm_min_child_samples_50`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing min_child_samples to 50 improves L25 recall by forcing splits to have more support, reducing noise from small CHM subsets and potentially improving zero-FP recall.
+- **`chm_reg_lambda_2`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if increasing reg_lambda to 2 improves L25 recall by adding L2 regularization, which may prevent overfitting to specific CHM malware samples and improve generalization to the dev set.
+- **`chm_subsample_06`** `EXP_BETA=2 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_EARLY_STOPPING=10 EXP_ENSEMBLE_SEEDS=42 EXP_ESTIMATORS=200 EXP_EXTRA_TREES=0 EXP_FOLDS=0 …` — Tests if decreasing subsample to 0.6 improves L25 recall by introducing more stochasticity in row sampling, which may help the model escape local minima and improve robustness on the small CHM cohort.
+
+</details>
+

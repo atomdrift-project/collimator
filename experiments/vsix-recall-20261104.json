@@ -1,0 +1,237 @@
+{
+  "date": "2026-11-04",
+  "route": "filetypes/vsix",
+  "objective": "Maximum tested recall under the shared L0/L25 budgets",
+  "historical_recipes_reviewed": 31,
+  "new_completed_cv_recipes": 34,
+  "recipes_in_final_selection": 33,
+  "training": {
+    "rows": 6032,
+    "malware": 228,
+    "canonical_groups": 2964,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "folds": 3
+  },
+  "winner": {
+    "name": "keywords_rich_budget400",
+    "layout": "keywords_rich",
+    "overrides": {
+      "holdout_fraction": 0.0,
+      "early_stopping_rounds": 0,
+      "n_estimators": 400
+    },
+    "cv_mean_L25": 0.37644969617398033,
+    "cv_mean_L0": 0.35153152491434575
+  },
+  "dev": {
+    "malware": 33,
+    "benign": 887,
+    "baseline": {
+      "rows": 920,
+      "malware": 33,
+      "benign": 887,
+      "L0": {
+        "budget": 0,
+        "threshold": 0.9783681631088257,
+        "tp": 12,
+        "fp": 0,
+        "recall": 0.36363636363636365,
+        "precision": 1.0
+      },
+      "L25": {
+        "budget": 1,
+        "threshold": 0.5657214522361755,
+        "tp": 20,
+        "fp": 1,
+        "recall": 0.6060606060606061,
+        "precision": 0.9523809523809523
+      }
+    },
+    "new_model": {
+      "rows": 920,
+      "malware": 33,
+      "benign": 887,
+      "L0": {
+        "budget": 0,
+        "threshold": 0.9773643612861633,
+        "tp": 15,
+        "fp": 0,
+        "recall": 0.45454545454545453,
+        "precision": 1.0
+      },
+      "L25": {
+        "budget": 1,
+        "threshold": 0.7044986486434937,
+        "tp": 21,
+        "fp": 1,
+        "recall": 0.6363636363636364,
+        "precision": 0.9545454545454546
+      }
+    },
+    "retained_baseline_plus_new": {
+      "L0": {
+        "budget": 0,
+        "thresholds": {
+          "baseline": 0.9811716079711914,
+          "candidate": 0.9804698824882507
+        },
+        "fp": 0,
+        "tp": 16,
+        "recall": 0.48484848484848486
+      },
+      "L25": {
+        "budget": 1,
+        "thresholds": {
+          "baseline": 0.6485779881477356,
+          "candidate": 0.7690325379371643
+        },
+        "fp": 1,
+        "tp": 21,
+        "recall": 0.6363636363636364
+      }
+    },
+    "paired_intervals": {
+      "levels": {
+        "L0": {
+          "baseline_recall_ci95": [
+            0.2,
+            0.53125
+          ],
+          "candidate_recall_ci95": [
+            0.2727272727272727,
+            0.6363636363636364
+          ],
+          "paired_delta_ci95": [
+            -0.032258064516129004,
+            0.22222222222222227
+          ],
+          "recovered_malware_ids": [
+            2054844671,
+            2421866053,
+            2562120835,
+            6353486840
+          ],
+          "lost_malware_ids": [
+            835001
+          ],
+          "baseline_false_positive_ids": [],
+          "candidate_false_positive_ids": []
+        },
+        "L25": {
+          "baseline_recall_ci95": [
+            0.41935483870967744,
+            0.7714285714285715
+          ],
+          "candidate_recall_ci95": [
+            0.45161290322580644,
+            0.8
+          ],
+          "paired_delta_ci95": [
+            0.0,
+            0.09677419354838701
+          ],
+          "recovered_malware_ids": [
+            2054844671
+          ],
+          "lost_malware_ids": [],
+          "baseline_false_positive_ids": [
+            423734
+          ],
+          "candidate_false_positive_ids": [
+            423734
+          ]
+        }
+      },
+      "bootstrap_positive_groups": 30,
+      "resamples": 5000,
+      "scope": "Conditional on selected dev thresholds; does not account for threshold selection, historical dev reuse, or future corpus drift."
+    },
+    "dev_nonregression": true,
+    "retained_combination_intervals": {
+      "L0": {
+        "baseline_recall_ci95": [
+          0.2,
+          0.53125
+        ],
+        "candidate_recall_ci95": [
+          0.30303030303030304,
+          0.6666666666666666
+        ],
+        "paired_delta_ci95": [
+          0.02941176470588236,
+          0.23529411764705888
+        ],
+        "recovered_malware_ids": [
+          2054844671,
+          2421866053,
+          2562120835,
+          6353486840
+        ],
+        "lost_malware_ids": [],
+        "baseline_false_positive_ids": [],
+        "candidate_false_positive_ids": []
+      },
+      "L25": {
+        "baseline_recall_ci95": [
+          0.41935483870967744,
+          0.7714285714285715
+        ],
+        "candidate_recall_ci95": [
+          0.45161290322580644,
+          0.8
+        ],
+        "paired_delta_ci95": [
+          0.0,
+          0.09677419354838701
+        ],
+        "recovered_malware_ids": [
+          2054844671
+        ],
+        "lost_malware_ids": [],
+        "baseline_false_positive_ids": [
+          423734
+        ],
+        "candidate_false_positive_ids": [
+          423734
+        ]
+      },
+      "scope": "Conditional paired canonical-group bootstrap at frozen dev-selected cuts; does not include calibration, search, or historical dev reuse uncertainty."
+    }
+  },
+  "checks": {
+    "unit_and_contract_tests": 62,
+    "onnx_max_absolute_error": 2.086162567138672e-07,
+    "same_nonkeyword_feature_values": {
+      "train": {
+        "rows": 6032,
+        "shared_nonkeyword_columns": 10111,
+        "different_cells": 0
+      },
+      "dev": {
+        "rows": 920,
+        "shared_nonkeyword_columns": 10111,
+        "different_cells": 0
+      }
+    },
+    "all_saved_L0_through_L25_shared_budgets_verified": true
+  },
+  "artifacts": {
+    "root": "out/experiments/vsix-recall-20261104",
+    "recipe": "out/experiments/vsix-recall-20261104/candidate/training_config.json",
+    "policy_proposal": "out/experiments/vsix-recall-20261104/candidate/route_policy_proposal.json",
+    "component_plan": "out/experiments/vsix-recall-20261104/candidate/component_plan.json",
+    "facts_findings": "out/experiments/vsix-recall-20261104/facts-findings.json",
+    "facts_comparison": "out/experiments/vsix-recall-20261104/sample-facts-comparison.csv"
+  },
+  "limitations": [
+    "Development is reused confirmation on 33 malware, not an independent population result.",
+    "Vocabulary CV is conditional on frozen training vocabularies.",
+    "The candidate L0 paired delta interval includes zero.",
+    "The component combination has been checked with the Python cumulative policy evaluator; full bundle, scanner and locked-test gates remain pending."
+  ],
+  "adoption": "Winning training recipe is the shared default in model-configs/filetypes/vsix.json for nightly and autocollie, with its checksum-pinned vocabulary under model-vocabularies/filetypes/vsix/. Autocollie replay preserves zero holdout and disabled early stopping. The retained-baseline policy proposal remains staged; installed scanner models still require the normal bundle deployment gates."
+}

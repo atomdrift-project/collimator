@@ -527,3 +527,30 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T221812-filetypes-npm` — 2026-11-06T22:18:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3c205f58879582f0` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9806 | 0.9881 | 0.8268 | 316 | [log](out/autocollie/runs/2026-11-06T22-20-57_20261106T221812-filetypes-npm_inherit_from_filetypes_chm_a07a95a3.log) |
+
+Rejected before run:
+
+- `npm_hnm_0015_w12` — training.estimators: 800 above max 600
+- `npm_hnm_001_w16` — training.estimators: 800 above max 600
+- `npm_hnm_002_w20` — training.estimators: 800 above max 600
+- `npm_hnm_0005_w8` — training.estimators: 800 above max 600
+- `npm_hnm_0012_w18` — training.estimators: 800 above max 600
+- `npm_mds_5_hnm_001_w12` — training.estimators: 800 above max 600
+- `npm_mds_10_hnm_0015_w16` — training.estimators: 800 above max 600
+- `npm_mds_0_hnm_001_w12` — training.estimators: 800 above max 600
+- `npm_mds_2_hnm_002_w20` — training.estimators: 800 above max 600
+- `npm_mds_5_hnm_0005_w8` — training.estimators: 800 above max 600
+- `npm_mds_10_hnm_0012_w18` — training.estimators: 800 above max 600
+- `npm_mds_0_hnm_0015_w16` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

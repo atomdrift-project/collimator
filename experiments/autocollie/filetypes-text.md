@@ -1375,3 +1375,75 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T162232-filetypes-text` — 2026-11-06T16:22:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6e0e2d0a19063830` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.5745 | 0.9270 | 0.1650 | 29 | [log](out/autocollie/runs/2026-11-06T16-24-55_20261106T162232-filetypes-text_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `03adebc26577e970` | text_ctxmi_rulekw_depth4 | ok | 0.9270 | 0.9891 | 0.8991 | 22 | [log](out/autocollie/runs/2026-11-06T16-25-17_20261106T162232-filetypes-text_text_ctxmi_rulekw_depth4.log) |
+| `c8addceec68cbbde` | text_ctxmi_rulekw_depth2 | ok | 0.9299 | 0.9891 | 0.9043 | 18 | [log](out/autocollie/runs/2026-11-06T16-25-42_20261106T162232-filetypes-text_text_ctxmi_rulekw_depth2.log) |
+| `2f79fe143e227bac` | text_ctxmi_rulekw_reglambda05 | ok | 0.9282 | 0.9892 | 0.8879 | 19 | [log](out/autocollie/runs/2026-11-06T16-26-03_20261106T162232-filetypes-text_text_ctxmi_rulekw_reglambda05.log) |
+| `0e0dc69d13d70463` | text_ctxmi_rulekw_lr003 | ok | 0.9204 | 0.9875 | 0.8983 | 7 | [log](out/autocollie/runs/2026-11-06T16-26-24_20261106T162232-filetypes-text_text_ctxmi_rulekw_lr003.log) |
+| `d3dcfe8c9d52277d` | text_ctxmi_rulekw_mcs50 | ok | 0.9324 | 0.9897 | 0.8869 | 8 | [log](out/autocollie/runs/2026-11-06T16-26-34_20261106T162232-filetypes-text_text_ctxmi_rulekw_mcs50.log) |
+| `af28f067d82e4f03` | text_ctxmi_rulekw_leaves128 | ok | 0.9271 | 0.9890 | 0.9042 | 8 | [log](out/autocollie/runs/2026-11-06T16-26-44_20261106T162232-filetypes-text_text_ctxmi_rulekw_leaves128.log) |
+| `a1c7453faa6ccd9d` | text_ctxmi_rulekw_ctxvocab10k | ok | 0.9271 | 0.9890 | 0.9042 | 13 | [log](out/autocollie/runs/2026-11-06T16-26-55_20261106T162232-filetypes-text_text_ctxmi_rulekw_ctxvocab10k.log) |
+| `06bcab7ca01dbf3c` | text_ctxmi_rulekw_ctxfreq | ok | 0.9271 | 0.9890 | 0.9042 | 22 | [log](out/autocollie/runs/2026-11-06T16-27-19_20261106T162232-filetypes-text_text_ctxmi_rulekw_ctxfreq.log) |
+| `bf7ad82566d3b544` | text_ctxmi_rulekw_rulevocab5k | ok | 0.9271 | 0.9890 | 0.9042 | 28 | [log](out/autocollie/runs/2026-11-06T16-27-44_20261106T162232-filetypes-text_text_ctxmi_rulekw_rulevocab5k.log) |
+| `c6fc45332a808f24` | text_ctxmi_rulekw_ruleminfreq5 | ok | 0.9271 | 0.9890 | 0.9042 | 29 | [log](out/autocollie/runs/2026-11-06T16-28-16_20261106T162232-filetypes-text_text_ctxmi_rulekw_ruleminfreq5.log) |
+| `54567883fd07990a` | text_ctxmi_rulekw_spw075 | ok | 0.9254 | 0.9884 | 0.9051 | 17 | [log](out/autocollie/runs/2026-11-06T16-28-47_20261106T162232-filetypes-text_text_ctxmi_rulekw_spw075.log) |
+| `048fca3a718e6a7a` | text_ctxmi_rulekw_mds5 | ok | 0.9271 | 0.9890 | 0.9042 | 5 | [log](out/autocollie/runs/2026-11-06T16-28-54_20261106T162232-filetypes-text_text_ctxmi_rulekw_mds5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctxmi_rulekw_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if deeper trait prefixes (depth 4) improve L25 recall over the 0.3912 baseline by increasing finding specificity for text malware.
+- **`text_ctxmi_rulekw_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if shallower trait prefixes (depth 2) improve L25 recall over the 0.3912 baseline by increasing feature coverage for sparse text findings.
+- **`text_ctxmi_rulekw_reglambda05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reduced L2 regularization improves L25 recall over the 0.3912 baseline by allowing sharper splits on keyword features.
+- **`text_ctxmi_rulekw_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if a lower learning rate improves L25 recall over the 0.3912 baseline by refining gradient updates with the fixed 250-tree budget.
+- **`text_ctxmi_rulekw_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if smaller leaf samples improve L25 recall over the 0.3912 baseline by allowing finer-grained splits on rare text patterns.
+- **`text_ctxmi_rulekw_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if more leaves improve L25 recall over the 0.3912 baseline by increasing model capacity to capture complex text interactions.
+- **`text_ctxmi_rulekw_ctxvocab10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if a larger context vocabulary improves L25 recall over the 0.3912 baseline by capturing more diverse text context signals.
+- **`text_ctxmi_rulekw_ctxfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if frequency-based context selection improves L25 recall over the 0.3912 baseline by prioritizing common context words over MI-ranked ones.
+- **`text_ctxmi_rulekw_rulevocab5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if a smaller rule keyword vocabulary improves L25 recall over the 0.3912 baseline by reducing noise from rare rule IDs.
+- **`text_ctxmi_rulekw_ruleminfreq5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if a higher rule keyword frequency floor improves L25 recall over the 0.3912 baseline by filtering out low-support rule terms.
+- **`text_ctxmi_rulekw_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reduced positive class weighting improves L25 recall over the 0.3912 baseline by balancing the influence of the minority malware class.
+- **`text_ctxmi_rulekw_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if a max delta step cap improves L25 recall over the 0.3912 baseline by stabilizing leaf outputs and preventing score saturation.
+
+</details>
+
+## Cycle `20261110T104936-filetypes-text` — 2026-11-10T10:49:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `32b973a6f3425c59` | inherit_from_filetypes_chm_a07a95a3 | ok | 0.9204 | 0.9819 | 0.7455 | 14 | [log](out/autocollie/runs/2026-11-10T10-52-22_20261110T104936-filetypes-text_inherit_from_filetypes_chm_a07a95a3.log) |
+| `0b279318425d17b6` | text_best_mcs50_reglambda05 | ok | 0.9346 | 0.9880 | 0.8892 | 14 | [log](out/autocollie/runs/2026-11-10T10-52-40_20261110T104936-filetypes-text_text_best_mcs50_reglambda05.log) |
+| `ad0ee2cb63c174a5` | text_best_mcs50_lr003 | ok | 0.9358 | 0.9885 | 0.8904 | 4 | [log](out/autocollie/runs/2026-11-10T10-52-55_20261110T104936-filetypes-text_text_best_mcs50_lr003.log) |
+| `1e73d91ca35ffa64` | text_best_mcs50_depth2 | ok | 0.9349 | 0.9881 | 0.8742 | 13 | [log](out/autocollie/runs/2026-11-10T10-53-01_20261110T104936-filetypes-text_text_best_mcs50_depth2.log) |
+| `364541c0e0542406` | text_best_mcs50_spw075 | ok | 0.9425 | 0.9895 | 0.8912 | 4 | [log](out/autocollie/runs/2026-11-10T10-53-15_20261110T104936-filetypes-text_text_best_mcs50_spw075.log) |
+| `d3af47b4f28e07c6` | text_best_mcs50_mds5 | ok | 0.9437 | 0.9899 | 0.8848 | 4 | [log](out/autocollie/runs/2026-11-10T10-53-20_20261110T104936-filetypes-text_text_best_mcs50_mds5.log) |
+| `ef154d0a0466b3dc` | text_best_mcs50_leaves128 | ok | 0.9435 | 0.9899 | 0.8665 | 4 | [log](out/autocollie/runs/2026-11-10T10-53-26_20261110T104936-filetypes-text_text_best_mcs50_leaves128.log) |
+| `92d97707ee151576` | text_best_mcs50_subsample06 | ok | 0.9332 | 0.9875 | 0.8563 | 3 | [log](out/autocollie/runs/2026-11-10T10-53-31_20261110T104936-filetypes-text_text_best_mcs50_subsample06.log) |
+| `03d4a260449440ae` | text_best_mcs50_col06 | ok | 0.9373 | 0.9879 | 0.8962 | 3 | [log](out/autocollie/runs/2026-11-10T10-53-35_20261110T104936-filetypes-text_text_best_mcs50_col06.log) |
+| `2ff00fd2a8e9a7e5` | text_best_mcs50_hardneg01 | ok | 0.9437 | 0.9899 | 0.8848 | 5 | [log](out/autocollie/runs/2026-11-10T10-53-40_20261110T104936-filetypes-text_text_best_mcs50_hardneg01.log) |
+| `69830ff6fcc60cc1` | text_best_mcs50_hardneg01_w10 | ok | 0.9441 | 0.9888 | 0.9002 | 6 | [log](out/autocollie/runs/2026-11-10T10-53-46_20261110T104936-filetypes-text_text_best_mcs50_hardneg01_w10.log) |
+| `523d447827ec9cb0` | text_best_mcs50_regalpha05 | ok | 0.9418 | 0.9896 | 0.8816 | 5 | [log](out/autocollie/runs/2026-11-10T10-53-53_20261110T104936-filetypes-text_text_best_mcs50_regalpha05.log) |
+| `8d01d22f9fe3df40` | text_best_mcs50_gamma05 | ok | 0.9402 | 0.9893 | 0.8804 | 4 | [log](out/autocollie/runs/2026-11-10T10-53-59_20261110T104936-filetypes-text_text_best_mcs50_gamma05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_a07a95a3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=a07a95a35c0643c0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_best_mcs50_reglambda05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines the top-performing min_child_samples=50 with reg_lambda=0.5 to test if reduced regularization further improves L25 recall beyond the 0.1300 baseline.
+- **`text_best_mcs50_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if the lower learning rate 0.03 that showed promise in isolation (0.0862) synergizes with min_child_samples=50 to boost L25 recall.
+- **`text_best_mcs50_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Evaluates if the trait_path_depth=2 setting, which yielded 0.1053 recall in isolation, improves L25 recall when combined with the optimal min_child_samples=50.
+- **`text_best_mcs50_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Investigates if scale_pos_weight_mult=0.75, which achieved 0.0876 recall alone, enhances L25 recall when paired with the stronger min_child_samples=50 configuration.
+- **`text_best_mcs50_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Checks if max_delta_step=5, which previously resulted in 0.0793 recall, interacts positively with min_child_samples=50 to increase L25 recall.
+- **`text_best_mcs50_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing num_leaves to 128, which previously yielded 0.0793 recall, provides additional capacity to improve L25 recall with min_child_samples=50.
+- **`text_best_mcs50_subsample06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Evaluates if subsample=0.6, a setting that achieved perfect recall in sister routes, improves L25 recall for this route when combined with min_child_samples=50.
+- **`text_best_mcs50_col06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Assesses if colsample_bytree=0.6, which showed strong performance in sister routes, boosts L25 recall when applied alongside min_child_samples=50.
+- **`text_best_mcs50_hardneg01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if hard_negative_fraction=0.1, a configuration used in sister routes, improves L25 recall by focusing on difficult benign samples with min_child_samples=50.
+- **`text_best_mcs50_hardneg01_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Evaluates if hard_negative_weight=10, paired with hard_negative_fraction=0.1, further enhances L25 recall by penalizing hard negatives more heavily.
+- **`text_best_mcs50_regalpha05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Investigates if L1 regularization reg_alpha=0.5 improves L25 recall by sparsifying the model when combined with min_child_samples=50.
+- **`text_best_mcs50_gamma05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if gamma=0.5, which controls minimum split gain, improves L25 recall by preventing overfitting to noise when combined with min_child_samples=50.
+
+</details>
+

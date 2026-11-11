@@ -1758,3 +1758,39 @@ Canonical run JSONs retain these larger-cohort results in research_evaluations, 
 
 </details>
 
+## Cycle `20261106T182743-filetypes-c` — 2026-11-06T18:27:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ad15aab2fa52cd0` | inherit_from_filetypes_mp3_d29c13e7 | ok | 0.7218 | 0.9141 | 0.3839 | 25 | [log](out/autocollie/runs/2026-11-06T18-30-56_20261106T182743-filetypes-c_inherit_from_filetypes_mp3_d29c13e7.log) |
+| `40c1e971c73b57e8` | c_depth5_mss0_seed_search_3 | ok | 0.9403 | 0.9801 | 0.8615 | 288 | [log](out/autocollie/runs/2026-11-06T18-34-34_20261106T182743-filetypes-c_c_depth5_mss0_seed_search_3.log) |
+| `c988acab14d69e2e` | c_depth5_mss0_scale_pos_weight_2 | ok | 0.9486 | 0.9826 | 0.8507 | 521 | [log](out/autocollie/runs/2026-11-06T18-45-54_20261106T182743-filetypes-c_c_depth5_mss0_scale_pos_weight_2.log) |
+| `d3803dc05c6f6d2c` | c_depth5_mss0_hard_neg_weight_10 | ok | 0.9504 | 0.9828 | 0.8379 | 520 | [log](out/autocollie/runs/2026-11-06T18-54-38_20261106T182743-filetypes-c_c_depth5_mss0_hard_neg_weight_10.log) |
+| `5040d84449dfe16a` | c_depth5_mss0_max_delta_step_2 | ok | 0.9451 | 0.9815 | 0.8303 | 560 | [log](out/autocollie/runs/2026-11-06T19-04-00_20261106T182743-filetypes-c_c_depth5_mss0_max_delta_step_2.log) |
+| `2eb9ba51c3708379` | c_depth5_mss0_reg_lambda_0_5 | ok | 0.9521 | 0.9841 | 0.8437 | 544 | [log](out/autocollie/runs/2026-11-06T19-13-05_20261106T182743-filetypes-c_c_depth5_mss0_reg_lambda_0_5.log) |
+| `51af15177122385f` | c_depth5_mss0_min_child_samples_50 | ok | 0.9449 | 0.9812 | 0.8278 | 34 | [log](out/autocollie/runs/2026-11-06T19-13-42_20261106T182743-filetypes-c_c_depth5_mss0_min_child_samples_50.log) |
+| `501ef97d44d49c91` | c_depth5_mss0_num_leaves_128 | ok | 0.9412 | 0.9809 | 0.8283 | 36 | [log](out/autocollie/runs/2026-11-06T19-14-22_20261106T182743-filetypes-c_c_depth5_mss0_num_leaves_128.log) |
+| `d8f745e2d94d52e8` | c_depth5_mss0_learning_rate_0_03 | ok | 0.9478 | 0.9831 | 0.8465 | 32 | [log](out/autocollie/runs/2026-11-06T19-14-54_20261106T182743-filetypes-c_c_depth5_mss0_learning_rate_0_03.log) |
+| `bdf6a82f104e5efa` | c_depth5_mss0_text_metrics_full | ok | 0.9448 | 0.9809 | 0.8429 | 51 | [log](out/autocollie/runs/2026-11-06T19-15-33_20261106T182743-filetypes-c_c_depth5_mss0_text_metrics_full.log) |
+| `7149d1cd4c3aec14` | c_depth5_mss0_kv_vocab | ok | 0.9466 | 0.9821 | 0.8360 | 52 | [log](out/autocollie/runs/2026-11-06T19-16-26_20261106T182743-filetypes-c_c_depth5_mss0_kv_vocab.log) |
+| `78497ae95e97b648` | c_depth5_mss0_symbols_vocab | ok | 0.9491 | 0.9817 | 0.8576 | 55 | [log](out/autocollie/runs/2026-11-06T19-17-22_20261106T182743-filetypes-c_c_depth5_mss0_symbols_vocab.log) |
+| `712bae4e6d812750` | c_depth5_mss0_severity_fractions | ok | 0.9479 | 0.9828 | 0.8461 | 51 | [log](out/autocollie/runs/2026-11-06T19-18-18_20261106T182743-filetypes-c_c_depth5_mss0_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_mp3_d29c13e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/mp3 (key=d29c13e714460248, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_depth5_mss0_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Confirms the 0.8526 L25 recall of the best depth-5/min_sample_score=0 run by averaging 3 seeds to reduce variance and stabilize the 1-FP operating point.
+- **`c_depth5_mss0_scale_pos_weight_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if increasing the positive class weight multiplier to 2 improves L25 recall beyond 0.8526 by forcing the model to prioritize malware detection over benign precision.
+- **`c_depth5_mss0_hard_neg_weight_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if doubling the hard negative weight to 10 improves L25 recall by more aggressively penalizing false positives on difficult benign samples.
+- **`c_depth5_mss0_max_delta_step_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if capping the leaf output step to 2 improves L25 recall by preventing overfitting to extreme outliers in the training set, similar to sister routes.
+- **`c_depth5_mss0_reg_lambda_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if reducing L2 regularization to 0.5 improves L25 recall by allowing the model to fit the complex C-source feature space more closely.
+- **`c_depth5_mss0_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if lowering the minimum child samples to 50 improves L25 recall by allowing deeper, more specific splits on the small malware cohort.
+- **`c_depth5_mss0_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Investigates if increasing tree complexity to 128 leaves improves L25 recall by capturing more intricate interactions in the C-source features.
+- **`c_depth5_mss0_learning_rate_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a lower learning rate of 0.03 improves L25 recall by allowing more gradual convergence and better generalization on the dev set.
+- **`c_depth5_mss0_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables full text metrics to see if additional structural text features improve L25 recall beyond the current 0.8526 baseline.
+- **`c_depth5_mss0_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables KV vocabulary features to test if key-value pair patterns improve L25 recall for C-source malware detection.
+- **`c_depth5_mss0_symbols_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables symbol vocabulary features to test if import/symbol patterns improve L25 recall for C-source malware detection.
+- **`c_depth5_mss0_severity_fractions`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables severity fraction features to test if size-invariant severity distributions improve L25 recall by normalizing for file size differences.
+
+</details>
+

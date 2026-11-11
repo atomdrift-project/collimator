@@ -2174,3 +2174,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T201611-filetypes-python` — 2026-11-06T20:16:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `722fed3fe2ee742b` | inherit_from_filetypes_jsp_bb6d8dbb | ok | 0.9002 | 0.9408 | 0.8385 | 108 | [log](out/autocollie/runs/2026-11-06T20-22-32_20261106T201611-filetypes-python_inherit_from_filetypes_jsp_bb6d8dbb.log) |
+| `a2ef2148a959fd81` | dex_transfer_depth4_cutoff0 | ok | 0.9859 | 0.9942 | 0.9447 | 67 | [log](out/autocollie/runs/2026-11-06T20-24-28_20261106T201611-filetypes-python_dex_transfer_depth4_cutoff0.log) |
+| `607c1c7eb5425f56` | dex_transfer_depth4_cutoff4 | ok | 0.9506 | 0.9792 | 0.8687 | 70 | [log](out/autocollie/runs/2026-11-06T20-25-37_20261106T201611-filetypes-python_dex_transfer_depth4_cutoff4.log) |
+| `0255ccccd8b04875` | dex_transfer_depth3_cutoff0 | ok | 0.9853 | 0.9938 | 0.9391 | 62 | [log](out/autocollie/runs/2026-11-06T20-26-50_20261106T201611-filetypes-python_dex_transfer_depth3_cutoff0.log) |
+| `739ac26010d5e184` | dex_transfer_depth5_cutoff0 | ok | 0.9857 | 0.9941 | 0.9433 | 67 | [log](out/autocollie/runs/2026-11-06T20-27-54_20261106T201611-filetypes-python_dex_transfer_depth5_cutoff0.log) |
+| `b04e538ce2f7efb7` | dex_transfer_depth4_cutoff0_reg1 | ok | 0.9866 | 0.9944 | 0.9441 | 12 | [log](out/autocollie/runs/2026-11-06T20-29-03_20261106T201611-filetypes-python_dex_transfer_depth4_cutoff0_reg1.log) |
+| `6fb9de20743860f9` | dex_transfer_depth4_cutoff0_leaves64 | ok | 0.9863 | 0.9945 | 0.9439 | 12 | [log](out/autocollie/runs/2026-11-06T20-29-17_20261106T201611-filetypes-python_dex_transfer_depth4_cutoff0_leaves64.log) |
+| `f377f38ef189b38b` | python_kv_vocab_depth4_cutoff0 | ok | 0.9893 | 0.9958 | 0.9486 | 77 | [log](out/autocollie/runs/2026-11-06T20-29-30_20261106T201611-filetypes-python_python_kv_vocab_depth4_cutoff0.log) |
+| `e0c089b38d18437c` | python_kv_vocab_depth4_cutoff4 | ok | 0.9665 | 0.9863 | 0.8776 | 75 | [log](out/autocollie/runs/2026-11-06T20-30-49_20261106T201611-filetypes-python_python_kv_vocab_depth4_cutoff4.log) |
+| `2bda91362090a222` | python_text_metrics_full_depth4 | ok | 0.9888 | 0.9955 | 0.9495 | 79 | [log](out/autocollie/runs/2026-11-06T20-32-41_20261106T201611-filetypes-python_python_text_metrics_full_depth4.log) |
+| `7deb4a2bbfbac327` | python_severity_fractions_depth4 | ok | 0.9877 | 0.9951 | 0.9454 | 79 | [log](out/autocollie/runs/2026-11-06T20-34-07_20261106T201611-filetypes-python_python_severity_fractions_depth4.log) |
+| `550cead762b67e10` | python_rule_keywords_depth4 | ok | 0.9894 | 0.9959 | 0.9493 | 97 | [log](out/autocollie/runs/2026-11-06T20-35-40_20261106T201611-filetypes-python_python_rule_keywords_depth4.log) |
+| `962e2fd79fe89b71` | python_depth4_cutoff0_seed_search | ok | 0.9861 | 0.9943 | 0.9435 | 33 | [log](out/autocollie/runs/2026-11-06T20-37-27_20261106T201611-filetypes-python_python_depth4_cutoff0_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_bb6d8dbb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=bb6d8dbbb4d66333, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`dex_transfer_depth4_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the dex-inherited depth-4 and low-regularization settings improve L25 recall over the 0.7026 baseline by removing the malware score cutoff that may discard weak signals.
+- **`dex_transfer_depth4_cutoff4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Isolates the effect of the malware score cutoff in the dex-inherited configuration to determine if filtering low-severity malware improves L25 recall stability.
+- **`dex_transfer_depth3_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the default trait path depth of 3 combined with dex training hyperparameters yields better L25 recall than depth 4, addressing potential over-specialization in path prefixes.
+- **`dex_transfer_depth5_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores deeper trait path specificity at depth 5 to see if more granular finding prefixes improve L25 recall for Python malware patterns.
+- **`dex_transfer_depth4_cutoff0_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces L2 regularization from 5 to 1 in the dex-inherited setup to allow more complex models, potentially improving L25 recall if the previous setting was overly conservative.
+- **`dex_transfer_depth4_cutoff0_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves from 32 to 64 in the dex-inherited configuration to capture more complex interactions, aiming to boost L25 recall without increasing depth.
+- **`python_kv_vocab_depth4_cutoff0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables KV vocabulary features with depth 4 and no malware cutoff to test if key-value pairs provide discriminative signal for L25 recall improvement in Python scripts.
+- **`python_kv_vocab_depth4_cutoff4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests KV vocabulary features with a malware score cutoff of 4 to see if filtering low-severity samples improves the signal-to-noise ratio for L25 recall.
+- **`python_text_metrics_full_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables full text metrics features with depth 4 to capture structural text anomalies that may improve L25 recall for Python malware detection.
+- **`python_severity_fractions_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds severity fraction features to provide size-invariant severity distribution signals, aiming to improve L25 recall by better characterizing malware intensity.
+- **`python_rule_keywords_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables rule keyword features to leverage rule ID patterns for L25 recall improvement, testing if specific rule identifiers are predictive for Python malware.
+- **`python_depth4_cutoff0_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses seed search with the dex-inherited depth-4 configuration to find a more robust model that improves L25 recall by averaging out seed-specific variance.
+
+</details>
+

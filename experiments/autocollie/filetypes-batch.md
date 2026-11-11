@@ -1458,3 +1458,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261106T203803-filetypes-batch` — 2026-11-06T20:38:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a894a2b935427df` | inherit_from_filetypes_jsp_bb6d8dbb | ok | 0.9748 | 0.8698 | 0.3032 | 29 | [log](out/autocollie/runs/2026-11-06T20-44-09_20261106T203803-filetypes-batch_inherit_from_filetypes_jsp_bb6d8dbb.log) |
+| `ae544ac7c389a90e` | dex_transfer_depth4_min_sample_0 | ok | 1.0000 | 0.9996 | 0.9969 | 21 | [log](out/autocollie/runs/2026-11-06T20-44-46_20261106T203803-filetypes-batch_dex_transfer_depth4_min_sample_0.log) |
+| `5122ce68b81d65a9` | depth4_rule_desc_keywords_min_freq_1 | ok | 1.0000 | 0.9997 | 0.9985 | 25 | [log](out/autocollie/runs/2026-11-06T20-45-09_20261106T203803-filetypes-batch_depth4_rule_desc_keywords_min_freq_1.log) |
+| `35579489ad14dff4` | depth4_severity_fractions | ok | 1.0000 | 0.9997 | 0.9980 | 20 | [log](out/autocollie/runs/2026-11-06T20-45-37_20261106T203803-filetypes-batch_depth4_severity_fractions.log) |
+| `f1e96dc70b618f6c` | depth4_text_metrics_full | ok | 1.0000 | 0.9996 | 0.9965 | 20 | [log](out/autocollie/runs/2026-11-06T20-45-59_20261106T203803-filetypes-batch_depth4_text_metrics_full.log) |
+| `94d51fbb3f8efafe` | depth4_kv_vocab | ok | 1.0000 | 0.9996 | 0.9967 | 21 | [log](out/autocollie/runs/2026-11-06T20-46-21_20261106T203803-filetypes-batch_depth4_kv_vocab.log) |
+| `cd46189a3a3d8b54` | depth4_min_malware_score_2 | ok | 0.9983 | 0.9905 | 0.9745 | 32 | [log](out/autocollie/runs/2026-11-06T20-46-55_20261106T203803-filetypes-batch_depth4_min_malware_score_2.log) |
+| `951caf11ee0ea8a6` | depth4_min_malware_score_4 | ok | 0.9909 | 0.9354 | 0.3031 | 33 | [log](out/autocollie/runs/2026-11-06T20-47-38_20261106T203803-filetypes-batch_depth4_min_malware_score_4.log) |
+| `5c0940e3d75f4cac` | depth4_reg_lambda_5 | ok | 1.0000 | 0.9996 | 0.9971 | 23 | [log](out/autocollie/runs/2026-11-06T20-48-24_20261106T203803-filetypes-batch_depth4_reg_lambda_5.log) |
+| `4ba3af041b44ee15` | depth4_min_child_samples_50 | ok | 0.9999 | 0.9995 | 0.9968 | 7 | [log](out/autocollie/runs/2026-11-06T20-48-56_20261106T203803-filetypes-batch_depth4_min_child_samples_50.log) |
+| `c9ba4a17b3045e34` | depth4_num_leaves_64 | ok | 1.0000 | 0.9996 | 0.9967 | 8 | [log](out/autocollie/runs/2026-11-06T20-49-18_20261106T203803-filetypes-batch_depth4_num_leaves_64.log) |
+| `c4e3f7375f3dc761` | depth4_subsample_0_6 | ok | 1.0000 | 0.9997 | 0.9965 | 8 | [log](out/autocollie/runs/2026-11-06T20-49-34_20261106T203803-filetypes-batch_depth4_subsample_0_6.log) |
+| `cd28b72d3cb94735` | depth4_col_sample_0_6 | ok | 1.0000 | 0.9996 | 0.9963 | 8 | [log](out/autocollie/runs/2026-11-06T20-49-49_20261106T203803-filetypes-batch_depth4_col_sample_0_6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_bb6d8dbb`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=bb6d8dbbb4d66333, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`dex_transfer_depth4_min_sample_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 EXP_BLINDFOLD=1 …` — Tests if the dex-inherited configuration's aggressive regularization and depth-4 features improve L25 recall over the 0.9828 baseline by reducing overfitting on the 1135 benign cohort.
+- **`depth4_rule_desc_keywords_min_freq_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the depth-4 feature surface with low-frequency rule/description keywords to capture rare batch-specific indicators, aiming to push L25 recall beyond the 0.9811 depth-4 control.
+- **`depth4_severity_fractions`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds size-invariant severity fractions to the depth-4 baseline to better distinguish high-severity batch scripts from benign noise, targeting L25 recall improvement via better class separation.
+- **`depth4_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables full text metrics on the depth-4 baseline to capture structural anomalies in batch files, aiming to improve L25 recall by adding discriminative text-level features.
+- **`depth4_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables KV vocabulary features on the depth-4 baseline to exploit key-value pairs in batch scripts, targeting L25 recall improvement through structured data extraction.
+- **`depth4_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering low-severity malware (score < 2) from training improves L25 recall by reducing label noise, using the depth-4 feature set as a control.
+- **`depth4_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if filtering low-severity malware (score < 4) from training improves L25 recall by focusing on high-confidence malware, using the depth-4 feature set as a control.
+- **`depth4_reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases L2 regularization to 5 on the depth-4 baseline to reduce overfitting and improve L25 recall by stabilizing the model on the small benign cohort.
+- **`depth4_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces min_child_samples to 50 on the depth-4 baseline to allow finer-grained splits, aiming to improve L25 recall by capturing subtle batch-specific patterns.
+- **`depth4_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces num_leaves to 64 on the depth-4 baseline to simplify the model, aiming to improve L25 recall by reducing variance on the small benign cohort.
+- **`depth4_subsample_0_6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces row subsampling to 0.6 on the depth-4 baseline to increase stochasticity, aiming to improve L25 recall by escaping local minima in the optimization landscape.
+- **`depth4_col_sample_0_6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces column subsampling to 0.6 on the depth-4 baseline to increase feature diversity, aiming to improve L25 recall by reducing correlation between features.
+
+</details>
+
