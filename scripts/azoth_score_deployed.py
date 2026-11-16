@@ -103,26 +103,12 @@ def _require_held_out(db: str, model_dir: Path, row_ids: list[int]) -> None:
         provenance.get("training_partitions") == ["train"]
         and provenance.get("model_revision") == cache_identity.model_revision(model_dir)
     )
-    found = 0
-    with collimator_data._connect(db, repeatable_read=True) as conn:
-        for start in range(0, len(row_ids), 2000):
-            ids = row_ids[start:start + 2000]
-            if collimator_data._is_pg(db):
-                rows = conn.execute(
-                    f"SELECT sha256, canonical_sha256 FROM samples WHERE id=ANY(%s) AND {collimator_data.LABELED_WHERE}",
-                    (ids,),
-                )
-            else:
-                markers = ",".join("?" for _ in ids)
-                rows = conn.execute(
-                    f"SELECT sha256, canonical_sha256 FROM samples WHERE id IN ({markers}) AND {collimator_data.LABELED_WHERE}", ids,
-                )
-            for sha, canonical in rows:
-                found += 1
-                partition = collimator_data.partition_of(canonical or sha)
-                if partition == "train" or (partition == "dev" and not dev_is_held_out):
-                    raise ValueError("baseline training may include requested evaluation rows; retrain baseline with dev held out")
-    if found != len(row_ids):
+    keys = collimator_data.split_keys(db, row_ids)
+    for split_key in keys.values():
+        partition = collimator_data.partition_of(split_key)
+        if partition == "train" or (partition == "dev" and not dev_is_held_out):
+            raise ValueError("baseline training may include requested evaluation rows; retrain baseline with dev held out")
+    if len(keys) != len(row_ids):
         raise ValueError("evaluation rows were deleted, relabeled or skipped; rerun screening")
 
 
@@ -200,41 +186,11 @@ def _test_partition_row_ids(
     via ``_fetch_labels`` so the cache survives label corrections /
     reclassifications without producing stale comparisons.
     """
-    is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
-    row_ids: list[int] = []
-    with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if is_pg:
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    SELECT id
-                    FROM samples
-                    WHERE {collimator_data.LABELED_WHERE}
-                      AND file_type = ANY(%s)
-                      AND id > %s
-                      AND canonical_sha256 IS NOT NULL
-                      AND length(canonical_sha256) >= 2
-                      AND get_byte(decode(right(canonical_sha256, 2), 'hex'), 0) < %s
-                    ORDER BY id
-                    """,
-                    [file_types, int(min_id_exclusive), collimator_data.TEST_BUCKET_MAX],
-                )
-                for (row_id,) in cur:
-                    row_ids.append(int(row_id))
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            for row_id, csha in conn.execute(
-                f"SELECT id, canonical_sha256 FROM samples "  # noqa: S608
-                f"WHERE {collimator_data.LABELED_WHERE} "
-                f"AND file_type IN ({placeholders}) AND id > ? "
-                f"AND canonical_sha256 IS NOT NULL ORDER BY id",
-                [*file_types, int(min_id_exclusive)],
-            ):
-                if not csha or len(csha) < 2:
-                    continue
-                if collimator_data.is_test_sample(csha):
-                    row_ids.append(int(row_id))
-    return row_ids
+    return [
+        row.row_id
+        for row in collimator_data.stream_corpus(db_path, file_types=tuple(file_types), scores="none")
+        if row.row_id > min_id_exclusive and collimator_data.is_test_sample(row.canonical_sha256)
+    ]
 
 
 def _fetch_labels(db_path: str, row_ids: np.ndarray) -> np.ndarray:

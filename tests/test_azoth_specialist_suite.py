@@ -18,6 +18,7 @@ import azoth_specialist_suite as suite  # noqa: E402
 
 from collimator import train  # noqa: E402
 from collimator.model import create_classifier  # noqa: E402
+from collimator.demo import add_sample, create_schema  # noqa: E402
 
 
 class _FakeModel:
@@ -393,23 +394,24 @@ def test_route_replay_cannot_exceed_current_thread_budget(saved, expected):
 @pytest.mark.parametrize("group,spellings", [
     ("documents", ("ooxml", "docx", "xlsx", "ole_doc", "doc", "ole")),
     ("scripts", ("vbs", "vbscript")),
-    ("portable", ("python_bytecode", "python-bytecode", "pyc")),
+    ("bytecode", ("python_bytecode", "python-bytecode", "pyc")),
+    ("archives", ("jar", "war", "ear", "apk_android", "apk", "tar.gz", "tgz", "msi")),
+    ("text", ("text", "ini", "toml")),
 ])
 def test_group_training_fetches_canonical_and_historical_types(tmp_path, monkeypatch, group, spellings):
     path = tmp_path / "samples.sqlite"
     with sqlite3.connect(path) as conn:
-        conn.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT, "
-                     "label TEXT, score INTEGER, file_type TEXT)")
-        conn.executemany("INSERT INTO samples VALUES (?, ?, ?, 'bad', 4, ?)",
-                         [(i, "ff" * 32, "ff" * 32, ft) for i, ft in enumerate(spellings, 1)])
-        conn.execute("INSERT INTO samples VALUES (999, ?, ?, 'bad', 4, 'elf')", ("ff" * 32, "ff" * 32))
-    monkeypatch.setattr(suite.data, "LABELED_WHERE", "label IN ('bad','good')")
+        create_schema(conn)
+        # Digests ending in ff hash to the training partition.
+        for i, ft in [*enumerate(spellings, 1), (999, "elf")]:
+            add_sample(conn, sample_id=i, sha256=f"{i:062x}ff", label="bad", file_type=ft,
+                       report={"risk": 4})
     monkeypatch.delenv("COLLIMATOR_OOF_FOLD_EXCLUDE", raising=False)
     monkeypatch.delenv("EXP_OOF_FOLD_EXCLUDE", raising=False)
     rows = suite._fetch_rows(path, file_types=suite.DEPLOYMENT_GROUPS[group], max_id=999,
                              min_score=None, min_malware_score=4)
     assert {row[0] for row in rows} == set(range(1, len(spellings) + 1))
-    assert all(not row[2] for row in rows)  # canonical ff hash is training-only
+    assert all(not row[2] for row in rows)  # an ff split key is training-only
     assert suite._count_rows(path, file_types=suite.DEPLOYMENT_GROUPS[group], max_id=999,
                              min_score=None)["bad"] == len(spellings)
 
@@ -417,11 +419,11 @@ def test_group_training_fetches_canonical_and_historical_types(tmp_path, monkeyp
 def test_specialist_eligibility_merges_alias_support_before_filtering(tmp_path, monkeypatch):
     path = tmp_path / 'eligibility.sqlite'
     with sqlite3.connect(path) as db:
-        db.execute('CREATE TABLE samples (id INTEGER PRIMARY KEY, label TEXT, score INTEGER, file_type TEXT)')
-        db.executemany('INSERT INTO samples (label,score,file_type) VALUES (?,4,?)',
-                       [('bad','ole')]*4 + [('good','ole')]*3 +
-                       [('bad','doc')]*3 + [('good','doc')]*4 + [('bad','pe'),('good','pe')])
-    monkeypatch.setattr(suite.data, 'LABELED_WHERE', "label IN ('bad','good')")
+        create_schema(db)
+        rows = ([('bad','ole')]*4 + [('good','ole')]*3 +
+                [('bad','doc')]*3 + [('good','doc')]*4 + [('bad','pe'),('good','pe')])
+        for i, (label, file_type) in enumerate(rows, 1):
+            add_sample(db, sha256=f"{i:064x}", label=label, file_type=file_type, report={"risk": 4})
     result = suite._eligible_filetypes(path, max_id=100, min_score=None, min_bad=5, min_good=5)
     assert len(result) == 1
     assert result[0]['name'] == 'ole_doc'

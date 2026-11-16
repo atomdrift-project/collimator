@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import closing
 from dataclasses import asdict
 import hashlib
+import itertools
 import json
 import logging
 import math
@@ -26,9 +26,8 @@ def _digest(value: Any) -> str:
 
 
 def _database_stamp(db: str) -> dict[str, Any]:
+    stamp: dict[str, Any] = {"max_id": data.snapshot_max_id(db)}
     with data._connect(db) as conn:
-        row = next(iter(data._execute(conn, f"SELECT MAX(id) FROM samples WHERE {data.LABELED_WHERE}")))
-        stamp: dict[str, Any] = {"max_id": int(row[0] or 0)}
         if data._is_pg(db):
             changes = next(iter(data._execute(conn, (
                 "SELECT n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_all_tables "
@@ -41,68 +40,37 @@ def _database_stamp(db: str) -> dict[str, Any]:
     return stamp
 
 
-def _id_reservoir(conn: Any, db: str, filetype: str, max_id: int, capacity: int, seed: int) -> tuple[np.ndarray, int]:
-    """Uniform sample via IID priorities, streaming only the covering index.
+def _sample_type(db: str, filetype: str, count: int, max_id: int, seed: int) -> list[tuple[int, int]]:
+    """Uniform sample of a filetype's non-test rows via IID priorities.
 
     Random ID seeks would bias the sample around ID gaps and ingestion batches.
-    This scans IDs once, retaining O(sample size) IDs and priorities, then
-    fetches hashes/labels only for that bounded reservoir.
+    This streams the filetype's rows once, retaining O(sample size) rows.
     """
-    marker = "%s" if data._is_pg(db) else "?"
-    query = (
-        f"SELECT id FROM samples WHERE {data.LABELED_WHERE} "
-        f"AND file_type={marker} AND id<={marker} ORDER BY id"
-    )
-    cur = conn.cursor(name="allowlist_ids") if data._is_pg(db) else conn.cursor()
-    rng = np.random.default_rng(seed)
-    ids = np.empty(0, dtype=np.int64)
-    priorities = np.empty(0, dtype=np.float64)
-    scanned = 0
-    last_progress = time.monotonic()
-    with closing(cur):
-        cur.execute(query, (filetype, max_id))
-        while batch := cur.fetchmany(32768):
-            incoming = np.fromiter((int(row[0]) for row in batch), dtype=np.int64, count=len(batch))
-            ids = np.concatenate((ids, incoming))
-            priorities = np.concatenate((priorities, rng.random(len(batch))))
-            if len(ids) > capacity:
-                keep = np.argpartition(priorities, capacity - 1)[:capacity]
-                ids, priorities = ids[keep], priorities[keep]
-            scanned += len(batch)
-            if time.monotonic() - last_progress >= 10:
-                LOG.info("sample %s: scanned %s indexed IDs", filetype, f"{scanned:,}")
-                last_progress = time.monotonic()
-    return ids[np.argsort(priorities, kind="stable")], scanned
-
-
-def _sample_type(db: str, filetype: str, count: int, max_id: int, seed: int) -> list[tuple[int, int]]:
     started = time.monotonic()
-    capacity = max(64, math.ceil(count * 1.5) + 32)
-    with data._connect(db, repeatable_read=True) as conn:
-        while True:
-            ids, population = _id_reservoir(conn, db, filetype, max_id, capacity, seed)
-            rows: dict[int, tuple[int, str]] = {}
-            for offset in range(0, len(ids), 1000):
-                chunk = [int(i) for i in ids[offset:offset + 1000]]
-                if data._is_pg(db):
-                    query = f"SELECT id, label, canonical_sha256, sha256 FROM samples WHERE {data.LABELED_WHERE} AND id=ANY(%s)"
-                    params: Any = (chunk,)
-                else:
-                    marks = ",".join("?" for _ in chunk)
-                    query = f"SELECT id, label, canonical_sha256, sha256 FROM samples WHERE {data.LABELED_WHERE} AND id IN ({marks})"
-                    params = chunk
-                for rid, label, canonical, sha in data._execute(conn, query, params):
-                    rows[int(rid)] = (int(label == "bad"), str(canonical or sha))
-            sample = [
-                (int(rid), rows[int(rid)][0]) for rid in ids
-                if int(rid) in rows and not data.is_test_sample(rows[int(rid)][1])
-            ][:count]
-            if len(sample) >= count or len(ids) >= population:
-                LOG.info("sample %s: %s/%s training rows in %.1fs", filetype, f"{len(sample):,}", f"{population:,}", time.monotonic() - started)
-                return sample
-            # A test-heavy filetype may need a larger reservoir. Reusing the
-            # same seed preserves the priority ordering of the first pass.
-            capacity = min(population, capacity * 2)
+    rng = np.random.default_rng(seed)
+    rows = np.empty((0, 2), dtype=np.int64)
+    priorities = np.empty(0, dtype=np.float64)
+    population = 0
+    last_progress = time.monotonic()
+    corpus = data.stream_corpus(db, max_id=max_id, file_types=(filetype,), scores="none")
+    # Aliases widen the query; each stored spelling is sampled under its own name.
+    eligible = (
+        (row.row_id, row.label) for row in corpus
+        if row.file_type == filetype and not data.is_test_sample(row.canonical_sha256)
+    )
+    while batch := list(itertools.islice(eligible, 32768)):
+        rows = np.concatenate((rows, np.asarray(batch, dtype=np.int64)))
+        priorities = np.concatenate((priorities, rng.random(len(batch))))
+        if len(rows) > count:
+            keep = np.argpartition(priorities, count - 1)[:count]
+            rows, priorities = rows[keep], priorities[keep]
+        population += len(batch)
+        if time.monotonic() - last_progress >= 10:
+            LOG.info("sample %s: scanned %s rows", filetype, f"{population:,}")
+            last_progress = time.monotonic()
+    sample = [(int(rid), int(label)) for rid, label in rows[np.argsort(priorities, kind="stable")]]
+    LOG.info("sample %s: %s/%s training rows in %.1fs", filetype, f"{len(sample):,}", f"{population:,}", time.monotonic() - started)
+    return sample
 
 
 def _sample_rows(args: Any, stamp: dict[str, Any]) -> list[tuple[int, int]]:
@@ -120,17 +88,13 @@ def _sample_rows(args: Any, stamp: dict[str, Any]) -> list[tuple[int, int]]:
 
 
 def _filetypes(db: str, max_id: int) -> list[str]:
-    """Walk distinct types with one covering-index seek per type."""
-    marker = "%s" if data._is_pg(db) else "?"
-    query = (
-        f"SELECT file_type FROM samples WHERE {data.LABELED_WHERE} "
-        f"AND file_type>{marker} AND id<={marker} ORDER BY file_type LIMIT 1"
-    )
-    types: list[str] = []
+    """The distinct stored file types of usable labeled rows."""
     with data._connect(db) as conn:
-        while row := next(iter(data._execute(conn, query, (types[-1] if types else "", max_id))), None):
-            types.append(str(row[0]))
-    return types
+        query = (
+            f"SELECT DISTINCT s.file_type FROM {data.CORPUS_FROM} WHERE {data.LABELED_WHERE}"
+            f" AND s.file_type > '' AND s.id <= {data._marker(conn)} ORDER BY 1"
+        )
+        return [str(file_type) for (file_type,) in data._execute(conn, query, (max_id,))]
 
 
 def _workers(args: Any, rows: int) -> int:
@@ -170,7 +134,7 @@ def frequency_counts(args: Any) -> tuple[list[str], np.ndarray, dict[str, Any]]:
     if not args.filetypes:
         raise RuntimeError("no labeled filetypes available for feature discovery")
     inputs = {
-        "version": 2,
+        "version": 3,
         "database": _digest(str(args.db)),  # Keep credentials out of metadata.
         "dataset": stamp,
         "feature_config": asdict(features.feature_config_from_env()),
@@ -206,7 +170,7 @@ def frequency_counts(args: Any) -> tuple[list[str], np.ndarray, dict[str, Any]]:
             os.environ["COLLIMATOR_ALLOWED_FEATURES_FILE"] = previous
     names = spec.feature_names
     counts = count_frequencies(args, sample, spec)
-    meta = {"sample_rows": len(sample), "dataset": stamp, "cache_key": key, "cache_hit": False, "sampling": "uniform indexed-ID priority reservoir v1"}
+    meta = {"sample_rows": len(sample), "dataset": stamp, "cache_key": key, "cache_hit": False, "sampling": "uniform priority reservoir v2"}
     if _database_stamp(args.db) != stamp:
         LOG.warning("dataset changed during audit; counts will not be cached")
         return names, counts, meta

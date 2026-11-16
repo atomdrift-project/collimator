@@ -2,13 +2,13 @@
 
 from dataclasses import asdict
 from itertools import combinations
-import json
 import pickle
 import sqlite3
 
 import pytest
 
 from collimator import features
+from collimator.demo import write_reports
 from collimator.vocabulary import DiskTrigramCandidates, TrigramSource, VocabularyCounts
 
 
@@ -23,16 +23,13 @@ def corpus(tmp_path, monkeypatch):
     features.feature_config_from_env.cache_clear()
     path = tmp_path / "samples.sqlite"
     labels = [(i, int(i % 3 != 0)) for i in range(1, 25)]
-    with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT,"
-                   " formula TEXT, elements TEXT, score INTEGER, mtime TEXT)")
-        for row, label in labels:
-            report = {"v": "4", "fs": [{"type": "elf", "ts": [
-                {"i": f"trait/{i}::finding", "l": 4, "c": 1.0}
-                for i in range(row % 4, row % 4 + 5)
-            ]}]}
-            db.execute("INSERT INTO samples VALUES (?, ?, '', '', ?, '')",
-                       (row, json.dumps(report), label * 5))
+    write_reports(path, [
+        {"id": row, "score": label * 5, "report": {"v": "4", "fs": [{"type": "elf", "ts": [
+            {"i": f"trait/{i}::finding", "l": 4, "c": 1.0}
+            for i in range(row % 4, row % 4 + 5)
+        ]}]}}
+        for row, label in labels
+    ])
     yield path, labels
     features.feature_config_from_env.cache_clear()
 

@@ -1,5 +1,4 @@
 """Persistent scoring workers preserve model layouts, row alignment and cleanup."""
-import json
 import os
 from pathlib import Path
 import runpy
@@ -8,21 +7,21 @@ import sqlite3
 import pytest
 
 from collimator import features
+from collimator.demo import add_sample, create_schema, write_reports
 
 
 @pytest.fixture
 def reports(tmp_path):
     path = tmp_path / "reports.sqlite"
     rows = []
-    with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT, "
-                   "formula TEXT, elements TEXT, score INTEGER, mtime TEXT)")
-        for rid in range(1, 17):
-            report = {"v": "4", "fs": [{"type": "elf", "ts": [
-                {"i": "a" if rid % 2 else "b", "l": 4, "c": 1.0},
-            ]}]}
-            db.execute("INSERT INTO samples VALUES (?,?, '', '', 4, '')", (rid, json.dumps(report)))
-            rows.append((rid, f"{rid:064x}", "", 4, rid % 2, f"{rid:064x}"))
+    stored = []
+    for rid in range(1, 17):
+        report = {"v": "4", "fs": [{"type": "elf", "ts": [
+            {"i": "a" if rid % 2 else "b", "l": 4, "c": 1.0},
+        ]}]}
+        stored.append({"id": rid, "report": report, "score": 4})
+        rows.append((rid, f"{rid:064x}", "", 4, rid % 2, f"{rid:064x}"))
+    write_reports(path, stored)
     return path, rows
 
 
@@ -78,22 +77,25 @@ def test_route_selection_needs_only_covered_fields_and_preserves_filters(tmp_pat
     from collimator import data
     scorer = runpy.run_path(str(Path(__file__).parents[1] / "scripts/azoth_oof_score_routes.py"))
     path = tmp_path / "metadata.sqlite"
+    sha = {rid: f"{rid:064x}" for rid in range(1, 6)}
     with sqlite3.connect(path) as db:
-        # Deliberately no path column: it must not be fetched for route scores.
-        db.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT, "
-                   "label TEXT, score INTEGER, file_type TEXT, skip TEXT, cleave_result TEXT)")
-        db.executemany("INSERT INTO samples VALUES (?,?,?,?,?,?,?,?)", [
-            (1, "sha1", "canonical1", "bad", 4, "elf", "", "{}"),
-            (2, "sha2", "", "good", 0, "pe", "", "{}"),
-            (3, "sha3", "", "bad", 5, "elf", "", "{}"),
-            (4, "sha4", "", "good", 0, "elf", "excluded", "{}"),
-            (5, "sha5", "", "good", 0, "elf", "", "{}"),
-        ])
+        create_schema(db)
+        for rid, label, risk, file_type, label_source in [
+            (1, "bad", 4, "elf", None),
+            (2, "good", 0, "pe", None),
+            (3, "bad", 5, "elf", None),
+            (4, "good", 0, "elf", "conflict"),
+            (5, "good", 0, "elf", None),
+        ]:
+            add_sample(db, sample_id=rid, sha256=sha[rid], label=label, file_type=file_type,
+                       report={"traits": [{"id": "x", "crit": 5}], "risk": risk},
+                       label_source=label_source)
     # Exercise the shared sampling predicate as well as the route and pin filters.
-    monkeypatch.setattr(data, "LABELED_WHERE", "label IN ('bad','good') AND skip='' AND id != 3")
+    monkeypatch.setattr(data, "LABELED_WHERE", data.LABELED_WHERE + " AND s.id != 3")
     fetch = scorer["_fetch_route_rows"]
+    # Route rows read no reports: score is filled in as each report is extracted.
     assert fetch(path, ["elf", "pe"], 4) == [
-        (1, "sha1", "", 4, 1, "canonical1"), (2, "sha2", "", 0, 0, "sha2"),
+        (1, sha[1], "", 0, 1, sha[1]), (2, sha[2], "", 0, 0, sha[2]),
     ]
-    assert fetch(path, ["elf"], 4) == [(1, "sha1", "", 4, 1, "canonical1")]
+    assert fetch(path, ["elf"], 4) == [(1, sha[1], "", 0, 1, sha[1])]
     assert fetch(path, [], 4) == []

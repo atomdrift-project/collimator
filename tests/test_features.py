@@ -1,12 +1,12 @@
 """Tests for capability-first feature extraction from cleave v3 AnalysisReport JSON."""
 
-import json
 import math
 import os
-import sqlite3
 
 import numpy as np
 import pytest
+
+from collimator.demo import write_reports
 
 from collimator.features import (
     FeatureSpec,
@@ -14,7 +14,6 @@ from collimator.features import (
     _allowed_with_pair,
     _assemble_partitioned_matrices,
     _finding_paths,
-    _file_symbols,
     build_vocab,
     extract,
     extract_all,
@@ -212,20 +211,7 @@ def test_extract_labeled_from_db_batches_fetches_reports_in_workers(tmp_path) ->
     )
     spec = build_vocab([report] * 35)
     db_path = tmp_path / "samples.db"
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "CREATE TABLE samples ("
-        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
-        "score INTEGER, mtime TEXT)"
-    )
-    for row_id in range(1, 4):
-        conn.execute(
-            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
-            "VALUES (?, ?, '', '', 10, '')",
-            (row_id, json.dumps(report)),
-        )
-    conn.commit()
-    conn.close()
+    write_reports(db_path, [{"id": row_id, "report": report, "score": 10} for row_id in range(1, 4)])
 
     batches = list(
         extract_labeled_from_db_batches(
@@ -250,20 +236,9 @@ def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_align
     )
     spec = build_vocab([report] * 35)
     db_path = tmp_path / "samples.db"
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "CREATE TABLE samples ("
-        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
-        "score INTEGER, mtime TEXT)"
-    )
-    for row_id in range(1, 4):
-        conn.execute(
-            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
-            "VALUES (?, ?, '', '', 10, '')",
-            (row_id, json.dumps(report)),
-        )
-    conn.commit()
-    conn.close()
+    write_reports(db_path, [
+        {"id": row_id, "report": report, "score": 20 + row_id} for row_id in range(1, 4)
+    ])
 
     metadata = [
         (1, "a" * 64, "/one", 10, 0),
@@ -282,7 +257,8 @@ def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_align
 
     returned = [row for batch_meta, _X, _y, _stats in batches for row in batch_meta]
     labels = [int(label) for _batch_meta, _X, y, _stats in batches for label in y]
-    assert sorted(returned) == metadata
+    # Each row's score is replaced by its report's risk as the report is read.
+    assert sorted(returned) == [(*row[:3], 20 + row[0], *row[4:]) for row in metadata]
     assert labels == [row[-1] for row in returned]
     assert all(X.nnz > 0 for _batch_meta, X, _y, _stats in batches)
     assert all(stats["rows"] > 0 for _batch_meta, _X, _y, stats in batches)
@@ -295,20 +271,7 @@ def test_extract_labeled_metadata_from_db_batches_uses_size_aware_batches(tmp_pa
     )
     spec = build_vocab([report] * 35)
     db_path = tmp_path / "samples.db"
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "CREATE TABLE samples ("
-        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
-        "score INTEGER, mtime TEXT)"
-    )
-    for row_id in range(1, 5):
-        conn.execute(
-            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
-            "VALUES (?, ?, '', '', 10, '')",
-            (row_id, json.dumps(report)),
-        )
-    conn.commit()
-    conn.close()
+    write_reports(db_path, [{"id": row_id, "report": report, "score": 10} for row_id in range(1, 5)])
 
     monkeypatch.setenv("COLLIMATOR_THRESHOLD_BATCH_BYTES", "100")
     metadata = [
@@ -985,15 +948,15 @@ def test_extract_format_hints_from_file_types(monkeypatch) -> None:
     spec = build_vocab([report] * 35)
     vec = extract(report, spec)
 
-    assert vec[spec.feature_names.index("format:archive_package")] == 1.0
-    assert vec[spec.feature_names.index("format:script")] == 1.0
-    assert vec[spec.feature_names.index("format:native_binary")] == 1.0
+    assert vec[spec.feature_names.index("format:archives")] == 1.0
+    assert vec[spec.feature_names.index("format:scripts")] == 1.0
+    assert vec[spec.feature_names.index("format:native")] == 1.0
     assert vec[spec.feature_names.index("format:mixed_archive_script")] == 1.0
     assert vec[spec.feature_names.index("format:mixed_archive_binary")] == 1.0
     assert vec[spec.feature_names.index("format:mixed_script_binary")] == 1.0
-    assert vec[spec.feature_names.index("format:script_inner_fraction")] == 0.5
-    assert vec[spec.feature_names.index("format:native_binary_hostile_fraction")] == 1.0
-    assert vec[spec.feature_names.index("format:script_suspicious_fraction")] == 1.0
+    assert vec[spec.feature_names.index("format:scripts_inner_fraction")] == 0.5
+    assert vec[spec.feature_names.index("format:native_hostile_fraction")] == 1.0
+    assert vec[spec.feature_names.index("format:scripts_suspicious_fraction")] == 1.0
     feature_config_from_env.cache_clear()
 
 
@@ -1017,7 +980,7 @@ def test_format_hints_do_not_infer_from_extensions(monkeypatch) -> None:
     spec = build_vocab([report] * 35)
     vec = extract(report, spec)
 
-    assert vec[spec.feature_names.index("format:script")] == 0.0
+    assert vec[spec.feature_names.index("format:scripts")] == 0.0
     assert vec[spec.feature_names.index("format:unknown_file_fraction")] == 1.0
     feature_config_from_env.cache_clear()
 
@@ -2001,20 +1964,10 @@ def test_parallel_extraction_matches_serial(tmp_path) -> None:
     ]
     spec = build_vocab(reports)
     db_path = tmp_path / "samples.db"
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "CREATE TABLE samples ("
-        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
-        "score INTEGER, mtime TEXT)"
-    )
-    for row_id, report in enumerate(reports, start=1):
-        conn.execute(
-            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
-            "VALUES (?, ?, '', '', 10, '')",
-            (row_id, json.dumps(report)),
-        )
-    conn.commit()
-    conn.close()
+    write_reports(db_path, [
+        {"id": row_id, "report": report, "score": 10}
+        for row_id, report in enumerate(reports, start=1)
+    ])
     ids = [(i, i % 2) for i in range(1, 41)]
 
     def matrix(n_workers: int) -> np.ndarray:

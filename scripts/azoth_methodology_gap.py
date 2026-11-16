@@ -40,31 +40,8 @@ LOG = logging.getLogger(__name__)
 
 
 def _fetch_canonical_map(db_path: str, row_ids: np.ndarray) -> dict[int, str]:
-    """Pull canonical_sha256 for the given row_ids in one batch."""
-    ids = [int(x) for x in row_ids]
-    if not ids:
-        return {}
-    chunk = 50_000
-    out: dict[int, str] = {}
-    for i in range(0, len(ids), chunk):
-        batch = ids[i : i + chunk]
-        with data._connect(db_path) as conn:  # noqa: SLF001
-            if data._is_pg(db_path):  # noqa: SLF001
-                with conn.cursor() as cur:
-                    cur.execute(
-                        "SELECT id, sha256, canonical_sha256 FROM samples WHERE id = ANY(%s)",
-                        [batch],
-                    )
-                    for rid, sha, canonical in cur:
-                        out[int(rid)] = (canonical or sha or "")
-            else:
-                placeholders = ",".join("?" for _ in batch)
-                for rid, sha, canonical in conn.execute(
-                    f"SELECT id, sha256, canonical_sha256 FROM samples WHERE id IN ({placeholders})",  # noqa: S608
-                    batch,
-                ):
-                    out[int(rid)] = (canonical or sha or "")
-    return out
+    """Pull each usable row's split key (its own sha256) in one pass."""
+    return data.split_keys(db_path, (int(x) for x in row_ids))
 
 
 def _recall_at_per_100M(y_true: np.ndarray, y_prob: np.ndarray, target: float) -> float:

@@ -31,6 +31,7 @@ import scipy.sparse as sp
 from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score, roc_auc_score
 
 from collimator import data
+from collimator.filegroups import TRAINED_GROUPS
 from collimator.features import (  # noqa: PLC2701
     DEFAULT_TRAIT_PATH_DEPTH,
     MIN_CONFIDENCE,
@@ -44,25 +45,7 @@ from collimator.model import create_classifier, predict_proba
 LOG = logging.getLogger("ngram_pool_sweep")
 
 DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
-    "scripts": (
-        "batch",
-        "javascript",
-        "lua",
-        "perl",
-        "php",
-        "powershell",
-        "python",
-        "ruby",
-        "shell",
-        "typescript",
-        "vbscript",
-    ),
-    "native": ("elf", "macho", "pe"),
-    "portable": ("dex", "java_class", "pyc", "wasm"),
-    "documents": ("doc", "docx", "html", "ole", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"),
-    "source": ("c", "cpp", "csharp", "go", "java", "kotlin", "makefile", "rust", "scala", "swift"),
-    "config": ("ini", "json", "package.json", "plist", "toml", "xml", "yaml", "yml"),
-    "media": ("bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"),
+    group: data.expand_filetype_aliases(types) for group, types in TRAINED_GROUPS.items()
 }
 
 
@@ -87,47 +70,20 @@ class Variant:
         return f"{self.pool}-{depth}-{self.crit_filter}-{self.n}gram-{prefix}"
 
 
-def _placeholder(db_path: str) -> str:
-    return "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
-
-
-def _label_int(label: str) -> int:
-    return 1 if label == "bad" else 0
-
-
 def _fetch_rows(db_path: str, pool: Pool, max_id: int) -> list[dict[str, Any]]:
-    marker = _placeholder(db_path)
-    where = [data.LABELED_WHERE]
-    params: list[Any] = []
-    if data._is_pg(db_path):  # noqa: SLF001
-        where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') = ANY({marker})")
-        params.append(list(pool.filetypes))
-    else:
-        placeholders = ",".join(marker for _ in pool.filetypes)
-        where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') IN ({placeholders})")
-        params.extend(pool.filetypes)
-    if max_id:
-        where.append(f"id <= {marker}")
-        params.append(max_id)
-    query = (
-        "SELECT id, sha256, canonical_sha256, label, score "
-        "FROM samples WHERE "
-        + " AND ".join(where)
-        + " ORDER BY id"
-    )
-    rows: list[dict[str, Any]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        for row_id, sha256, canonical, label, score in data._execute(conn, query, params):  # noqa: SLF001
-            split_key = canonical or sha256
-            rows.append(
-                {
-                    "id": int(row_id),
-                    "label": _label_int(str(label)),
-                    "is_test": data.is_test_sample(str(split_key)),
-                    "score": float(score or 0.0),
-                },
-            )
-    return rows
+    wanted = set(pool.filetypes)
+    # A file hopper could not type has no file_type to filter on in SQL.
+    file_types = None if "unknown" in wanted else tuple(pool.filetypes)
+    return [
+        {
+            "id": row.row_id,
+            "label": row.label,
+            "is_test": data.is_test_sample(row.canonical_sha256),
+            "score": float(row.score),
+        }
+        for row in data.stream_corpus(db_path, max_id=max_id, file_types=file_types)
+        if row.file_type in wanted
+    ]
 
 
 def _cap_rows(rows: list[dict[str, Any]], *, per_label: int, seed: int) -> list[dict[str, Any]]:

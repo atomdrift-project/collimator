@@ -154,6 +154,7 @@ def test_estimate_scales_with_matrix_threads_and_cv():
                                      SimpleNamespace(n_folds=0, num_threads=8)) > small
 
 
+@pytest.mark.skipif(not Path('/proc/self/stat').exists(), reason='fit reservations identify processes through /proc')
 def test_parallel_fit_admission_is_atomic_and_recovers_killed_owner(tmp_path):
     script = '''
 import sys,time

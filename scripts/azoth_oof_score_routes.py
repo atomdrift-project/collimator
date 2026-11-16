@@ -134,55 +134,16 @@ def _fetch_route_rows(
 
     Tuple format matches ``data.stream_labeled_metadata_full``:
     ``(row_id, sha256, path, score, label, split_key)``. Path is an unused
-    empty placeholder: extraction reads reports by ID and output omits paths.
-    Keeping selection covered by the sampling index avoids a heap lookup for
-    every matching row, especially expensive when table pages are cold. We construct it
-    via direct SQL so we can apply the file_type filter at the database
-    rather than streaming the entire labeled corpus per route.
+    empty placeholder: extraction reads reports by ID and output omits paths;
+    score is filled in from each report as it is extracted.
     """
     if not file_types:
         return []
-    marker = "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
-    where = [
-        data.LABELED_WHERE,
+    rows = data.stream_corpus(db_path, max_id=max_id, file_types=tuple(file_types), scores="none")
+    return [
+        (row.row_id, row.sha256, "", row.score, row.label, row.canonical_sha256)
+        for row in rows
     ]
-    params: list[Any] = []
-    if max_id > 0:
-        where.append(f"id <= {marker}")
-        params.append(int(max_id))
-    rows: list[tuple[int, str, str, int, int, str]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(list(file_types))
-            query = _route_metadata_query(" AND ".join(where))
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                for row_id, sha256, path, score, label, canonical in cur:
-                    split_key = canonical or sha256
-                    rows.append((
-                        int(row_id), str(sha256), str(path or ""),
-                        int(score or 0), data._label_int(str(label)),  # noqa: SLF001
-                        str(split_key),
-                    ))
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            query = _route_metadata_query(" AND ".join(where))
-            for row_id, sha256, path, score, label, canonical in conn.execute(query, params):
-                split_key = canonical or sha256
-                rows.append((
-                    int(row_id), str(sha256), str(path or ""),
-                    int(score or 0), data._label_int(str(label)),  # noqa: SLF001
-                    str(split_key),
-                ))
-    return rows
-
-
-def _route_metadata_query(where: str) -> str:
-    return ("SELECT id, sha256, '' AS path, score, label, canonical_sha256 "
-            f"FROM samples WHERE {where} ORDER BY id")
 
 
 def _sha256_file(path: Path) -> str:

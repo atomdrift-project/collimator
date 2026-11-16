@@ -294,10 +294,6 @@ def _route_artifacts_newer_than(path: Path, output_dir: Path) -> bool:
     return False
 
 
-def _label_int(label: str) -> int:
-    return 1 if label == "bad" else 0
-
-
 def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str]:
     """Return {row_id: canonical_file_type}. Each stored `file_type` is mapped
     to its canonical filefacts label via [data.route_filetype] — compression
@@ -324,31 +320,9 @@ def _fetch_rows(
     file_types: list[str],
     max_id: int,
 ) -> list[tuple[int, int]]:
-    marker = "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
-    where = [
-        data.LABELED_WHERE,
-        f"id <= {marker}",
-    ]
-    params: list[Any] = [max_id]
-    rows: list[tuple[int, int]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(file_types)
-            query = "SELECT id, label FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                rows = [(int(row_id), _label_int(str(label))) for row_id, label in cur]
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            query = "SELECT id, label FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            rows = [
-                (int(row_id), _label_int(str(label)))
-                for row_id, label in conn.execute(query, params)
-            ]
-    return rows
+    """(row_id, label) of the usable labeled rows of a route, by id."""
+    rows = data.stream_corpus(db_path, max_id=max_id, file_types=tuple(file_types), scores="none")
+    return [(row.row_id, row.label) for row in rows]
 
 
 def _load_oof_route_scores(

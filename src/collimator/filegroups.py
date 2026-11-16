@@ -1,15 +1,30 @@
-"""Shared filegroup membership for experiments and deployment."""
+"""filefacts' file groups: the partition every filegroup route trains on.
 
-# Multi-file containers, application packages, and filesystem images share
-# layout/member-name signals even when their contents have their own models.
-# Include stored legacy labels and compressed TAR variants so older rows join
-# the same training pool. Bare compression wrappers have no container layout;
-# Office/OLE containers keep their document group instead.
-ARCHIVE_FILETYPES: tuple[str, ...] = (
-    "7z", "apk", "apk_alpine", "apk_android", "cab", "chm", "conda",
-    "cpio", "crate", "crx", "deb", "dmg", "ear", "egg", "gem", "ipa",
-    "iso", "jar", "npm", "nupkg", "oci_image", "pkg_arch", "pkg_freebsd",
-    "pkg_macos", "python_sdist", "rar", "rpa", "rpm", "snap", "squashfs",
-    "tar", "tar.bz2", "tar.gz", "tar.xz", "tar.zst", "tgz", "vsix",
-    "war", "whl", "xbps", "xpi", "zip",
-)
+`data/file_groups.json` is filefacts' `docs/file-groups.json`, vendored so a
+route's membership is exactly the grouping filefacts reports at runtime.
+Refresh it with `make sync-file-groups` when filefacts adds or regroups a type.
+Labels are canonical filefacts labels; `data.expand_filetype_aliases` widens
+them to the spellings older catalog rows were stored under.
+"""
+
+import json
+from pathlib import Path
+
+_TABLE = Path(__file__).parent / "data" / "file_groups.json"
+
+FILE_GROUPS: dict[str, tuple[str, ...]] = {
+    group: tuple(types)
+    for group, types in json.loads(_TABLE.read_text(encoding="utf-8"))["groups"].items()
+}
+
+# Groups that never get a specialist. Single-stream compression is unwrapped
+# by litmus and the inner file routed instead, so the wrapper has no signal
+# of its own; `unknown` names no format at all.
+UNTRAINED_GROUPS: frozenset[str] = frozenset({"compressed", "unknown"})
+
+TRAINED_GROUPS: dict[str, tuple[str, ...]] = {
+    group: types for group, types in FILE_GROUPS.items() if group not in UNTRAINED_GROUPS
+}
+
+# Canonical filefacts label → its group.
+GROUP_OF: dict[str, str] = {ft: group for group, types in FILE_GROUPS.items() for ft in types}

@@ -25,13 +25,8 @@ from collimator import data, features  # noqa: E402
 
 
 def _make_batch(db: str, n: int, ftype: str, seed: int) -> list:
-    with data._connect(db) as conn, conn.cursor() as cur:  # noqa: SLF001
-        cur.execute(
-            "SELECT id FROM samples WHERE file_type = %s AND label IN ('bad','good') "
-            "AND cleave_result IS NOT NULL AND skip = '' ORDER BY id",
-            (ftype,),
-        )
-        all_ids = [int(r[0]) for r in cur]
+    corpus = data.stream_corpus(db, file_types=(ftype,), scores="none")
+    all_ids = [row.row_id for row in corpus]
     rng = random.Random(seed)
     rng.shuffle(all_ids)
     ids = all_ids[:n]

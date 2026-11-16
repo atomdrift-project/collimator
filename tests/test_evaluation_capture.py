@@ -1,13 +1,14 @@
 """Evaluation identities describe the versions actually fetched, not later DB state."""
 
 from contextlib import contextmanager
+import hashlib
 import sqlite3
 
 import numpy as np
 import pytest
 
 from collimator import cache_identity, data, experiment, features
-from collimator.demo import create_demo_db
+from collimator.demo import compress_report, create_demo_db, set_report
 
 
 @pytest.fixture
@@ -44,7 +45,7 @@ def test_captured_revision_matches_live_and_survives_cache_reuse(corpus, tmp_pat
         test_row_ids=identity["test_row_ids"], evaluation_revision=expected,
     )
     with sqlite3.connect(path) as conn:
-        conn.execute("UPDATE samples SET score=score+1 WHERE id=?", (evaluation[0][0],))
+        set_report(conn, evaluation[0][0], {"risk": 11})
     assert cache_identity.evaluation_revision(path, [rid for rid, _ in evaluation]) != expected
     cached = experiment._load_matrix_cache(cache, "captured")
     assert cached[-1] == expected
@@ -64,7 +65,7 @@ def test_deleted_and_invalid_rows_keep_ids_labels_and_features_aligned(corpus, m
     monkeypatch.setattr(features, "_feature_batch_size", lambda _: 80)
     with sqlite3.connect(path) as conn:
         conn.execute("DELETE FROM samples WHERE id IN (?,?)", (training[0][0], evaluation[0][0]))
-        conn.execute("UPDATE samples SET cleave_result='[]' WHERE id=?", (evaluation[1][0],))
+        set_report(conn, evaluation[1][0], [])
     identity = {}
     X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
         path, training, evaluation, spec, n_workers=1, identity=identity,
@@ -80,29 +81,45 @@ def test_deleted_and_invalid_rows_keep_ids_labels_and_features_aligned(corpus, m
     )
 
 
-def test_postgres_captures_report_and_version_in_one_query(monkeypatch):
+def test_postgres_captures_report_and_version_in_one_snapshot(monkeypatch):
     queries = []
+    detail = compress_report({"risk": 5})
+    digest = hashlib.sha256(detail).digest()
 
     class Cursor:
-        description = [(key,) for key in
-                       ("id", "cleave_result", "formula", "elements", "score", "mtime", "row_version")]
+        def __init__(self):
+            self.rows = []
 
-        def __iter__(self):
-            return iter([(1, {"fs": []}, "", "", 5, None, "123")])
+        def __enter__(self):
+            return self
 
-    class Connection:
+        def __exit__(self, *exc):
+            return False
+
         def execute(self, query, params):
             queries.append(query)
             assert params == [[1]]
+            if "v.detail IS NOT NULL" in query:  # the reports themselves
+                self.rows = [(1, b"\x01" * 32, "pe", 10, detail, "123", digest)]
+
+        def __iter__(self):
+            return iter(self.rows)
+
+    class Connection:
+        def cursor(self):
             return Cursor()
 
+    snapshots = []
+
     @contextmanager
-    def connect(*args, **kwargs):
+    def connect(*args, repeatable_read=False, **kwargs):
+        snapshots.append(repeatable_read)
         yield Connection()
 
     monkeypatch.setattr(data, "_connect", connect)
     result = data.fetch_cleave_results("postgres://test", [1], evaluation_labels={1: 0})
-    assert len(queries) == 1
-    assert "cleave_result" in queries[0] and "xmin::text" in queries[0]
-    assert result[1]["evaluation_digest"] == cache_identity.evaluation_row_digest([1, "123", "good"])
+    assert snapshots == [True]  # reports, members and versions read in one snapshot
+    assert "xmin::text" in queries[0] and "v.digest" in queries[0]
+    assert result[1]["evaluation_digest"] == cache_identity.evaluation_row_digest(
+        [1, "123", digest.hex(), "good", {k: v for k, v in result[1].items() if k != "evaluation_digest"}])
     assert result[1]["score"] == 5

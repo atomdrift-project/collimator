@@ -1,7 +1,6 @@
 """Paired evaluation freezes labels, routing, model inputs and row alignment."""
 import json
 from pathlib import Path
-import sqlite3
 import sys
 from types import SimpleNamespace
 
@@ -10,6 +9,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import compare_frozen_bundles as compare
+
+from collimator.demo import write_reports
 
 
 def test_cohort_includes_test_and_only_pe_dev():
@@ -49,11 +50,10 @@ def test_capture_freezes_source_labels_and_detects_mutated_or_added_inputs(tmp_p
     (source/'general/model.txt').write_text('snapshot-only fixture')
     (source/'general/feature_spec.json').write_text('{}')
     db_path=tmp_path/'source.sqlite'
-    with sqlite3.connect(db_path) as db:
-        db.execute('CREATE TABLE samples (id INTEGER, cleave_result TEXT, formula TEXT, elements TEXT, '
-                   'score INTEGER, mtime TEXT, label TEXT, sha256 TEXT)')
-        db.executemany('INSERT INTO samples VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-            (1,'{}','','',0,'','good','aa'*32), (2,'{}','','',4,'','good','bb'*32)])
+    write_reports(db_path, [
+        {'id': 1, 'report': {}, 'score': 0, 'label': 'good', 'sha256': 'aa'*32},
+        {'id': 2, 'report': {}, 'score': 4, 'label': 'good', 'sha256': 'bb'*32},
+    ])
     capture=tmp_path/'capture'
     compare.capture(SimpleNamespace(capture=capture, source=source, bundle=['candidate='+str(source)], db=str(db_path)))
     manifest=compare.verify_capture(capture)

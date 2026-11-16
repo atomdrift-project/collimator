@@ -18,6 +18,7 @@ dependencies = [
     "numba>=0.60",
     "llvmlite>=0.43",
     "psycopg[binary]>=3.1",
+    "zstandard>=0.22",
     "lightgbm>=4.0",
 ]
 

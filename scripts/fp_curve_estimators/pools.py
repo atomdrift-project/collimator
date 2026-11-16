@@ -19,8 +19,8 @@ import numpy as np
 
 sys.path.insert(0, "src")
 
-from collimator.experiment import EXPERIMENT_FILEGROUPS  # noqa: E402
-from collimator.features import FORMAT_GROUPS  # noqa: E402
+from collimator.data import route_filetype  # noqa: E402
+from collimator.filegroups import GROUP_OF  # noqa: E402
 
 from .base import PooledContext, RouteMeta, RouteTail, to_logit  # noqa: E402
 
@@ -39,7 +39,7 @@ TEACHER_POOLS: tuple[str, ...] = (
     "filegroups/scripts",
     "filegroups/source",
     "filetypes/java_class",
-    "filegroups/portable",
+    "filegroups/bytecode",
     "filetypes/c",
     "filetypes/javascript",
 )
@@ -53,29 +53,11 @@ TARGET_ROUTES: tuple[str, ...] = ("filetypes/pe", "filetypes/ruby", "filetypes/g
 # ~30MB.
 CONTEXT_TAIL_KEEP = 50_000
 
-_FILETYPE_TO_FILEGROUP: dict[str, str] = {}
-for _group, _types in EXPERIMENT_FILEGROUPS.items():
-    for _ft in _types:
-        _FILETYPE_TO_FILEGROUP[_ft] = _group
-# Fallback for filetypes with no training filegroup of their own (archives,
-# office documents, packaging manifests): the feature-layer format group is
-# the next-best statement of "these files are alike".
-_FORMAT_GROUP_ALIAS = {
-    "script": "scripts", "native_binary": "native", "archive_package": "archive",
-    "document": "documents", "source_code": "source", "config_data": "config",
-    "media": "media",
-}
-for _group, _types in FORMAT_GROUPS.items():
-    for _ft in _types:
-        _FILETYPE_TO_FILEGROUP.setdefault(_ft, _FORMAT_GROUP_ALIAS.get(_group, _group))
-
-
 def route_filegroup(route: str) -> str:
     """Hierarchy parent for a route: its filegroup, or a sensible fallback.
 
-    ``filegroups/x`` is its own family. A filetype route uses its training
-    filegroup when it has one, else its feature-layer format group, else
-    ``other``. Route names carry both spellings of the same type in the
+    ``filegroups/x`` is its own family. A filetype route uses its filefacts
+    group, else ``other``. Route names carry old spellings of a type in the
     corpus (``python-bytecode`` / ``python_bytecode``), so both normalise to
     the same family.
     """
@@ -84,8 +66,7 @@ def route_filegroup(route: str) -> str:
         return name
     if route == "general":
         return "general"
-    key = name.replace("-", "_")
-    return _FILETYPE_TO_FILEGROUP.get(key, _FILETYPE_TO_FILEGROUP.get(name, "other"))
+    return GROUP_OF.get(route_filetype(name), "other")
 
 
 @dataclass(frozen=True)

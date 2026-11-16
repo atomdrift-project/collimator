@@ -1,12 +1,42 @@
-"""Load labeled samples from a hopper database (SQLite or PostgreSQL).
+"""Load labeled samples from hopper's verdict schema (PostgreSQL or SQLite).
 
-Splitting is deterministic and archive-aware: each sample's
-canonical_sha256 (the lexicographic minimum SHA256 across the sample
-itself and all embedded files, pre-computed by hopper) is used as the
-split key.  This ensures archives sharing an inner file always land in
-the same partition, preventing data leakage.
+hopper (store/schema.sql) keeps one ``samples`` row per file, archive members
+included; one ``verdicts`` row per file per scanner; archive membership in
+``contents``; and where files sit on disk in ``locations``. Collimator only
+reads it: every connection is read-only and names the schema it reads
+(``HOPPER_SCHEMA``, default ``verdict``). What each training input is read
+from:
 
-Three-way partition by canonical_sha256 last byte:
+  label        samples.label: 'good' / 'bad'. (Legacy 'purgatory' is
+               'inconclusive' now; neither trains.)
+  file_type    samples.file_type.
+  report       atomscan's verdict (scanner 1): verdicts.detail is the file's
+               own version 8 report, zstd-compressed. The report a file trains
+               on is rebuilt from it and from the reports of every file
+               ``contents`` lists beneath it, as the scan that produced them
+               saw the archive (see ``fetch_cleave_results``).
+  formula      the report's ``mol``; elements is the formula without its
+               subscript digits (legacy samples.formula / elements).
+  score        the report's ``risk`` (legacy samples.score was files[0].risk).
+  path, mtime  the file's newest ``locations`` row (by seen_at). Archive
+               members have none: their place is in their archive's contents.
+
+A usable labeled sample (``LABELED_WHERE``) is labeled good or bad, has an ok
+atomscan verdict with a report, and is not a good/bad conflict
+(label_source 'conflict', legacy skip 'conflict'). Two exclusions concern
+archive members never scanned on their own (no ``scans`` row), whose label
+they inherited from an archive; no column says them, so they are applied in
+Python, reading each member's report:
+
+- its report is a stub, a molecule and a risk alone (``_molecule_only``);
+- it is labeled bad and its own findings do not convict it (one at crit 5,
+  or two at crit 4): legacy hopper's skip-benign-archive-item
+  (``_benign_archive_item``).
+
+Splitting is deterministic. hopper's verdict schema keeps no canonical
+(archive-wide) digest, so the split key is the file's own sha256, still
+exposed as ``canonical_sha256`` so callers and caches keep their shape.
+Three-way partition by the split key's last byte:
 
   test:  byte < TEST_BUCKET_MAX                       (12.5%)
   dev:   TEST_BUCKET_MAX <= byte < DEV_BUCKET_MAX     (12.5%)
@@ -23,22 +53,24 @@ this still doesn't address (family-level correlation, temporal drift).
 
 from __future__ import annotations
 
-from .profiling import timed
-
-import json
 import hashlib
+import itertools
+import json
 import logging
 import os
 import random
+import re
 import sqlite3
 import time
-import threading
-from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
+
+import zstandard
+
+from .profiling import timed
 
 # Pure-compression suffixes — formats with no multi-file container of
 # their own. When they appear AT THE END of a compound filetype string
@@ -126,9 +158,9 @@ _FILETYPE_ALIASES: dict[str, tuple[str, ...]] = {
     "go.mod": ("gomod",),
     # Office formats — filefacts identifies the OPC/OLE container, not the
     # member, so every Word/Excel/PowerPoint subtype (including macro-enabled
-    # and template variants) collapses onto its container. MSI is also an
-    # OLE2/CFBF file, which cleave identifies as `ole_doc`.
-    "ole_doc": ("oledoc", "ole", "doc", "xls", "ppt", "msg", "msi"),
+    # and template variants) collapses onto its container. MSI is OLE2 too,
+    # but filefacts reports it as its own `msi` type in the archives group.
+    "ole_doc": ("oledoc", "ole", "doc", "xls", "ppt", "msg"),
     "ooxml": (
         "docx", "xlsx", "pptx",
         "xlsm", "xltx", "xltm", "xlsb", "xlam",
@@ -145,6 +177,15 @@ _FILETYPE_ALIASES: dict[str, tuple[str, ...]] = {
     "zip": ("msix",),
     "data": ("dat",),
     "pkg_macos": ("pkg",),
+    # Labels older cleave stored that filefacts now reports differently:
+    # `.war`/`.ear` are JARs, bare `apk` is Android, `.tgz` is a gzip TAR
+    # (routed as `tar`), C++ is `c`, and TOML/INI are text by extension.
+    "jar": ("war", "ear"),
+    "apk_android": ("apk",),
+    "tar": ("tgz",),
+    "c": ("cpp",),
+    "yaml": ("yml",),
+    "text": ("ini", "toml"),
 }
 
 # Reverse index built once: every alias → its canonical label.
@@ -218,17 +259,18 @@ def expand_route_filetypes(file_types: tuple[str, ...]) -> tuple[str, ...]:
     A training summary may list only high-count aliases. Scoring still needs
     every alias that runtime maps to that specialist, including compressed TAR.
     """
-    from .filegroups import ARCHIVE_FILETYPES
+    from .filegroups import FILE_GROUPS
 
     canonical = {route_filetype(ft) for ft in file_types} - {""}
     variants = set(file_types) | set(expand_filetype_aliases(tuple(canonical)))
-    variants.update(ft for ft in ARCHIVE_FILETYPES if route_filetype(ft) in canonical)
+    variants.update(ft for ft in FILE_GROUPS["archives"] if route_filetype(ft) in canonical)
     return tuple(sorted(variants - {""}))
+
 
 
 log = logging.getLogger(__name__)
 
-# canonical_sha256 last-byte ranges. test < TEST_BUCKET_MAX, dev in
+# Split-key last-byte ranges. test < TEST_BUCKET_MAX, dev in
 # [TEST_BUCKET_MAX, DEV_BUCKET_MAX), train >= DEV_BUCKET_MAX.
 # 32/256 = 12.5% (test), 32/256 = 12.5% (dev), 192/256 = 75% (train).
 TEST_BUCKET_MAX = 32
@@ -262,7 +304,7 @@ def is_dev_sample(canonical_sha256: str) -> bool:
 
 
 def partition_of(canonical_sha256: str) -> str:
-    """Return 'train', 'dev', or 'test' for a given canonical hash."""
+    """Return 'train', 'dev', or 'test' for a given split key."""
     last = int(canonical_sha256[-2:], 16)
     if last < TEST_BUCKET_MAX:
         return "test"
@@ -297,9 +339,52 @@ def _label_int(label: str) -> int:
 # Database access — the only place that knows about SQLite or PostgreSQL.
 # ---------------------------------------------------------------------------
 
+# The schema holding hopper's verdict tables. hopper migrated production from
+# the legacy tables in `public` on 2026-11-15; the legacy tables are frozen.
+HOPPER_SCHEMA = os.environ.get("HOPPER_SCHEMA", "verdict")
+if not re.fullmatch(r"[a-z_][a-z0-9_]*", HOPPER_SCHEMA):
+    raise ValueError(f"HOPPER_SCHEMA must be a plain lowercase schema name, not {HOPPER_SCHEMA!r}")
+APPLICATION_NAME = "collimator"
+
+# scanners.id of atomscan, whose verdict row carries the file's report.
+ATOMSCAN = 1
+
+# hopper's limits on what it walks and stores: a report line (scanresult.MaxLine)
+# and how deep a contents walk goes (store.maxMemberDepth). An archive's report
+# lists at most MAX_REPORT_FILES files, the most a legacy stored report listed.
+MAX_REPORT_BYTES = 64 << 20
+MAX_REPORT_DEPTH = 16
+MAX_REPORT_FILES = 20_000
+
+# Ids per lookup: SQLite's bound-parameter limit, or one PostgreSQL array.
+_SQLITE_CHUNK = 500
+_PG_CHUNK = 5000
+
+
 def _is_pg(dsn: Path | str) -> bool:
     s = str(dsn)
     return s.startswith(("postgres://", "postgresql://"))
+
+
+def _pg_conn(conn: Any) -> bool:
+    return not isinstance(conn, sqlite3.Connection)
+
+
+def _marker(conn: Any) -> str:
+    return "%s" if _pg_conn(conn) else "?"
+
+
+def _in(conn: Any, column: str, values: list[Any]) -> tuple[str, list[Any]]:
+    """`column` is one of `values`: an array parameter, or SQLite's list."""
+    if _pg_conn(conn):
+        return f"{column} = ANY(%s)", [list(values)]
+    return f"{column} IN ({','.join('?' * len(values))})", list(values)
+
+
+def _chunks(items: Iterable[Any], size: int) -> Iterator[list[Any]]:
+    it = iter(items)
+    while chunk := list(itertools.islice(it, size)):
+        yield chunk
 
 
 # Connection-establishment retry: exponential backoff with jitter, bounded by a
@@ -318,7 +403,7 @@ _DB_CONNECT_MAX_DELAY_S = float(os.getenv("COLLIMATOR_DB_CONNECT_MAX_DELAY_S", "
 _DB_CONNECT_MAX_TOTAL_S = float(os.getenv("COLLIMATOR_DB_CONNECT_MAX_TOTAL_S", "7200.0"))  # ~2h
 
 
-def _retry_pg_connect(dsn: str, **connect_kwargs):
+def _retry_pg_connect(dsn: str, **connect_kwargs: Any) -> Any:
     """Open a psycopg connection, retrying transient OperationalErrors with
     exponential backoff + jitter until ``_DB_CONNECT_MAX_TOTAL_S`` of cumulative
     wait, then raising the last error."""
@@ -353,16 +438,35 @@ def _retry_pg_connect(dsn: str, **connect_kwargs):
     raise last_err
 
 
-@contextmanager
-def _connect(dsn: Path | str, *, repeatable_read: bool = False):
-    """Open a read-only connection to the hopper database.
+def _require_schema(conn: Any) -> None:
+    """Fail fast when the connection does not see hopper's verdict tables."""
+    if _pg_conn(conn):
+        row = conn.execute(
+            "SELECT to_regclass('samples') IS NOT NULL AND to_regclass('verdicts') IS NOT NULL"
+        ).fetchone()
+        ok = bool(row and row[0])
+    else:
+        query = "SELECT name FROM sqlite_master WHERE type = 'table'"
+        tables = {name for (name,) in conn.execute(query)}
+        ok = {"samples", "verdicts"} <= tables
+    if not ok:
+        raise RuntimeError(
+            f"hopper schema {HOPPER_SCHEMA!r} has no samples and verdicts tables: "
+            "set HOPPER_SCHEMA to the schema holding hopper's verdict tables"
+        )
 
-    When *repeatable_read* is True the PostgreSQL connection uses
-    REPEATABLE READ isolation, pinning a consistent snapshot for the
-    lifetime of the connection.  This prevents concurrent hopper writes
-    (new samples, label changes) from altering the row set mid-scan.
-    SQLite read-only connections are already snapshot-isolated, so the
-    flag is a no-op there.
+
+@contextmanager
+def _connect(dsn: Path | str, *, repeatable_read: bool = False) -> Iterator[Any]:
+    """Open a read-only connection to hopper's verdict schema.
+
+    PostgreSQL sessions are read-only (default_transaction_read_only), read
+    HOPPER_SCHEMA alone (search_path), report times in UTC, and name
+    themselves to the server (application_name). When *repeatable_read* is
+    True the connection uses REPEATABLE READ isolation, pinning a consistent
+    snapshot for its lifetime, so concurrent hopper writes (new samples, label
+    changes) cannot alter the row set mid-scan. SQLite read-only connections
+    are already snapshot-isolated, so the flag is a no-op there.
 
     A COLLIMATOR_PG_SNAPSHOT supplied by the research-pass owner is imported
     before any reads, including on worker connections. All such connections
@@ -384,7 +488,12 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             ) from exc
         # libpq `options` is space-separated, so a literal space inside a value
         # has to be backslash-escaped (hence "repeatable\\ read").
-        opts = [f"-c max_parallel_workers_per_gather={PG_PARALLEL_WORKERS}"]
+        opts = [
+            f"-c search_path={HOPPER_SCHEMA}",
+            "-c default_transaction_read_only=on",
+            "-c timezone=UTC",
+            f"-c max_parallel_workers_per_gather={PG_PARALLEL_WORKERS}",
+        ]
         snapshot = os.environ.get("COLLIMATOR_PG_SNAPSHOT", "")
         if snapshot and os.environ.get("COLLIMATOR_PG_SNAPSHOT_DATABASE") != str(dsn):
             raise ValueError("corpus snapshot belongs to a different database")
@@ -394,12 +503,13 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             str(dsn),
             autocommit=False,
             options=" ".join(opts),
+            application_name=APPLICATION_NAME,
         )
         try:
             if snapshot:
                 from psycopg import sql
                 conn.execute(sql.SQL("SET TRANSACTION SNAPSHOT {}").format(sql.Literal(snapshot)))
-                conn.execute("SET TRANSACTION READ ONLY")
+            _require_schema(conn)
             yield conn
         finally:
             conn.close()
@@ -408,9 +518,13 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
         if not db_path.exists():
             raise FileNotFoundError(f"Database not found: {db_path}")
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        # PostgreSQL's md5() and encode(bytea, 'hex'), so one statement serves both.
         conn.create_function("md5", 1, lambda value: hashlib.md5(value.encode()).hexdigest(),
                              deterministic=True)
+        conn.create_function("encode", 2, lambda value, _format: bytes(value).hex(),
+                             deterministic=True)
         try:
+            _require_schema(conn)
             if repeatable_read:
                 conn.execute("BEGIN")
             yield conn
@@ -418,274 +532,124 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             conn.close()
 
 
-def _execute(conn, query: str, params=None):
+def _execute(conn: Any, query: str, params: Any = None) -> Iterator[Any]:
     """Execute a query, adapting for sqlite3 vs psycopg cursor styles."""
     if isinstance(conn, sqlite3.Connection):
         yield from conn.execute(query, params or [])
     else:
-        # psycopg
         with conn.cursor() as cur:
             cur.execute(query, params)
             yield from cur
 
 
-def _read_table_in_order(conn: Any) -> None:
-    """Make this transaction scan ``samples`` sequentially (Postgres only).
+_cursor_names = itertools.count()
 
-    For a query over the whole labeled corpus the planner picks
-    idx_samples_labeled_route, then fetches ~30M rows from the heap at
-    random: 11-16+ min (2026-09-27), and worse as dead tuples pile up. Reading
-    the table in order takes ~4 min, sort included. SET LOCAL lasts only for
-    the current transaction.
+
+def _stream(conn: Any, query: str, params: Any = None) -> Iterator[Any]:
+    """Execute a query whose result is a corpus pass, holding a batch at a time.
+
+    PostgreSQL gets a server-side cursor: a client-side one would buffer every
+    row (bad rows carry their reports) before yielding the first.
     """
-    # Hash samples have a selective replica-side expression index. The full
-    # corpus workaround must not disable that access path for iteration runs.
-    if not SAMPLE_PREDICATE and not isinstance(conn, sqlite3.Connection):
-        for setting in ("enable_indexscan", "enable_indexonlyscan", "enable_bitmapscan"):
-            conn.execute(f"SET LOCAL {setting} = off")
+    if isinstance(conn, sqlite3.Connection):
+        yield from conn.execute(query, params or [])
+        return
+    with conn.cursor(name=f"collimator_{next(_cursor_names)}") as cur:
+        cur.itersize = 20_000
+        cur.execute(query, params)
+        yield from cur
 
 
-def _cleave_value(raw):
-    """Return the raw cleave_result as-is for downstream pass-through.
-
-    Downstream consumers (``_coerce_report``) already accept either a
-    pre-parsed dict (psycopg's JSONB auto-decode) or a JSON string
-    (SQLite), so re-serializing PG dicts back to strings is wasted work
-    — the previous ``json.dumps(...)`` here + ``json.loads(...)`` in
-    ``_coerce_report`` was a profiling-visible dict→str→dict roundtrip.
-    """
-    return raw
+def _array(value: Any) -> list[Any]:
+    """A PostgreSQL array as psycopg returns it, or SQLite's JSON text."""
+    if isinstance(value, str):
+        return list(json.loads(value))
+    return list(value or ())
 
 
-def _cleave_report(raw):
-    """Return the cleave_result as a dict (or ``None`` on missing/invalid).
+# ---------------------------------------------------------------------------
+# Reports: atomscan's zstd-compressed version 8 report of each file. hopper
+# compresses them itself, without a dictionary (store.New), so a plain zstd
+# frame decoder reads them.
+# ---------------------------------------------------------------------------
 
-    Handles both psycopg's pre-parsed dict and SQLite's TEXT JSON.
-    """
-    if raw is None:
+_decompressor: zstandard.ZstdDecompressor | None = None
+
+
+def decode_report(detail: bytes | memoryview | None) -> dict[str, Any] | None:
+    """A stored report as a dict; None when absent, undecodable or not an object."""
+    global _decompressor
+    if detail is None:
         return None
-    if isinstance(raw, dict):
-        return raw
-    if isinstance(raw, str):
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            return None
-    return None
+    if _decompressor is None:
+        _decompressor = zstandard.ZstdDecompressor()
+    try:
+        raw = _decompressor.decompress(bytes(detail), max_output_size=MAX_REPORT_BYTES)
+        report = json.loads(raw)
+    except (zstandard.ZstdError, ValueError):
+        return None
+    return report if isinstance(report, dict) else None
 
 
-@timed('db.fetch_and_decode')
-def fetch_cleave_results(
-    dsn: Path | str, ids: list[int], *, evaluation_labels: dict[int, int] | None = None,
-) -> dict[int, dict[str, Any]]:
-    """Batch-fetch cleave_result JSON and related metadata by row IDs.
+def _findings(report: dict[str, Any]) -> list[Any]:
+    """A report's findings: v8 `traits`, or `find` in a v7 report hopper kept as written."""
+    findings = report.get("traits") or report.get("find") or []
+    return findings if isinstance(findings, list) else []
 
-    Used by feature extraction workers. Each worker opens its own
-    connection via this function — safe for multiprocessing. When selected
-    evaluation labels are provided, capture row digests in this same SELECT,
-    using those labels rather than racing a later read of the live labels.
+
+def _crit(finding: Any) -> int:
+    if not isinstance(finding, dict):
+        return 0
+    try:
+        return int(finding.get("crit") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _benign_archive_item(report: dict[str, Any]) -> bool:
+    """legacy hopper's skip-benign-archive-item rule, for a bad archive member.
+
+    A member inherited its archive's bad label; unless its own findings
+    convict it (one at crit 5, or two at crit 4 or above) it is filler, and
+    legacy kept it out of training (hopper.go memberSamplesFromEnvelope).
     """
-    if not ids:
-        return {}
-    with _connect(dsn, repeatable_read=member_context_enabled()) as conn:
-        if evaluation_labels:
-            from .cache_identity import evaluation_row_digest
-
-            pg = _is_pg(dsn)
-            if pg:
-                rows = conn.execute(
-                    "SELECT id, cleave_result, formula, elements, score, mtime, "
-                    "xmin::text AS row_version FROM samples WHERE id = ANY(%s)", [ids],
-                )
-            else:
-                markers = ",".join("?" for _ in ids)
-                rows = conn.execute(f"SELECT * FROM samples WHERE id IN ({markers})", ids)
-            columns = [column[0] for column in rows.description]
-            result = {}
-            for row in rows:
-                values = dict(zip(columns, row, strict=True))
-                rid = int(values["id"])
-                if values["cleave_result"] is None:
-                    continue
-                item = {key: values[key] for key in ("cleave_result", "formula", "elements", "score")}
-                item.update(mtime=str(values["mtime"]) if values["mtime"] else "", cluster_id=0)
-                if rid in evaluation_labels:
-                    label = {0: "good", 1: "bad"}[evaluation_labels[rid]]
-                    if pg:
-                        version = [rid, values["row_version"], label]
-                    else:
-                        version = list(row)
-                        version[columns.index("label")] = label
-                    item["evaluation_digest"] = evaluation_row_digest(version)
-                result[rid] = item
-            return add_member_context(conn, result)
-        if _is_pg(dsn):
-            # PostgreSQL: use ANY(%s) with array parameter.
-            query = "SELECT id, cleave_result, formula, elements, score, mtime, 0 AS cluster_id FROM samples WHERE id = ANY(%s)"
-            with conn.cursor() as cur:
-                cur.execute(query, [ids])
-                return add_member_context(conn, {
-                    int(rid): {
-                        "cleave_result": _cleave_value(cr),
-                        "formula": formula,
-                        "elements": elements,
-                        "score": score,
-                        "mtime": str(mtime) if mtime else "",
-                        "cluster_id": cluster_id,
-                    }
-                    for rid, cr, formula, elements, score, mtime, cluster_id in cur
-                    if cr is not None
-                })
-        else:
-            placeholders = ",".join("?" for _ in ids)
-            query = f"SELECT id, cleave_result, formula, elements, score, mtime, 0 AS cluster_id FROM samples WHERE id IN ({placeholders})"  # noqa: S608
-            return add_member_context(conn, {
-                int(rid): {
-                    "cleave_result": cr,
-                    "formula": formula,
-                    "elements": elements,
-                    "score": score,
-                    "mtime": str(mtime) if mtime else "",
-                    "cluster_id": cluster_id,
-                }
-                for rid, cr, formula, elements, score, mtime, cluster_id in conn.execute(query, ids)
-                if cr is not None
-            })
+    crits = [_crit(f) for f in _findings(report)]
+    return max(crits, default=0) < 5 and sum(c >= 4 for c in crits) <= 1
 
 
-def member_context_enabled() -> bool:
-    """Opt-in input source for archive context keywords, not trait reassembly."""
-    return os.getenv("COLLIMATOR_ARCHIVE_MEMBER_CONTEXT", "0").lower() in {"1", "true", "yes", "on"}
+def _molecule_only(report: dict[str, Any]) -> bool:
+    """A report that says no more than a molecule and a risk (hopper's FillReports test).
 
-
-_MEMBER_CONTEXT_CACHE = OrderedDict()
-_MEMBER_CONTEXT_CACHE_KEY = None
-_MEMBER_CONTEXT_CACHE_BYTES = 0
-_MEMBER_CONTEXT_CACHE_LIMIT = 64 * 1024 * 1024
-_MEMBER_CONTEXT_CACHE_LOCK = threading.Lock()
-
-
-def _member_context_cache(key, sha, value=None):
-    """Bounded process-local cache, usable only inside an exported snapshot.
-
-    Store encoded windows so the byte bound measures retained data directly.
-    Missing leaves are cached too; each snapshot has a separate identity.
+    It is all an archive's report kept of a member once legacy hopper cut
+    member entries out of archive reports (2026-06-18), not an analysis of
+    the file. hopper's migration filled such members from their legacy
+    excerpts only for rows that were never members (legacy parent = ''), so
+    the members legacy trained on mostly kept a stub.
     """
-    global _MEMBER_CONTEXT_CACHE_KEY, _MEMBER_CONTEXT_CACHE_BYTES
-    with _MEMBER_CONTEXT_CACHE_LOCK:
-        if key != _MEMBER_CONTEXT_CACHE_KEY or not key:
-            _MEMBER_CONTEXT_CACHE.clear()
-            _MEMBER_CONTEXT_CACHE_BYTES = 0
-            _MEMBER_CONTEXT_CACHE_KEY = key
-        if not key:
-            return None
-        if value is None:
-            if sha not in _MEMBER_CONTEXT_CACHE:
-                return None
-            _MEMBER_CONTEXT_CACHE.move_to_end(sha)
-            return _MEMBER_CONTEXT_CACHE[sha]
-        size = len(value[0] or b'') + 256
-        if size > _MEMBER_CONTEXT_CACHE_LIMIT:
-            return None
-        old = _MEMBER_CONTEXT_CACHE.pop(sha, None)
-        if old is not None:
-            _MEMBER_CONTEXT_CACHE_BYTES -= len(old[0] or b'') + 256
-        _MEMBER_CONTEXT_CACHE[sha] = value
-        _MEMBER_CONTEXT_CACHE_BYTES += size
-        while _MEMBER_CONTEXT_CACHE_BYTES > _MEMBER_CONTEXT_CACHE_LIMIT or len(_MEMBER_CONTEXT_CACHE) > 8192:
-            _, removed = _MEMBER_CONTEXT_CACHE.popitem(last=False)
-            _MEMBER_CONTEXT_CACHE_BYTES -= len(removed[0] or b'') + 256
-    return None
+    return report.keys() <= {"mol", "risk"}
 
 
-def add_member_context(conn, items):
-    """Read missing member context within the parent's transaction snapshot.
+def _risk(report: dict[str, Any]) -> int:
+    """The report's risk: legacy samples.score."""
+    try:
+        return int(report.get("risk") or 0)
+    except (TypeError, ValueError):
+        return 0
 
-    Preserve every trait, fact, and occurrence field in the compact parent.
-    Only context windows are added, matching the WHL expanded-context study.
-    Cache identities include missing leaves and the exact contexts consumed.
-    """
-    if not member_context_enabled():
-        return items
-    references, identities = {}, {}
-    for rid, item in items.items():
-        report = _cleave_report(item["cleave_result"])
-        if not isinstance(report, dict):
-            continue
-        key = "files" if "files" in report else "fs"
-        files = report.get(key) or []
-        refs = [(i, f) for i, f in enumerate(files) if isinstance(f, dict)
-                and f.get("depth", f.get("dp", 0)) > 0 and f.get("sha") and not f.get("ctx")]
-        if not refs:
-            continue
-        report = dict(report)
-        report[key] = list(files)
-        item["cleave_result"] = report
-        identities[rid] = {}
-        for index, ref in refs:
-            references.setdefault(ref["sha"], []).append((rid, key, index, ref))
-            identities[rid][ref["sha"]] = None
-    snapshot = os.getenv("COLLIMATOR_PG_SNAPSHOT")
-    database = os.getenv("COLLIMATOR_PG_SNAPSHOT_DATABASE")
-    cache_key = (database, snapshot) if snapshot and database and not isinstance(conn, sqlite3.Connection) else None
 
-    def apply_context(sha, payload, digest):
-        ctx = json.loads(payload) if payload else []
-        for rid, key, index, ref in references[sha]:
-            if ctx:
-                items[rid]["cleave_result"][key][index] = dict(ref, ctx=ctx)
-            identities[rid][sha] = digest
-
-    shas = []
-    for sha in sorted(references):
-        cached = _member_context_cache(cache_key, sha)
-        if cached is None:
-            shas.append(sha)
-        else:
-            apply_context(sha, *cached)
-    for start in range(0, len(shas), 256):
-        chunk = shas[start:start + 256]
-        if isinstance(conn, sqlite3.Connection):
-            marks = ",".join("?" for _ in chunk)
-            rows = conn.execute(f"SELECT sha256,cleave_result FROM samples WHERE sha256 IN ({marks})", chunk)
-            contexts = []
-            for sha, raw in rows:
-                leaf = _cleave_report(raw)
-                files = (leaf.get("files", leaf.get("fs", [])) or []) if isinstance(leaf, dict) else []
-                contexts.append((sha, files[0].get("ctx") if files and isinstance(files[0], dict) else None))
-        else:
-            contexts = conn.execute("SELECT sha256,COALESCE(cleave_result->'files',cleave_result->'fs')->0->'ctx' "
-                                    "FROM samples WHERE sha256=ANY(%s)", [chunk])
-        missing = set(chunk)
-        for sha, ctx in contexts:
-            missing.discard(sha)
-            if not isinstance(ctx, list):
-                ctx = []
-            payload = json.dumps(ctx, sort_keys=True, separators=(",", ":")).encode()
-            digest = hashlib.sha256(payload).hexdigest()
-            _member_context_cache(cache_key, sha, (payload, digest))
-            apply_context(sha, payload, digest)
-        for sha in missing:
-            _member_context_cache(cache_key, sha, (None, None))
-    for rid, versions in identities.items():
-        item = items[rid]
-        if "evaluation_digest" in item:
-            h = hashlib.sha256(b"archive-member-context-v1\n" + item["evaluation_digest"])
-            h.update(json.dumps(sorted(versions.items()), separators=(",", ":")).encode())
-            item["evaluation_digest"] = h.digest()
-    return items
+_SUBSCRIPTS = str.maketrans("", "", "₀₁₂₃₄₅₆₇₈₉")
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-# Minimum hopper score for a sample to be considered trainable.
-# Controls the SQL-level filter in _TRAINABLE_QUERY and the default floor of
-# stream_partitioned_metadata_grouped (screens stream with min_score=None and
-# apply this floor to TRAIN rows only — see experiment.sample_partitioned_reports:
-# an eval-side floor changes the benign denominator and can flip the 25k
-# operating-point regime, which is a measurement artifact, not a model change).
+# Minimum report risk for a sample to be considered trainable.
+# Controls the default floor of stream_partitioned_metadata_grouped and
+# stream_samples (screens stream with min_score=None and apply this floor to
+# TRAIN rows only — see experiment.sample_partitioned_reports: an eval-side
+# floor changes the benign denominator and can flip the 25k operating-point
+# regime, which is a measurement artifact, not a model change).
 # Override via COLLIMATOR_MIN_SAMPLE_SCORE env var for experiments.
 # v15 used >= 8; v16 >= 3; v17 >= 1; briefly back to >= 3, now 0 (no benign
 # filter). This filter applies UNIFORMLY to good and bad, so it is the BENIGN
@@ -699,7 +663,8 @@ def add_member_context(conn, items):
 # 85->20) and produced 1.0-prob FPs on trivial files. The label noise that
 # motivated any floor lives on the HOSTILE side — gated separately by
 # EXP_MIN_MALWARE_SCORE / min_malware_training_score (train-only, malware-only).
-# See [[project_score_gate_and_replay_override]] and [[project_allowlist_litmus_layout]].
+# A floor above 0 makes every corpus pass read every report (risk lives inside
+# it), so it is much slower than the malware gate, which reads bad rows only.
 _default_min = 0
 try:
     MIN_SAMPLE_SCORE = int(os.getenv("COLLIMATOR_MIN_SAMPLE_SCORE", str(_default_min)))
@@ -718,22 +683,14 @@ try:
 except ValueError:
     PG_PARALLEL_WORKERS = _default_parallel
 
-# Canonical predicate for a usable labeled sample. Every stage that SELECTS the
-# labeled corpus — training, calibration, score-table build, specialist/OOF
-# scoring, and triage — filters on this so they all agree on the universe: a
-# human good/bad label, cleave actually ran, and hopper hasn't flagged the row
-# (skip set = missing/replaced/corrupt/misclassified/label-mismatch/…). Stages
-# append their own clauses (score >=, file_type, id <=, partition) with AND.
-# Secondary by-id lookups that merely enrich already-selected rows trust that
-# upstream selection and need not repeat it.
-def sample_predicate(percent: str) -> str:
-    """Repeatable canonical-hash sample, independent of suffix-based splits.
 
-    Keep canonical groups together. Rehash the canonical key before sampling:
-    its raw prefix is biased because archive canonicalization selects a minimum.
-    The leading 32 digest bits select the cohort. Existing train/dev/test and
-    OOF splits still use the original canonical key's trailing bytes.
-    The predicate uses SQL supported by both PostgreSQL and SQLite.
+def sample_predicate(percent: str) -> str:
+    """Repeatable digest sample, independent of suffix-based splits.
+
+    The split key's trailing bytes pick the partition, so the cohort rehashes
+    the digest and keeps rows whose leading 32 bits fall under the cutoff.
+    The predicate is SQL over ``samples s`` that runs on PostgreSQL and on
+    SQLite (``_connect`` gives SQLite md5 and encode).
     """
     from decimal import Decimal, InvalidOperation
 
@@ -748,92 +705,482 @@ def sample_predicate(percent: str) -> str:
     cutoff = int(fraction * (1 << 32))
     if not cutoff:
         raise ValueError("sample percent is too small for a 32-bit hash sample")
-    return (
-        "substr(md5(lower(COALESCE(NULLIF(canonical_sha256, ''), sha256))), 1, 8)"
-        f" < '{cutoff:08x}'"
-    )
+    return f"substr(md5(encode(s.sha256, 'hex')), 1, 8) < '{cutoff:08x}'"
 
 
 SAMPLE_PERCENT = os.environ.get("COLLIMATOR_SAMPLE_PERCENT", "100")
 SAMPLE_PREDICATE = sample_predicate(SAMPLE_PERCENT)
-LABELED_WHERE = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
+
+# Canonical predicate for a usable labeled sample. Every stage that SELECTS the
+# labeled corpus — training, calibration, score-table build, specialist/OOF
+# scoring, and triage — reads it through stream_corpus (or the wrappers below)
+# so they all agree on the universe: a human good/bad label that is not a
+# good/bad conflict, and an ok atomscan verdict with a report. stream_corpus
+# also drops bad archive members that are filler (_benign_archive_item), which
+# no column says. Secondary by-id lookups that merely enrich already-selected
+# rows trust that upstream selection and need not repeat it.
+CORPUS_FROM = (
+    "samples s"
+    f" JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+    " LEFT JOIN scans sc ON sc.sample_id = s.id"
+)
+LABELED_WHERE = (
+    "s.label IN ('bad', 'good') AND v.outcome = 'ok' AND v.detail IS NOT NULL"
+    " AND COALESCE(s.label_source, '') <> 'conflict'"
+)
 if SAMPLE_PREDICATE:
     LABELED_WHERE += f" AND ({SAMPLE_PREDICATE})"
+
+# The newest place a file is held on disk, as hopper's prism shows it
+# (store.newestLocation); locations_sample serves it.
+_NEWEST_PATH = (
+    "(SELECT l.path FROM locations l WHERE l.sample_id = s.id"
+    " ORDER BY l.seen_at DESC, l.path LIMIT 1)"
+)
+
+
+class CorpusRow(NamedTuple):
+    """One usable labeled sample, as a corpus pass yields it."""
+
+    row_id: int
+    sha256: str
+    label: int  # 1 = malware, 0 = benign
+    file_type: str  # 'unknown' when hopper has none
+    score: int  # the report's risk, where the pass read it (see stream_corpus)
+    path: str  # newest location; '' when not asked for, or for a member
+    report_bytes: int  # compressed size of the file's own report
+
+    @property
+    def canonical_sha256(self) -> str:
+        """The split key: the file's own digest (see the module docstring)."""
+        return self.sha256
+
+    @property
+    def partition(self) -> str:
+        return partition_of(self.sha256)
+
+
+def _corpus(
+    conn: Any,
+    *,
+    max_id: int = 0,
+    file_types: tuple[str, ...] | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    scores: str = "bad",
+    path_substr: str | None = None,
+    with_path: bool = False,
+    limit: int = 0,
+    percent: str | None = None,
+    ordered: bool = True,
+) -> Iterator[CorpusRow]:
+    """Yield the usable labeled samples in id order (see stream_corpus)."""
+    mark = _marker(conn)
+    where = [LABELED_WHERE]
+    params: list[Any] = []
+    if percent and (cohort := sample_predicate(percent)):
+        where.append(f"({cohort})")
+    if max_id > 0:
+        where.append(f"s.id <= {mark}")
+        params.append(int(max_id))
+    if file_types:
+        # Expand canonical route labels to every stored spelling (old + new),
+        # so the filter still matches rows analyzed before the filetype
+        # nomenclature was unified.
+        stored = expand_filetype_aliases(tuple(str(ft) for ft in file_types if str(ft)))
+        if stored:
+            clause, values = _in(conn, "s.file_type", list(stored))
+            where.append(clause)
+            params.extend(values)
+    if path_substr:
+        where.append(f"LOWER({_NEWEST_PATH}) LIKE {mark}")
+        params.append(f"%{path_substr.lower()}%")
+    # Which reports this pass reads: risk is inside them. A member's report
+    # is always read, for _molecule_only and _benign_archive_item.
+    if min_score is not None or max_score is not None:
+        scores = "all"
+    read = {
+        "all": "1 = 1",
+        "bad": "s.label = 'bad' OR sc.sample_id IS NULL",
+        "none": "sc.sample_id IS NULL",
+    }[scores]
+    path = _NEWEST_PATH if with_path or path_substr else "NULL"
+    query = (
+        "SELECT s.id, s.sha256, s.label, s.file_type, sc.sample_id IS NOT NULL,"
+        f" CASE WHEN {read} THEN v.detail END, length(v.detail), {path}"
+        f" FROM {CORPUS_FROM} WHERE {' AND '.join(where)}"
+        + (" ORDER BY s.id" if ordered or limit > 0 else "")
+    )
+    counts = {"rows": 0, "stub": 0, "filler": 0, "unreadable": 0, "score": 0}
+    started = time.monotonic()
+    try:
+        for row in _stream(conn, query, params):
+            row_id, sha256, label, file_type, scanned, detail, size, row_path = row
+            score = 0
+            if detail is not None:
+                report = decode_report(detail)
+                if report is None:
+                    counts["unreadable"] += 1
+                    log.warning("sample %s: atomscan report is not a JSON object, skipping", row_id)
+                    continue
+                if not scanned and _molecule_only(report):
+                    counts["stub"] += 1
+                    continue
+                if label == "bad" and not scanned and _benign_archive_item(report):
+                    counts["filler"] += 1
+                    continue
+                score = _risk(report)
+            if (min_score is not None and score < min_score) or (
+                max_score is not None and score > max_score
+            ):
+                counts["score"] += 1
+                continue
+            yield CorpusRow(
+                int(row_id), bytes(sha256).hex(), _label_int(label), file_type or "unknown",
+                score, row_path or "", int(size or 0),
+            )
+            counts["rows"] += 1
+            if limit and counts["rows"] >= limit:
+                return
+    finally:
+        log.info(
+            "corpus pass (max_id=%d file_types=%d scores=%s): %d rows; dropped %d member stub "
+            "reports, %d bad archive filler, %d unreadable reports, %d outside score bounds; %.1fs",
+            max_id, len(file_types or ()), scores, counts["rows"], counts["stub"],
+            counts["filler"], counts["unreadable"], counts["score"], time.monotonic() - started,
+        )
+
+
+def stream_corpus(
+    db_path: Path | str,
+    *,
+    max_id: int = 0,
+    file_types: tuple[str, ...] | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    scores: str = "bad",
+    path_substr: str | None = None,
+    with_path: bool = False,
+    limit: int = 0,
+    percent: str | None = None,
+    ordered: bool = True,
+) -> Iterator[CorpusRow]:
+    """Yield every usable labeled sample in id order, from one snapshot.
+
+    ``max_id`` pins the corpus (see snapshot_max_id); ``file_types`` takes
+    canonical route labels; ``path_substr`` matches the newest location;
+    ``percent`` keeps a digest-hash cohort (sample_predicate), within the
+    COLLIMATOR_SAMPLE_PERCENT one LABELED_WHERE already keeps.
+
+    ``score`` is the report's risk, and hopper keeps risk only inside the
+    compressed report, so a pass reads it only where it must: ``scores`` is
+    "all", "bad" (the malware training gate; the default) or "none", and a
+    score bound reads all. Rows whose report was not read report 0.
+    """
+    with _connect(db_path, repeatable_read=True) as conn:
+        yield from _corpus(
+            conn, max_id=max_id, file_types=file_types, min_score=min_score,
+            max_score=max_score, scores=scores, path_substr=path_substr,
+            with_path=with_path, limit=limit, percent=percent, ordered=ordered,
+        )
+
+
+# --- report assembly ---------------------------------------------------------
+
+
+def _xmin(conn: Any) -> str:
+    """The samples row's version: PostgreSQL's xmin; SQLite has none."""
+    return "s.xmin::text" if _pg_conn(conn) else "''"
+
+
+def _evaluation_version(row_id: int, xmin: Any, digest: Any, label: str, item: Any = None) -> list[Any]:
+    """What an evaluation cache depends on: the samples row (label included) and its report."""
+    report = bytes(digest).hex() if digest is not None else None
+    return [int(row_id), str(xmin or ""), report, label, item]
+
+
+def evaluation_versions(conn: Any, ids: list[int]) -> Iterator[tuple[int, str, list[Any]]]:
+    """Yield (row_id, label, version) for each existing sample of ``ids``, by id."""
+    for chunk in _chunks(sorted(ids), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+        clause, params = _in(conn, "s.id", chunk)
+        query = (
+            f"SELECT s.id, {_xmin(conn)}, v.digest, s.label FROM samples s"
+            f" LEFT JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+            f" WHERE {clause} ORDER BY s.id"
+        )
+        rows = list(_execute(conn, query, params))
+        reports = _reports(conn, [int(row[0]) for row in rows])
+        for row_id, xmin, digest, label in rows:
+            yield int(row_id), str(label), _evaluation_version(row_id, xmin, digest, str(label), reports.get(int(row_id)))
+
+
+def _members(conn: Any, roots: list[int]) -> dict[int, list[tuple[int, int, int, str]]]:
+    """Each root's files, breadth first: (id, parent index, depth, path in parent).
+
+    The root is entry 0 (parent -1). A walk stops MAX_REPORT_DEPTH levels down
+    or at MAX_REPORT_FILES files, as hopper's own Members walk is bounded.
+    """
+    files = {root: [(root, -1, 0, "")] for root in roots}
+    frontier = [(root, 0) for root in roots]
+    children: dict[int, list[tuple[int, str]]] = {}
+    chunk_size = _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK
+    for depth in range(1, MAX_REPORT_DEPTH + 1):
+        wanted = {files[root][i][0] for root, i in frontier} - children.keys()
+        for chunk in _chunks(sorted(wanted), chunk_size):
+            children.update((parent, []) for parent in chunk)
+            clause, params = _in(conn, "parent_id", chunk)
+            query = f"SELECT parent_id, child_ids, paths FROM contents WHERE {clause}"
+            for parent, child_ids, paths in _execute(conn, query, params):
+                listing = zip(map(int, _array(child_ids)), _array(paths), strict=True)
+                children[int(parent)] = list(listing)
+        following = []
+        for root, i in frontier:
+            listed = files[root]
+            for child, path in children[listed[i][0]]:
+                if len(listed) >= MAX_REPORT_FILES:
+                    break
+                listed.append((child, i, depth, str(path)))
+                following.append((root, len(listed) - 1))
+        frontier = following
+        if not frontier:
+            break
+    for root, listed in files.items():
+        if len(listed) >= MAX_REPORT_FILES:
+            log.info("sample %d: report truncated at %d files", root, MAX_REPORT_FILES)
+    return files
+
+
+# A file as a report entry needs it: sha256, file type, size, report or None.
+_FileRow = tuple[str, str, int, dict[str, Any] | None]
+
+
+def _file_rows(conn: Any, ids: Iterable[int]) -> dict[int, _FileRow]:
+    """Each file's _FileRow."""
+    out: dict[int, _FileRow] = {}
+    for chunk in _chunks(sorted(ids), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+        clause, params = _in(conn, "s.id", chunk)
+        query = (
+            "SELECT s.id, s.sha256, s.file_type, s.size_bytes, v.detail FROM samples s"
+            f" LEFT JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+            f" WHERE {clause}"
+        )
+        for row_id, sha256, file_type, size, detail in _execute(conn, query, params):
+            report = decode_report(detail)
+            out[int(row_id)] = (bytes(sha256).hex(), file_type or "", int(size or 0), report)
+    return out
+
+
+def _newest_locations(conn: Any, ids: list[int]) -> dict[int, tuple[str, str]]:
+    """(path, mtime) of each file's newest location, as _NEWEST_PATH picks it."""
+    out: dict[int, tuple[str, str]] = {}
+    for chunk in _chunks(sorted(ids), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+        clause, params = _in(conn, "sample_id", chunk)
+        # Ascending seen_at then descending path: the last row of a sample wins.
+        query = (
+            f"SELECT sample_id, path, mtime FROM locations WHERE {clause}"
+            " ORDER BY seen_at, path DESC"
+        )
+        for row_id, path, mtime in _execute(conn, query, params):
+            out[int(row_id)] = (str(path), str(mtime) if mtime else "")
+    return out
+
+
+def _reports(
+    conn: Any, ids: list[int], evaluation_labels: dict[int, int] | None = None,
+) -> dict[int, dict[str, Any]]:
+    """Rebuild the multi-file report each sample trains on.
+
+    A version 8 report describes one file and moves what says where it sat
+    (sha, type, size, depth, path, its id and its parent's) out of it; members
+    are files of their own, listed in contents. This puts the archive back
+    together as the scan saw it: the sample's report first (depth 0), then
+    every file contents lists beneath it, breadth first, each its own report
+    with those keys restored and paths joined with "!!" as cleave writes them.
+    A member atomscan holds no report for is listed by type and size alone.
+    The root's path is the file name of its newest location.
+
+    A sample without an atomscan report is absent from the result.
+    """
+    roots: dict[int, tuple[Any, Any]] = {}  # id -> (xmin, report digest)
+    files: dict[int, _FileRow] = {}
+    for chunk in _chunks(sorted(set(ids)), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+        clause, params = _in(conn, "s.id", chunk)
+        query = (
+            "SELECT s.id, s.sha256, s.file_type, s.size_bytes, v.detail,"
+            f" {_xmin(conn)}, v.digest"
+            f" FROM samples s JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+            f" WHERE v.detail IS NOT NULL AND {clause}"
+        )
+        for row_id, sha256, file_type, size, detail, xmin, digest in _execute(conn, query, params):
+            rid = int(row_id)
+            report = decode_report(detail)
+            if report is None:
+                log.warning("sample %d: atomscan report is not a JSON object, skipping", rid)
+                continue
+            files[rid] = (bytes(sha256).hex(), file_type or "", int(size or 0), report)
+            roots[rid] = (xmin, digest)
+    tree = _members(conn, list(roots))
+    listed = {fid for entries in tree.values() for fid, _p, _d, _r in entries}
+    files.update(_file_rows(conn, listed - files.keys()))
+    places = _newest_locations(conn, list(roots))
+
+    result: dict[int, dict[str, Any]] = {}
+    for rid, (xmin, digest) in roots.items():
+        path, mtime = places.get(rid, ("", ""))
+        entries: list[dict[str, Any]] = []
+        paths: list[str] = []
+        for index, (fid, parent, depth, rel) in enumerate(tree[rid]):
+            sha256, file_type, size, report = files.get(fid, ("", "", 0, None))
+            entry = dict(report or {})
+            entry.update(id=index, depth=depth, sha=sha256, type=file_type, size=size)
+            if parent < 0:
+                entry["path"] = path.rsplit("/", 1)[-1]
+            else:
+                entry["pid"] = parent
+                entry["path"] = f"{paths[parent]}!!{rel}"
+            paths.append(entry["path"])
+            entries.append(entry)
+        root = entries[0]
+        formula = root.get("mol")
+        formula = formula if isinstance(formula, str) else ""
+        item: dict[str, Any] = {
+            "cleave_result": {"files": entries},
+            "formula": formula,
+            "elements": formula.translate(_SUBSCRIPTS),
+            "score": _risk(root),
+            "mtime": mtime,
+            "cluster_id": 0,
+        }
+        if evaluation_labels and rid in evaluation_labels:
+            from .cache_identity import evaluation_row_digest  # noqa: PLC0415
+
+            selected = {0: "good", 1: "bad"}[evaluation_labels[rid]]
+            version = _evaluation_version(rid, xmin, digest, selected, dict(item))
+            item["evaluation_digest"] = evaluation_row_digest(version)
+        result[rid] = item
+    return result
+
+
+@timed('db.fetch_and_decode')
+def fetch_cleave_results(
+    dsn: Path | str, ids: list[int], *, evaluation_labels: dict[int, int] | None = None,
+) -> dict[int, dict[str, Any]]:
+    """Batch-fetch each sample's training report and related metadata by row ID.
+
+    Returns ``{row_id: {"cleave_result": report, "formula", "elements",
+    "score", "mtime", "cluster_id"}}``; the report is rebuilt from hopper's
+    per-file reports (see _reports) in the multi-file shape cleave wrote. The
+    key keeps its legacy name so every consumer reads old and new alike.
+
+    Used by feature extraction workers. Each worker opens its own
+    connection via this function — safe for multiprocessing. All of a batch
+    is read in one snapshot. When selected evaluation labels are provided,
+    each evaluated row's version is digested from that same snapshot, using
+    those labels rather than racing a later read of the live labels.
+    """
+    if not ids:
+        return {}
+    with _connect(dsn, repeatable_read=True) as conn:
+        return _reports(conn, ids, evaluation_labels)
+
+
+def _with_reports(conn: Any, rows: Iterable[CorpusRow]) -> Iterator[Sample]:
+    """Each row as a Sample, its report read in batches from the same snapshot."""
+    for batch in _chunks(rows, _SQLITE_CHUNK):
+        reports = _reports(conn, [row.row_id for row in batch])
+        for row in batch:
+            item = reports.get(row.row_id)
+            if item is None:
+                continue
+            yield Sample(
+                row_id=row.row_id,
+                sha256=row.sha256,
+                path=row.path,
+                label=row.label,
+                report=item["cleave_result"],
+                formula=item["formula"],
+                elements=item["elements"],
+                score=item["score"],
+                mtime=item["mtime"],
+                cluster_id=item["cluster_id"],
+                canonical_sha256=row.canonical_sha256,
+            )
 
 
 @timed('db.file_types')
 def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
     """Return stored file types for the requested usable labeled rows.
 
+    For rows a caller already selected: the filter is LABELED_WHERE alone.
     Requests up to 250k rows use bounded ID lookups, covering the usual
-    150k-row experiment. Larger requests read the labeled
-    population once, allowing PostgreSQL to use the covering (file_type, id)
-    index. Forcing a sequential scan here reads the entire samples heap for
-    metadata that fits in that index and competes with replication apply.
+    150k-row experiment. Larger requests read the labeled population once.
     """
     wanted = {int(row_id) for row_id in row_ids}
     if not wanted:
         return {}
     query = (
-        "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') FROM samples"
-        f" WHERE {LABELED_WHERE}"
+        "SELECT s.id, COALESCE(NULLIF(s.file_type, ''), 'unknown')"
+        f" FROM {CORPUS_FROM} WHERE {LABELED_WHERE}"
     )
     with _connect(db_path, repeatable_read=True) as conn:
-        # A cohort scan uses the covering training-hash index once, instead of
-        # hundreds of random ID probes (and repeated scans of the hash range).
-        sampled_scan = bool(SAMPLE_PREDICATE) and len(wanted) > 500
-        if len(wanted) <= 250_000 and not sampled_scan:
+        if len(wanted) <= 250_000:
             result: dict[int, str] = {}
-            ordered = sorted(wanted)
-            for start in range(0, len(ordered), 500):
-                chunk = ordered[start : start + 500]
-                if isinstance(conn, sqlite3.Connection):
-                    placeholders = ",".join("?" for _ in chunk)
-                    rows = _execute(conn, query + f" AND id IN ({placeholders})", chunk)
-                else:
-                    rows = _execute(conn, query + " AND id = ANY(%s)", [chunk])
-                result.update((int(row_id), file_type) for row_id, file_type in rows)
+            for chunk in _chunks(sorted(wanted), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+                clause, params = _in(conn, "s.id", chunk)
+                result.update(
+                    (int(row_id), file_type)
+                    for row_id, file_type in _execute(conn, f"{query} AND {clause}", params)
+                )
             return result
         return {
             int(row_id): file_type
-            for row_id, file_type in _execute(conn, query + f" AND id <= {max(wanted)}")
+            for row_id, file_type in _stream(conn, f"{query} AND s.id <= {max(wanted)}")
             if int(row_id) in wanted
         }
 
 
+def split_keys(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
+    """Return the split key (canonical_sha256) of each requested usable labeled row.
+
+    For rows a caller already selected: the filter is LABELED_WHERE alone.
+    """
+    out: dict[int, str] = {}
+    with _connect(db_path, repeatable_read=True) as conn:
+        size = _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK
+        for chunk in _chunks(sorted({int(row_id) for row_id in row_ids}), size):
+            clause, params = _in(conn, "s.id", chunk)
+            query = f"SELECT s.id, s.sha256 FROM {CORPUS_FROM} WHERE {LABELED_WHERE} AND {clause}"
+            rows = _execute(conn, query, params)
+            out.update((int(row_id), bytes(sha256).hex()) for row_id, sha256 in rows)
+    return out
+
+
 @timed('db.snapshot_pin')
 def snapshot_max_id(db_path: Path | str) -> int:
-    """Return max(id) of trainable samples at this moment.
+    """Return max(id) of usable labeled samples at this moment.
 
     Used to pin the dataset for a single experiment / training run so that
     concurrent inserts to the hopper database don't cause drift between runs.
     Pass the returned value as ``max_id`` to ``stream_partitioned_metadata_grouped``
-    or ``partition_row_ids``.
+    or ``partition_row_ids``. A pin needs only to bound the ids, so the
+    Python-side filters (filler members, score floors) are not applied.
     """
-    query = (
-        "SELECT MAX(id) FROM samples"
-        f" WHERE {LABELED_WHERE}"
-        f" AND score >= {MIN_SAMPLE_SCORE}"
-    )
+    query = f"SELECT MAX(s.id) FROM {CORPUS_FROM} WHERE {LABELED_WHERE}"
     with _connect(db_path) as conn:
         for (max_id,) in _execute(conn, query):
             return int(max_id) if max_id is not None else 0
     return 0
 
 
-_TRAINABLE_QUERY = (
-    "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
-    " FROM samples"
-    f" WHERE {LABELED_WHERE}"
-    f" AND score >= {MIN_SAMPLE_SCORE}"
-    " ORDER BY id"
-)
-
 # Sentinel for stream_partitioned_metadata_grouped: "apply the module-level
 # MIN_SAMPLE_SCORE floor" (legacy behavior). Pass min_score=None to stream
 # the full labeled population — the eval-side contract (screens measure the
 # same benign universe deploy calibrates on).
 _SCORE_FILTER_DEFAULT: Any = object()
+
+
+def _sample_floor() -> int | None:
+    return MIN_SAMPLE_SCORE if MIN_SAMPLE_SCORE > 0 else None
 
 
 def stream_samples(
@@ -858,46 +1205,26 @@ def stream_samples(
                               setting it to 0 trains on fold 1 only; the
                               held-out fold 0 rows then get OOF predictions
                               from this model.
-    Default yields every labeled row.
+    Default yields every labeled row. ``limit`` caps the rows read.
     """
-    query = _TRAINABLE_QUERY
-    if limit > 0:
-        query += f" LIMIT {limit}"
+
+    def keep(row: CorpusRow) -> bool:
+        partition = row.partition
+        if exclude_test and partition == "test":
+            return False
+        if exclude_eval and partition in ("test", "dev"):
+            return False
+        if only_test and partition != "test":
+            return False
+        if only_dev and partition != "dev":
+            return False
+        return exclude_oof_fold is None or (
+            partition != "test" and oof_fold_of(row.sha256) != exclude_oof_fold
+        )
+
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime, cluster_id in _execute(conn, query):
-            split_key = canonical or sha256
-            partition = partition_of(split_key)
-            if exclude_test and partition == "test":
-                continue
-            if exclude_eval and partition in ("test", "dev"):
-                continue
-            if only_test and partition != "test":
-                continue
-            if only_dev and partition != "dev":
-                continue
-            if exclude_oof_fold is not None:
-                if partition == "test":
-                    continue
-                if oof_fold_of(split_key) == exclude_oof_fold:
-                    continue
-            report = _cleave_report(cleave_result)
-            if report is None:
-                if cleave_result is not None:
-                    log.warning("invalid JSON for %s, skipping", sha256)
-                continue
-            yield Sample(
-                row_id=int(row_id),
-                sha256=sha256,
-                path=path or "",
-                label=_label_int(label),
-                report=add_member_context(conn, {0: {"cleave_result": report}})[0]["cleave_result"],
-                formula=formula or "",
-                elements=elements or "",
-                score=score or 0,
-                mtime=str(mtime) if mtime else "",
-                cluster_id=cluster_id,
-                canonical_sha256=split_key,
-            )
+        rows = _corpus(conn, min_score=_sample_floor(), scores="none", with_path=True, limit=limit)
+        yield from _with_reports(conn, (row for row in rows if keep(row)))
 
 
 def stream_labeled_samples_full(
@@ -909,101 +1236,18 @@ def stream_labeled_samples_full(
     limit: int = 0,
     max_id: int = 0,
 ) -> Iterator[Sample]:
-    """Yield labeled, non-skipped samples without the MIN_SAMPLE_SCORE filter.
+    """Yield usable labeled samples with their reports, without the MIN_SAMPLE_SCORE floor.
 
     This is for operational corpus analysis over the full labeled hopper set,
     including low-score benign rows that are intentionally excluded from
     training/evaluation partitions.
     """
     with _connect(db_path, repeatable_read=True) as conn:
-        params: list[Any] = []
-        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
-        query = (
-            "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
-            " FROM samples"
-            f" WHERE {LABELED_WHERE}"
+        rows = _corpus(
+            conn, max_id=max_id, min_score=min_score, max_score=max_score, scores="none",
+            path_substr=path_substr, with_path=True, limit=limit,
         )
-        if max_id > 0:
-            query += f" AND id <= {int(max_id)}"
-        if path_substr:
-            query += f" AND LOWER(path) LIKE {placeholder}"
-            params.append(f"%{path_substr.lower()}%")
-        if min_score is not None:
-            query += f" AND score >= {placeholder}"
-            params.append(int(min_score))
-        if max_score is not None:
-            query += f" AND score <= {placeholder}"
-            params.append(int(max_score))
-        query += " ORDER BY id"
-        if limit > 0:
-            query += f" LIMIT {int(limit)}"
-
-        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime, cluster_id in _execute(conn, query, params):
-            split_key = canonical or sha256
-            report = _cleave_report(cleave_result)
-            if report is None:
-                if cleave_result is not None:
-                    log.warning("invalid JSON for %s, skipping", sha256)
-                continue
-            yield Sample(
-                row_id=int(row_id),
-                sha256=sha256,
-                path=path or "",
-                label=_label_int(label),
-                report=add_member_context(conn, {0: {"cleave_result": report}})[0]["cleave_result"],
-                formula=formula or "",
-                elements=elements or "",
-                score=score or 0,
-                mtime=str(mtime) if mtime else "",
-                cluster_id=cluster_id,
-                canonical_sha256=split_key,
-            )
-
-
-def _metadata_full_query(
-    where: str, *, postgres: bool, path_predicate: str = "", limit: int = 0,
-    compact: bool = False, ordered: bool = True,
-) -> str:
-    """Select the indexed sample before fetching uncovered file paths.
-
-    Materialization prevents a path projection from turning the small hash
-    cohort scan into a heap scan of every row in a file type. Path filtering
-    and limits still apply before yielding rows, in ID order.
-    """
-    if compact:
-        # Score-only caches need identities and labels, not display paths or
-        # severity. Avoid transferring and sorting long archive paths.
-        query = ("SELECT id, '' AS sha256, '' AS path, 0 AS score, label, "
-                 "COALESCE(NULLIF(canonical_sha256, ''), sha256) FROM samples"
-                 f" WHERE {where}")
-        if path_predicate:
-            query += f" AND {path_predicate}"
-        if ordered or limit > 0:
-            query += " ORDER BY id"
-    elif postgres and SAMPLE_PREDICATE:
-        query = (
-            "WITH cohort AS MATERIALIZED ("
-            "SELECT id, sha256, score, label, canonical_sha256 FROM samples"
-            f" WHERE {where})"
-            " SELECT c.id, c.sha256, s.path, c.score, c.label, c.canonical_sha256"
-            " FROM cohort c JOIN samples s ON s.id = c.id"
-        )
-        if path_predicate:
-            query += f" WHERE {path_predicate}"
-        if ordered or limit > 0:
-            query += " ORDER BY c.id"
-    else:
-        query = (
-            "SELECT id, sha256, path, score, label, canonical_sha256 FROM samples"
-            f" WHERE {where}"
-        )
-        if path_predicate:
-            query += f" AND {path_predicate}"
-        if ordered or limit > 0:
-            query += " ORDER BY id"
-    if limit > 0:
-        query += f" LIMIT {int(limit)}"
-    return query
+        yield from _with_reports(conn, rows)
 
 
 def stream_labeled_metadata_full(
@@ -1018,56 +1262,23 @@ def stream_labeled_metadata_full(
     compact: bool = False,
     ordered: bool = True,
 ) -> Iterator[tuple[int, str, str, int, int, str]]:
-    """Yield labeled, non-skipped sample metadata without loading JSON reports.
+    """Yield usable labeled sample metadata without loading reports.
 
     Yielded tuple: ``(row_id, sha256, path, score, label, canonical_sha256)``.
+    ``score`` is read for bad rows, and for every row under a score bound;
+    benign rows otherwise report 0 (stream_corpus). The metadata extraction
+    workers replace it with each report's risk as they read the report.
 
     If ``partition`` is set ("train", "dev", or "test"), only rows in that
-    partition are yielded. Filtering happens in Python after the row is
-    fetched (canonical_sha256 isn't indexed for byte-range queries in hopper).
-
-    ``compact`` omits display-only SHA/path/score values, preserving canonical
-    identities and labels. ``ordered=False`` avoids sorting a full scan; a
-    positive limit still selects the same first IDs as the ordered call.
+    partition are yielded.
     """
-    with _connect(db_path, repeatable_read=True) as conn:
-        params: list[Any] = []
-        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
-        where = LABELED_WHERE
-        if max_id > 0:
-            where += f" AND id <= {int(max_id)}"
-        if min_score is not None:
-            where += f" AND score >= {placeholder}"
-            params.append(int(min_score))
-        if max_score is not None:
-            where += f" AND score <= {placeholder}"
-            params.append(int(max_score))
-        path_predicate = ""
-        if path_substr:
-            path_predicate = f"LOWER(path) LIKE {placeholder}"
-            params.append(f"%{path_substr.lower()}%")
-        query = _metadata_full_query(
-            where, postgres=not isinstance(conn, sqlite3.Connection),
-            path_predicate=path_predicate, limit=limit,
-            compact=compact, ordered=ordered,
-        )
-
-        _read_table_in_order(conn)
-        def rows():
-            if isinstance(conn, sqlite3.Connection):
-                yield from _execute(conn, query, params)
-            else:
-                # A client cursor first buffers all 21M rows in libpq, then
-                # duplicates them into Python metadata. Bound that buffer.
-                with conn.cursor(name="collimator_labeled_metadata") as cursor:
-                    cursor.itersize = 10000
-                    cursor.execute(query, params)
-                    yield from cursor
-        for row_id, sha256, path, score, label, canonical in rows():
-            split_key = canonical or sha256
-            if partition is not None and partition_of(split_key) != partition:
-                continue
-            yield int(row_id), sha256, path or "", score or 0, _label_int(label), split_key
+    for row in stream_corpus(
+        db_path, max_id=max_id, min_score=min_score, max_score=max_score,
+        path_substr=path_substr, with_path=not compact, limit=limit, ordered=ordered,
+    ):
+        if partition is not None and row.partition != partition:
+            continue
+        yield row.row_id, "" if compact else row.sha256, "" if compact else row.path, 0 if compact else row.score, row.label, row.canonical_sha256
 
 
 def stream_labeled_metadata_full_with_size(
@@ -1080,49 +1291,23 @@ def stream_labeled_metadata_full_with_size(
     max_id: int = 0,
     partition: str | None = None,
 ) -> Iterator[tuple[int, str, str, int, int, int, str]]:
-    """Yield full-corpus metadata plus serialized cleave_result byte estimate.
+    """Yield full-corpus metadata plus a report size estimate.
 
-    Yielded tuple: ``(row_id, sha256, path, score, label, json_bytes, canonical_sha256)``.
+    Yielded tuple: ``(row_id, sha256, path, score, label, report_bytes, canonical_sha256)``.
+    ``report_bytes`` is the compressed size of the file's own report: a
+    relative weight for batch packing (an archive's members are not counted).
+    ``score`` is as in stream_labeled_metadata_full.
 
     If ``partition`` is set, only rows from that partition are yielded.
     """
-    with _connect(db_path, repeatable_read=True) as conn:
-        params: list[Any] = []
-        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
-        json_len_expr = "LENGTH(cleave_result)" if isinstance(conn, sqlite3.Connection) else "LENGTH(cleave_result::text)"
-        query = (
-            f"SELECT id, sha256, path, label, score, {json_len_expr}, canonical_sha256"
-            " FROM samples"
-            f" WHERE {LABELED_WHERE}"
-        )
-        if max_id > 0:
-            query += f" AND id <= {int(max_id)}"
-        if path_substr:
-            query += f" AND LOWER(path) LIKE {placeholder}"
-            params.append(f"%{path_substr.lower()}%")
-        if min_score is not None:
-            query += f" AND score >= {placeholder}"
-            params.append(int(min_score))
-        if max_score is not None:
-            query += f" AND score <= {placeholder}"
-            params.append(int(max_score))
-        query += " ORDER BY id"
-        if limit > 0:
-            query += f" LIMIT {int(limit)}"
-
-        for row_id, sha256, path, label, score, json_bytes, canonical in _execute(conn, query, params):
-            split_key = canonical or sha256
-            if partition is not None and partition_of(split_key) != partition:
-                continue
-            yield (
-                int(row_id),
-                sha256,
-                path or "",
-                score or 0,
-                _label_int(label),
-                int(json_bytes or 0),
-                split_key,
-            )
+    for row in stream_corpus(
+        db_path, max_id=max_id, min_score=min_score, max_score=max_score,
+        path_substr=path_substr, with_path=True, limit=limit,
+    ):
+        if partition is not None and row.partition != partition:
+            continue
+        yield (row.row_id, row.sha256, row.path, row.score, row.label,
+               row.report_bytes, row.canonical_sha256)
 
 
 def load_samples(db_path: Path | str, limit: int = 0) -> list[Sample]:
@@ -1149,9 +1334,8 @@ def stream_reports(
 ) -> Iterator[tuple[dict[str, Any], int]]:
     """Yield (report, label) pairs. See stream_samples for filter semantics.
 
-    ``limit`` caps the SQL query (0 = unbounded); without it a caller that only
-    wants a small sample still triggers a full-corpus scan that buffers before
-    the first row.
+    ``limit`` caps the rows read (0 = unbounded); without it a caller that
+    only wants a small sample still triggers a full-corpus scan.
     """
     for sample in stream_samples(
         db_path,
@@ -1169,7 +1353,7 @@ def partition_row_ids(
     min_malware_training_score: int = 0,
     max_id: int = 0,
 ) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]], list[tuple[int, int]]]:
-    """Partition samples into train/dev/test by canonical_sha256.
+    """Partition samples into train/dev/test by split key.
 
     Returns (train_row_ids, train_ids_labels, dev_ids_labels, test_ids_labels).
     Pass ``max_id`` from ``snapshot_max_id`` to pin the dataset.
@@ -1181,7 +1365,8 @@ def partition_row_ids(
     train_ids_labels: list[tuple[int, int]] = []
     dev_ids_labels: list[tuple[int, int]] = []
     test_ids_labels: list[tuple[int, int]] = []
-    for row_id, label, partition, _canonical, score in stream_partitioned_metadata_grouped(db_path, max_id=max_id):
+    rows = stream_partitioned_metadata_grouped(db_path, max_id=max_id)
+    for row_id, label, partition, _canonical, score in rows:
         if partition == "test":
             test_ids_labels.append((row_id, label))
         elif partition == "dev":
@@ -1199,17 +1384,31 @@ def lookup_sample(
     db_path: Path | str,
     sha256_prefix: str,
 ) -> tuple[str, str, str, dict[str, Any]] | None:
-    """Look up a sample by SHA256 prefix. Returns (sha256, path, label, report) or None."""
-    with _connect(db_path) as conn:
-        query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE ?"
-        params: list[Any] = [f"{sha256_prefix}%"]
-        if not isinstance(conn, sqlite3.Connection):
-            query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE %s"
-        for sha256, path, label, cleave_result in _execute(conn, query, params):
-            report = _cleave_report(cleave_result)
-            if report is None:
+    """Look up a sample by SHA256 prefix. Returns (sha256, path, label, report) or None.
+
+    The first sample (by digest) at or after the prefix that has a report.
+    """
+    prefix = sha256_prefix.strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{1,64}", prefix):
+        return None
+    low, high = bytes.fromhex(prefix.ljust(64, "0")), bytes.fromhex(prefix.ljust(64, "f"))
+    with _connect(db_path, repeatable_read=True) as conn:
+        mark = _marker(conn)
+        query = (
+            f"SELECT s.id, s.label FROM samples s"
+            f" JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+            f" WHERE s.sha256 >= {mark} AND s.sha256 <= {mark} AND v.detail IS NOT NULL"
+            " ORDER BY s.sha256 LIMIT 1"
+        )
+        for row_id, label in _execute(conn, query, [low, high]):
+            rid = int(row_id)
+            item = _reports(conn, [rid]).get(rid)
+            if item is None:
                 return None
-            return sha256, path or "", label, report
+            root = item["cleave_result"]["files"][0]
+            newest = f"SELECT {_NEWEST_PATH} FROM samples s WHERE s.id = {mark}"
+            path = next(iter(_execute(conn, newest, [rid])))[0]
+            return root["sha"], path or "", str(label), item["cleave_result"]
     return None
 
 
@@ -1220,7 +1419,7 @@ def stream_partitioned_metadata_grouped(
     file_types: tuple[str, ...] | None = None,
     min_score: int | None | object = _SCORE_FILTER_DEFAULT,
 ) -> Iterator[tuple[int, int, str, str, int]]:
-    """Yield (row_id, label, partition, canonical_sha256, score) without loading raw JSON.
+    """Yield (row_id, label, partition, canonical_sha256, score) without loading reports.
 
     ``partition`` is one of "train", "dev", "test". If ``max_id`` > 0, only
     rows with ``id <= max_id`` are returned. Use this with a value from
@@ -1233,53 +1432,19 @@ def stream_partitioned_metadata_grouped(
     apply the floor to TRAIN rows only: a floor on the eval side changes the
     benign denominator (and can flip the 25k operating-point regime) for
     reasons unrelated to the model.
+
+    ``score`` is read for every bad row (the malware training gate) and,
+    while MIN_SAMPLE_SCORE is set (callers apply it to train rows), for
+    every row; benign rows otherwise report 0.
     """
-    effective_min = MIN_SAMPLE_SCORE if min_score is _SCORE_FILTER_DEFAULT else min_score
-    query = (
-        "SELECT id, sha256, label, canonical_sha256, score"
-        " FROM samples"
-        f" WHERE {LABELED_WHERE}"
+    effective = MIN_SAMPLE_SCORE if min_score is _SCORE_FILTER_DEFAULT else min_score
+    floor = int(effective) if isinstance(effective, int) and effective > 0 else None
+    rows = stream_corpus(
+        db_path, max_id=max_id, file_types=file_types, min_score=floor,
+        scores="all" if MIN_SAMPLE_SCORE > 0 else "bad", limit=limit,
     )
-    if effective_min is not None and int(effective_min) > 0:
-        query += f" AND score >= {int(effective_min)}"
-    query += " ORDER BY id"
-    params: list[Any] = []
-    filters: list[str] = []
-    if max_id > 0:
-        filters.append("id <= %s" if _is_pg(db_path) else "id <= ?")
-        params.append(int(max_id))
-    if file_types:
-        # Expand canonical route labels to every stored spelling (old + new),
-        # so an index-backed filter still matches rows analyzed before the
-        # filetype nomenclature was unified.
-        normalized = expand_filetype_aliases(
-            tuple(str(ft) for ft in file_types if str(ft))
-        )
-        if normalized:
-            if _is_pg(db_path):
-                filters.append("file_type = ANY(%s)")
-                params.append(list(normalized))
-            else:
-                placeholders = ",".join("?" for _ in normalized)
-                filters.append(f"file_type IN ({placeholders})")
-                params.extend(normalized)
-    if filters:
-        # Inject extra filters before ORDER BY (the query ends with ORDER BY id).
-        query = query.replace(" ORDER BY id", f" AND {' AND '.join(filters)} ORDER BY id")
-    if limit > 0:
-        query += f" LIMIT {limit}"
-    with _connect(db_path, repeatable_read=True) as conn:
-        if not file_types:  # a route's few rows: the (file_type, id) index is right
-            _read_table_in_order(conn)
-        for row_id, sha256, label, canonical, score in _execute(conn, query, params):
-            split_key = canonical or sha256
-            yield (
-                int(row_id),
-                _label_int(label),
-                partition_of(split_key),
-                split_key,
-                score or 0,
-            )
+    for row in rows:
+        yield row.row_id, row.label, row.partition, row.canonical_sha256, row.score
 
 
 def count_labeled_by_partition_full(
@@ -1287,35 +1452,21 @@ def count_labeled_by_partition_full(
     *,
     max_id: int = 0,
 ) -> dict[str, dict[str, int]]:
-    """Count all labeled, non-skipped rows by partition without score filtering.
+    """Count all usable labeled rows by partition without score filtering.
 
-    Returns counts under keys "train", "dev", "test", "all". Training
-    intentionally focuses on rows at or above ``MIN_SAMPLE_SCORE``. FP-per-
-    million reporting, however, is a corpus-level good-file rate, so it
-    needs the full labeled good-file denominator, including low-score rows.
+    Returns counts under keys "train", "dev", "test", "all". FP-per-million
+    reporting is a corpus-level good-file rate, so it needs the full labeled
+    good-file denominator, including low-score rows.
     """
     counts = {
-        "train": {"good": 0, "bad": 0, "total": 0},
-        "dev": {"good": 0, "bad": 0, "total": 0},
-        "test": {"good": 0, "bad": 0, "total": 0},
-        "all": {"good": 0, "bad": 0, "total": 0},
+        part: {"good": 0, "bad": 0, "total": 0}
+        for part in ("train", "dev", "test", "all")
     }
-    with _connect(db_path, repeatable_read=True) as conn:
-        query = (
-            "SELECT id, sha256, label, canonical_sha256"
-            " FROM samples"
-            f" WHERE {LABELED_WHERE}"
-        )
-        if max_id > 0:
-            query += f" AND id <= {int(max_id)}"
-        for _row_id, sha256, label, canonical in _execute(conn, query):
-            split_key = canonical or sha256
-            part = partition_of(split_key)
-            name = "bad" if _label_int(label) == 1 else "good"
+    for row in stream_corpus(db_path, max_id=max_id, scores="none"):
+        name = "bad" if row.label == 1 else "good"
+        for part in (row.partition, "all"):
             counts[part][name] += 1
             counts[part]["total"] += 1
-            counts["all"][name] += 1
-            counts["all"]["total"] += 1
     return counts
 
 
@@ -1325,23 +1476,9 @@ def labeled_corpus_metadata_full(
     max_id: int = 0,
 ) -> dict[str, int]:
     """Return row counts for the full labeled threshold/FP corpus."""
-    with _connect(db_path, repeatable_read=True) as conn:
-        query = (
-            "SELECT"
-            " COUNT(*),"
-            " COALESCE(SUM(CASE WHEN label = 'bad' THEN 1 ELSE 0 END), 0),"
-            " COALESCE(SUM(CASE WHEN label = 'good' THEN 1 ELSE 0 END), 0),"
-            " COALESCE(MAX(id), 0)"
-            " FROM samples"
-            f" WHERE {LABELED_WHERE}"
-        )
-        if max_id > 0:
-            query += f" AND id <= {int(max_id)}"
-        for total, bad, good, row_max_id in _execute(conn, query):
-            return {
-                "samples": int(total or 0),
-                "malware": int(bad or 0),
-                "benign": int(good or 0),
-                "max_row_id": int(row_max_id or 0),
-            }
-    return {"samples": 0, "malware": 0, "benign": 0, "max_row_id": 0}
+    total = bad = row_max_id = 0
+    for row in stream_corpus(db_path, max_id=max_id, scores="none"):
+        total += 1
+        bad += row.label
+        row_max_id = max(row_max_id, row.row_id)
+    return {"samples": total, "malware": bad, "benign": total - bad, "max_row_id": row_max_id}

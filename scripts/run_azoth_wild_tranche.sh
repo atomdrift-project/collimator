@@ -136,7 +136,7 @@ run_experiment filetypes/xml xml_kv_schema_textenc \
   EXP_TEXT_ENCODING_FEATURES=1 EXP_FORMAT_HINTS=1 EXP_TAXONOMY_FEATURES=1 \
   COLLIMATOR_METRIC_MIN_FREQ_PCT=0
 
-run_experiment filegroups/media media_textenc_kv_carrier \
+run_experiment filegroups/images images_textenc_kv_carrier \
   EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=7000 EXP_KV_MIN_FREQ=2 \
   EXP_TEXT_ENCODING_FEATURES=1 EXP_FORMAT_HINTS=1 EXP_EMBER_LITE_FEATURES=1 \
   COLLIMATOR_METRIC_MIN_FREQ_PCT=0
@@ -149,7 +149,7 @@ run_experiment filetypes/jpeg jpeg_exif_kv_textenc \
   EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_KV_MIN_FREQ=2 \
   EXP_TEXT_ENCODING_FEATURES=1 EXP_FORMAT_HINTS=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0
 
-run_experiment filegroups/media media_metadata_only_no_traits \
+run_experiment filegroups/images images_metadata_only_no_traits \
   EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters \
   EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_TEXT_ENCODING_FEATURES=1 \
   EXP_FORMAT_HINTS=1 EXP_EMBER_LITE_FEATURES=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0

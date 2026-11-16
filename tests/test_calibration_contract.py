@@ -255,7 +255,9 @@ def test_calibration_groups_cover_canonical_labels_and_aliases():
     mapping = calibrate._filetype_to_group()
     assert mapping["ooxml"] == mapping["docx"] == mapping["ole_doc"] == "documents"
     assert mapping["vbs"] == mapping["vbscript"] == "scripts"
-    assert mapping["python_bytecode"] == mapping["pyc"] == "portable"
+    assert mapping["python_bytecode"] == mapping["pyc"] == "bytecode"
+    assert mapping["msi"] == mapping["war"] == mapping["tgz"] == "archives"
+    assert mapping["cpp"] == "source"
     for group, spellings in calibrate.DEPLOYMENT_GROUPS.items():
         for spelling in spellings:
             assert mapping[data.route_filetype(spelling)] == group
@@ -271,7 +273,7 @@ def test_scoring_expands_legacy_specialist_summary_to_runtime_coverage(tmp_path,
     monkeypatch.setattr(calibrate.bundle, 'has_model', lambda p: True)
     monkeypatch.setattr(calibrate.export, 'route_model_is_degenerate', lambda p: False)
     expected = set(calibrate._load_routes(summary)[0]['file_types'])
-    assert {'ole_doc','ole','doc','xls','ppt','msi'} <= expected
+    assert {'ole_doc','ole','doc','xls','ppt'} <= expected
     assert set(oof_routes._load_route_file_types(summary)['filetypes/ole_doc']) == expected
 
 

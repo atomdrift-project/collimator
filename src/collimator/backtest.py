@@ -47,7 +47,7 @@ from collimator.thresholds import _fp_anchor_curve, quantile_severity_threshold
 LOG = logging.getLogger("collimator.backtest")
 
 # Cache schema for the joined score+metadata slice. Bump on layout changes.
-SLICE_CACHE_VERSION = 1
+SLICE_CACHE_VERSION = 2
 
 # Key used for the single threshold of a non-joint_or policy.
 COMBINED = "__combined__"
@@ -69,7 +69,7 @@ class RouteSlice:
     ingested_at: np.ndarray   # int64 epoch seconds; 0 when unknown
     feed: np.ndarray          # unicode
     carved: np.ndarray        # bool: extracted from a parent, label inherited
-    cleave_score: np.ndarray  # int32, samples.score
+    cleave_score: np.ndarray  # int32, the report's risk (legacy samples.score)
     partition: np.ndarray     # unicode: 'train' | 'dev' | 'test'
 
     def __len__(self) -> int:
@@ -608,15 +608,21 @@ def threshold_stability(
 
 # --- slice loading -----------------------------------------------------------
 
-_META_SQL = """
-SELECT id,
-       COALESCE(EXTRACT(EPOCH FROM created_at)::bigint, 0),
-       feed,
-       (parent <> '' OR filename LIKE 'embedded:%%'),
-       score,
-       canonical_sha256
-FROM samples
-WHERE file_type = %s AND label IN ('bad', 'good')
+# carved: a member never scanned on its own (no scans row), whose label it
+# inherited from its archive. feed: of the file's newest location. The report
+# is read for its risk (legacy samples.score), which hopper keeps nowhere else.
+_META_SQL = f"""
+SELECT s.id,
+       COALESCE(EXTRACT(EPOCH FROM s.created_at)::bigint, 0),
+       (SELECT l.feed FROM locations l WHERE l.sample_id = s.id
+        ORDER BY l.seen_at DESC, l.path LIMIT 1),
+       sc.sample_id IS NULL,
+       v.detail,
+       s.sha256
+FROM samples s
+LEFT JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {collimator_data.ATOMSCAN}
+LEFT JOIN scans sc ON sc.sample_id = s.id
+WHERE s.file_type = %s AND s.label IN ('bad', 'good')
 """
 
 
@@ -625,10 +631,12 @@ def _fetch_metadata(dsn: str, file_type: str) -> dict[int, tuple[int, str, bool,
     with collimator_data._connect(dsn) as conn, conn.cursor(name="backtest_meta") as cur:
         cur.itersize = 50_000
         cur.execute(_META_SQL, (file_type,))
-        return {
-            int(rid): (int(ts), feed or "", bool(carved), int(score or 0), canon or "")
-            for rid, ts, feed, carved, score, canon in cur
-        }
+        meta = {}
+        for rid, ts, feed, carved, detail, sha256 in cur:
+            report = collimator_data.decode_report(detail) or {}
+            score = collimator_data._risk(report)
+            meta[int(rid)] = (int(ts), feed or "", bool(carved), score, bytes(sha256).hex())
+        return meta
 
 
 def load_route_slice(

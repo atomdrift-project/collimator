@@ -21,7 +21,7 @@ import time
 
 import numpy as np
 
-from collimator import data, features
+from collimator import data, demo, features
 import azoth_oof_score_routes as scoring
 
 
@@ -65,20 +65,19 @@ def capture(args):
     if not routes:
         raise ValueError("no scored routes with all three model bundles")
     ids = sorted(all_ids)
+    # The frozen copy is a verdict-schema SQLite DB that data.py reads alike.
     with sqlite3.connect(args.capture / "reports.sqlite") as db:
-        db.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT, "
-                   "formula TEXT, elements TEXT, score INTEGER, mtime TEXT)")
+        demo.create_schema(db)
         for start in range(0, len(ids), 128):
             requested = ids[start:start + 128]
             reports = data.fetch_cleave_results(args.db, requested)
             missing = set(requested) - set(reports)
             if missing:
                 raise ValueError(f"capture lost {len(missing)} selected rows; choose a fresh cohort")
-            db.executemany("INSERT INTO samples VALUES (?,?,?,?,?,?)", [
-                (rid, json.dumps(item["cleave_result"]) if isinstance(item["cleave_result"], dict)
-                 else item["cleave_result"], item.get("formula", ""), item.get("elements", ""),
-                 item.get("score", 0), item.get("mtime", "")) for rid, item in reports.items()
-            ])
+            for rid, item in reports.items():
+                root = item["cleave_result"]["files"][0]
+                demo.add_report(db, rid, item["cleave_result"], sha256=root["sha"],
+                                path=f"{rid}/{root['path'] or rid}", mtime=item["mtime"] or None)
             db.commit()
             if start % 1024 == 0:
                 print(f"captured {start + len(requested)}/{len(ids)} unique reports", flush=True)

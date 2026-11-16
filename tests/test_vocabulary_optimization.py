@@ -1,6 +1,5 @@
 """Exact vocabulary counts survive SQL remapping and worker aggregation."""
 
-import json
 import random
 import sqlite3
 import struct
@@ -12,6 +11,7 @@ from threading import Event
 import pytest
 
 from collimator import features
+from collimator.demo import write_reports
 from collimator.vocabulary import CountView, VocabularyCounts, _packed_remapper
 
 
@@ -286,19 +286,18 @@ def test_parallel_vocab_matches_serial_across_shard_rotation(
     try:
         db_path = tmp_path / "reports.sqlite"
         labels = []
-        with sqlite3.connect(db_path) as db:
-            db.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT,"
-                       " formula TEXT, elements TEXT, score INTEGER, mtime TEXT)")
-            for rid in range(1, 234):
-                label = int(rid % 3 != 0)
-                labels.append((rid, label))
-                file = {"type": "elf", "ms": {"text": {"custom_count": rid}}, "ts": [
-                    {"i": f"trait/{p}::finding", "l": 3 + p % 3, "c": 1.0}
-                    for p in range(rid % 5, rid % 5 + 5)
-                ]}
-                report = json.dumps({"v": "4", "fs": [file, file]})
-                db.execute("INSERT INTO samples VALUES (?, ?, ?, ?, ?, ?)",
-                           (rid, report if rid % 17 else None, "C2H6", "C,H", label * 5, ""))
+        stored = []
+        for rid in range(1, 234):
+            label = int(rid % 3 != 0)
+            labels.append((rid, label))
+            file = {"type": "elf", "ms": {"text": {"custom_count": rid}}, "ts": [
+                {"i": f"trait/{p}::finding", "l": 3 + p % 3, "c": 1.0}
+                for p in range(rid % 5, rid % 5 + 5)
+            ]}
+            report = {"v": "4", "fs": [file, file]}
+            stored.append({"id": rid, "report": report if rid % 17 else None,
+                           "formula": "C2H6", "score": label * 5})
+        write_reports(db_path, stored)
         serial = features.build_vocab_from_db(db_path, labels, n_workers=1)
         merges = []
         original_merge = VocabularyCounts.merge

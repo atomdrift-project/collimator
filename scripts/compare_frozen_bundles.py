@@ -18,7 +18,7 @@ import time
 
 import numpy as np
 
-from collimator import bundle, data, features, policy
+from collimator import bundle, data, demo, features, policy
 import azoth_oof_score_routes as scoring
 
 
@@ -113,31 +113,29 @@ def capture(args):
         if any(digest(p) != fingerprints[str(p)] for p in paths):
             raise ValueError('bundle changed during snapshot')
     # One repeatable-read transaction freezes all reports, not one per batch.
+    # The frozen copy is a verdict-schema SQLite DB that data.py reads alike.
     ids = metadata['row_ids'].tolist()
     changed_labels = []
     with data._connect(args.db, repeatable_read=True) as source, sqlite3.connect(out / 'reports.sqlite') as db:
-        if data._is_pg(args.db):
-            source.execute('SET TRANSACTION READ ONLY')
-        db.execute('CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT, '
-                   'formula TEXT, elements TEXT, score INTEGER, mtime TEXT)')
+        demo.create_schema(db)
         for start in range(0, len(ids), 128):
             batch = ids[start:start + 128]
-            params = [batch] if data._is_pg(args.db) else batch
-            where = 'id = ANY(%s)' if data._is_pg(args.db) else 'id IN (' + ','.join('?' for _ in batch) + ')'
-            rows = source.execute('SELECT id, cleave_result, formula, elements, score, mtime, label, sha256 '
-                                  'FROM samples WHERE ' + where, params).fetchall()
-            if {r[0] for r in rows if r[1] is not None} != set(batch):
+            reports = data._reports(source, batch)
+            if set(reports) != set(batch):
                 raise ValueError('capture lost a selected report; no partial cohort accepted')
+            labels = {rid: label for rid, label, _version in data.evaluation_versions(source, batch)}
             expected = dict(zip(batch, metadata['labels'][start:start+len(batch)], strict=True))
-            for rid, report, formula, elements, score, mtime, label, sha in rows:
+            for rid in batch:
+                item = reports[rid]
+                root = item['cleave_result']['files'][0]
                 index = int(np.searchsorted(metadata['row_ids'], rid))
-                metadata['sha256'][index] = str(sha)
-                metadata['scores'][index] = int(score or 0)
-                if str(label) != {0: 'good', 1: 'bad'}[int(expected[rid])]:
+                metadata['sha256'][index] = root['sha']
+                metadata['scores'][index] = int(item['score'])
+                if labels.get(rid) != {0: 'good', 1: 'bad'}[int(expected[rid])]:
                     changed_labels.append(int(rid))
-                db.execute('INSERT INTO samples VALUES (?,?,?,?,?,?)', (
-                    rid, json.dumps(report) if isinstance(report, dict) else report,
-                    formula, elements, score, str(mtime) if mtime else ''))
+                demo.add_report(db, rid, item['cleave_result'], label=labels.get(rid, 'unknown'),
+                                sha256=root['sha'], path=f"{rid}/{root['path'] or rid}",
+                                mtime=item['mtime'] or None)
             db.commit()
             if start % 1024 == 0:
                 print(f'captured {start+len(batch)}/{len(ids)} reports', flush=True)

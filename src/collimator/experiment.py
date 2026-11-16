@@ -11,7 +11,6 @@ import logging
 import math
 import os
 import shutil
-import sqlite3
 import tempfile
 import time
 from datetime import datetime
@@ -34,7 +33,7 @@ from sklearn.metrics import (
 
 from . import bundle, cache_identity, data, export, features, train
 from . import thresholds as _severity  # aliased: a local `thresholds` var shadows the name in recall_at_per_100M
-from .filegroups import ARCHIVE_FILETYPES
+from .filegroups import TRAINED_GROUPS
 from .model import predict_proba
 
 
@@ -95,46 +94,12 @@ def _restore_run_artifacts(output_dir: Path, key: str) -> bool:
 # the metadata scan while re-running vocab + extraction.
 
 
-# Filegroup membership in filefacts' canonical filetype vocabulary
-# (`filefacts::FileType::label`). Names that diverged historically have been
-# folded to the canonical form (`vbscript` → `vbs`, `pyc` → `python_bytecode`),
-# and granular office/media subtypes collapse onto the container type filefacts
-# actually emits (`doc`/`xls`/`ppt` → `ole_doc`, `docx`/`xlsx`/`pptx` →
-# `ooxml`). Old rows in the catalog still match because `data.py`'s
-# `expand_filetype_aliases` widens each canonical label to its stored spellings
-# at query time.
-EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
-    "archive": ARCHIVE_FILETYPES,
-    "scripts": (
-        "batch",
-        "javascript",
-        "lua",
-        "perl",
-        "php",
-        "powershell",
-        "python",
-        "ruby",
-        "shell",
-        "typescript",
-        "vbs",
-    ),
-    "native": ("elf", "macho", "pe"),
-    "portable": ("java_class", "python_bytecode", "wasm"),
-    "documents": ("html", "ole_doc", "ooxml", "pdf", "rtf"),
-    "source": (
-        "c",
-        "csharp",
-        "go",
-        "java",
-        "kotlin",
-        "makefile",
-        "rust",
-        "scala",
-        "swift",
-    ),
-    "config": ("json", "package.json", "plist", "xml"),
-    "media": ("jpeg", "png", "svg"),
-}
+# Filegroup routes are filefacts' groups, so a `filegroups/<name>` model is
+# trained on exactly the files filefacts puts in that group at runtime. Labels
+# are canonical; old rows in the catalog still match because `data.py`'s
+# `expand_filetype_aliases` widens each label to its stored spellings at query
+# time.
+EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = TRAINED_GROUPS
 
 
 def _corpus_revision(db_path: Path | str, live_revision: str) -> str:
@@ -845,26 +810,8 @@ def recall_at_per_100M(
 
 
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
-    """Load primary file types for a set of row IDs.
-
-    Reads the ``file_type`` column in one scan (data.fetch_file_types),
-    falling back to parsing cleave_result JSON on SQLite/demo DBs without it.
-    """
-    try:
-        file_types_by_row = data.fetch_file_types(db_path, row_ids)
-    except sqlite3.OperationalError:
-        # No file_type column (SQLite/demo DBs): parse it from cleave_result.
-        file_types_by_row = {}
-        for start in range(0, len(row_ids), 5000):
-            chunk = row_ids[start : start + 5000]
-            for row_id, item in data.fetch_cleave_results(db_path, chunk).items():
-                file_type = "unknown"
-                try:
-                    report = json.loads(item["cleave_result"])
-                    file_type = str(features.primary_file(report).get("type") or "unknown")
-                except (json.JSONDecodeError, KeyError):
-                    pass
-                file_types_by_row[row_id] = file_type
+    """Load primary file types for a set of row IDs (data.fetch_file_types)."""
+    file_types_by_row = data.fetch_file_types(db_path, row_ids)
 
     # Canonicalize so old and new spellings collapse to one label before the
     # array feeds stratification and per-filetype reporting.

@@ -15,6 +15,7 @@ import azoth_score_deployed as baseline
 import azoth_specialist_suite as suite
 from collimator import cache_identity, experiment, export, features, model, train
 from collimator.autocollie_selection import evaluation_cohort
+from collimator.demo import add_sample, create_schema, set_report
 
 
 @pytest.fixture(autouse=True)
@@ -28,13 +29,10 @@ def clear_feature_config():
 def db(tmp_path):
     path = tmp_path / "samples.db"
     with sqlite3.connect(path) as conn:
-        conn.execute("""CREATE TABLE samples (
-            id INTEGER PRIMARY KEY, sha256 TEXT, canonical_sha256 TEXT,
-            label TEXT, score INTEGER, file_type TEXT, cleave_result TEXT, skip TEXT)""")
+        create_schema(conn)
         for i, suffix in enumerate(("80", "20", "00"), 1):
-            sha = f"{i:062x}" + suffix
-            conn.execute("INSERT INTO samples VALUES (?,?,?,?,?,?,?,?)",
-                         (i, sha, sha, "bad", 5, "go", "{}", ""))
+            add_sample(conn, sample_id=i, sha256=f"{i:062x}" + suffix, label="bad",
+                       file_type="go", report={"risk": 5})
     return path
 
 
@@ -61,11 +59,11 @@ def test_mutations_invalidate_data_but_only_relevant_rows_invalidate_evaluation(
     before = cache_identity.database_revision(db)
     ev = cache_identity.evaluation_revision(db, [2], [1])
     with sqlite3.connect(db) as conn:
-        conn.execute("UPDATE samples SET score=6 WHERE id=1")
+        set_report(conn, 1, {"risk": 6})
     assert cache_identity.database_revision(db) != before
     assert cache_identity.evaluation_revision(db, [2], [1]) == ev
     with sqlite3.connect(db) as conn:
-        conn.execute("UPDATE samples SET cleave_result='{\"new\":true}' WHERE id=2")
+        set_report(conn, 2, {"new": True})
     assert cache_identity.evaluation_revision(db, [2], [1]) != ev
     with sqlite3.connect(db) as conn:
         conn.execute("UPDATE samples SET label='good' WHERE id=2")
@@ -278,7 +276,7 @@ def test_experiment_artifacts_cache_and_database_mutation(tmp_path, monkeypatch,
     # In-place changes below max(id) must not reuse the completed experiment.
     row = first["test_sample_row_ids"][0]
     with sqlite3.connect(db_path) as conn:
-        conn.execute("UPDATE samples SET score=score+1 WHERE id=?", (row,))
+        set_report(conn, row, {"risk": 11})
     third = experiment.run_experiment(db_path, **options)
     assert third["experiment_key"] != first["experiment_key"]
     assert third["evaluation_revision"] != first["evaluation_revision"]
@@ -356,7 +354,7 @@ def test_live_label_changes_keep_captured_evaluation(tmp_path, monkeypatch, part
         captured.append(kwargs["identity"]["evaluation_revision"])
         # A subsequent update must not relabel or invalidate the extracted matrix.
         with sqlite3.connect(db_path) as conn:
-            conn.execute("UPDATE samples SET score=score+1 WHERE id=?", (selected_test[0][0],))
+            set_report(conn, selected_test[0][0], {"risk": 11})
         extracted.append(True)
         return matrices
 

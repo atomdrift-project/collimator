@@ -1,22 +1,30 @@
 """Tests for data loading from hopper databases."""
 
-import json
 import sqlite3
 import tempfile
 from pathlib import Path
+
+import zstandard
 
 from collimator.data import (
     canonicalize_filetype,
     count_labeled_by_partition_full,
     expand_filetype_aliases,
     expand_route_filetypes,
+    fetch_cleave_results,
     labeled_corpus_metadata_full,
     load_samples,
     normalize_archive_filetype,
     route_filetype,
+    stream_corpus,
     stream_labeled_metadata_full_with_size,
     stream_labeled_samples_full,
 )
+from collimator.demo import add_sample, compress_report, create_schema
+
+
+def compress_report_bytes(raw: bytes) -> bytes:
+    return zstandard.ZstdCompressor().compress(raw)
 
 
 def test_normalize_archive_filetype_strips_pure_compression():
@@ -48,7 +56,9 @@ def test_normalize_archive_filetype_strips_pure_compression():
 
 def test_runtime_route_expansion_preserves_all_aliases_and_compressed_members():
     assert {'tar','tar.gz','tar.bz2','tar.xz','tar.zst'} <= set(expand_route_filetypes(('tar.gz',)))
-    assert {'ole_doc','doc','xls','ole','msi'} <= set(expand_route_filetypes(('xls',)))
+    assert {'ole_doc','doc','xls','ole'} <= set(expand_route_filetypes(('xls',)))
+    # filefacts reports MSI as its own type, so it is no Office alias.
+    assert 'msi' not in expand_route_filetypes(('xls',))
     assert expand_route_filetypes(('pe',)) == ('pe',)
 
 
@@ -130,137 +140,96 @@ def test_route_filetype_composes_compression_and_canonicalization():
     assert route_filetype("gz") == "gz"
 
 
-def test_compact_unordered_metadata_preserves_corpus_and_canonical_groups():
-    from collimator.data import stream_labeled_metadata_full, _metadata_full_query
-
-    db = _create_test_db([
-        {'sha256':'a'*62+'ff','label':'bad','cleave_result':'{}','path':'/include/one','score':7},
-        {'sha256':'b'*62+'00','label':'good','cleave_result':'{}','path':'/include/two','score':3},
-        {'sha256':'c'*64,'label':'good','cleave_result':'{}','path':'/other','skip':'yes'},
-    ])
-    with sqlite3.connect(db) as conn:
-        conn.execute('UPDATE samples SET canonical_sha256=? WHERE id=2', ('a'*62+'ff',))
-    try:
-        for options in ({}, {'limit':1}, {'min_score':5}, {'path_substr':'two'}, {'partition':'train'}):
-            expected = list(stream_labeled_metadata_full(db, **options))
-            actual = list(stream_labeled_metadata_full(db, compact=True, ordered=False, **options))
-            assert sorted((r[0],r[4],r[5]) for r in actual) == sorted((r[0],r[4],r[5]) for r in expected)
-            assert all(r[1:4] == ('','',0) for r in actual)
-        assert 'ORDER BY' not in _metadata_full_query('true', postgres=True, compact=True, ordered=False)
-        assert 'ORDER BY' in _metadata_full_query('true', postgres=True, compact=True, ordered=False, limit=1)
-    finally:
-        db.unlink()
+def _sha(name: str) -> str:
+    """A full digest spelled by repeating a short hex name ("aaa" -> "aaaa…")."""
+    return (name * 64)[:64]
 
 
-def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:
-    """Create a temporary hopper-schema SQLite DB.
+def _create_test_db(samples: list[tuple[str, str, dict | bytes | None] | dict]) -> Path:
+    """Create a temporary hopper verdict-schema SQLite DB.
 
-    Each tuple: (sha256, label, cleave_result)
-    Or dict with optional path/score/skip overrides.
+    Each tuple: (sha256, label, report) — the file's v8 report, raw stored
+    bytes, or None. Or a dict with optional path/score/conflict overrides:
+    score is the report's risk, conflict marks a good/bad conflict.
     """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = Path(tmp.name)
+    db_path.unlink()
 
     conn = sqlite3.connect(str(db_path))
-    conn.execute("""
-        CREATE TABLE samples (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sha256 TEXT UNIQUE NOT NULL,
-            source TEXT NOT NULL DEFAULT '',
-            feed TEXT NOT NULL DEFAULT '',
-            ecosystem TEXT NOT NULL DEFAULT '',
-            filename TEXT NOT NULL DEFAULT '',
-            file_type TEXT NOT NULL DEFAULT '',
-            size_bytes INTEGER NOT NULL DEFAULT 0,
-            label TEXT NOT NULL DEFAULT 'unknown',
-            label_source TEXT NOT NULL DEFAULT '',
-            cleave_result TEXT,
-            risk TEXT NOT NULL DEFAULT '',
-            finding_count INTEGER NOT NULL DEFAULT 0,
-            path TEXT NOT NULL DEFAULT '',
-            status TEXT NOT NULL DEFAULT '',
-            note TEXT NOT NULL DEFAULT '',
-            canonical_sha256 TEXT NOT NULL DEFAULT '',
-            parent TEXT NOT NULL DEFAULT '',
-            skip TEXT NOT NULL DEFAULT '',
-            formula TEXT NOT NULL DEFAULT '',
-            elements TEXT NOT NULL DEFAULT '',
-            score INTEGER NOT NULL DEFAULT 10,
-            mtime DATETIME,
-            created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-            updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-            analyzed_at DATETIME
-        )
-    """)
+    create_schema(conn)
     for entry in samples:
         if isinstance(entry, dict):
             sha = str(entry["sha256"])
             label = str(entry["label"])
-            cr = entry["cleave_result"]
-            path = str(entry.get("path", ""))
+            report = entry["report"]
+            path = entry.get("path")
             score = int(entry.get("score", 10))
-            skip = str(entry.get("skip", ""))
+            conflict = bool(entry.get("conflict", False))
         else:
-            sha, label, cr = entry
-            path = ""
-            score = 10
-            skip = ""
-        conn.execute(
-            "INSERT INTO samples (sha256, label, canonical_sha256, cleave_result, path, score, skip)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (sha, label, sha, cr, path, score, skip),
+            sha, label, report = entry
+            path, score, conflict = None, 10, False
+        if isinstance(report, dict):
+            report = {**report, "risk": score}
+        add_sample(
+            conn, sha256=sha, label=label, report=report, path=path,
+            label_source="conflict" if conflict else None,
         )
     conn.commit()
     conn.close()
     return db_path
 
 
-def _minimal_report() -> str:
-    return json.dumps({
-        "version": "3",
-        "files": [{
-            "id": 0,
-            "path": "/tmp/x",
-            "depth": 0,
-            "file_type": "elf",
-            "sha256": "abc",
-            "size": 1024,
-            "findings": [],
-            "structure": [],
-            "strings": [],
-        }],
-        "summary": {"files_analyzed": 1, "duration_ms": 1, "tools": []},
-    })
+def _minimal_report() -> dict:
+    return {"findings": [], "structure": [], "strings": []}
+
+
+def test_compact_unordered_metadata_preserves_ids_and_partitions():
+    from collimator.data import stream_labeled_metadata_full
+
+    db = _create_test_db([
+        {"sha256": _sha("a"), "label": "bad", "report": _minimal_report(), "path": "/include/one", "score": 7},
+        {"sha256": _sha("b"), "label": "good", "report": _minimal_report(), "path": "/include/two", "score": 3},
+    ])
+    try:
+        for options in ({}, {"limit": 1}, {"min_score": 5}, {"path_substr": "two"}, {"partition": "train"}):
+            expected = list(stream_labeled_metadata_full(db, **options))
+            actual = list(stream_labeled_metadata_full(db, compact=True, ordered=False, **options))
+            assert sorted((r[0], r[4], r[5]) for r in actual) == sorted((r[0], r[4], r[5]) for r in expected)
+            assert all(r[1:4] == ("", "", 0) for r in actual)
+    finally:
+        db.unlink()
 
 
 def test_load_labeled_samples() -> None:
     db = _create_test_db([
-        ("aaa", "bad", _minimal_report()),
-        ("bbb", "good", _minimal_report()),
-        ("ccc", "unknown", _minimal_report()),  # excluded — not bad or good
+        (_sha("a"), "bad", _minimal_report()),
+        (_sha("b"), "good", _minimal_report()),
+        (_sha("c"), "unknown", _minimal_report()),  # excluded — not bad or good
     ])
     samples = load_samples(db)
     assert len(samples) == 2
     labels = {s.sha256: s.label for s in samples}
-    assert labels["aaa"] == 1  # malware
-    assert labels["bbb"] == 0  # benign
+    assert labels[_sha("a")] == 1  # malware
+    assert labels[_sha("b")] == 0  # benign
 
 
-def test_skip_null_json() -> None:
+def test_skip_missing_report() -> None:
     db = _create_test_db([
-        ("aaa", "bad", _minimal_report()),
-        ("bbb", "bad", ""),
-        ("ccc", "good", None),
+        (_sha("a"), "bad", _minimal_report()),
+        (_sha("b"), "bad", b""),
+        (_sha("c"), "good", None),
     ])
     samples = load_samples(db)
     assert len(samples) == 1
-    assert samples[0].sha256 == "aaa"
+    assert samples[0].sha256 == _sha("a")
 
 
-def test_skip_invalid_json() -> None:
+def test_skip_invalid_report() -> None:
     db = _create_test_db([
-        ("aaa", "bad", _minimal_report()),
-        ("bbb", "bad", "not valid json{{{"),
+        (_sha("a"), "bad", _minimal_report()),
+        (_sha("b"), "bad", b"not valid json{{{"),
+        (_sha("c"), "bad", compress_report_bytes(b"not valid json{{{")),
     ])
     samples = load_samples(db)
     assert len(samples) == 1
@@ -278,53 +247,65 @@ def test_file_not_found() -> None:
         load_samples(Path("/nonexistent/database.db"))
 
 
+def test_schema_without_verdict_tables_fails_fast(tmp_path) -> None:
+    import pytest
+    db = tmp_path / "legacy.db"
+    with sqlite3.connect(db) as conn:
+        conn.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, cleave_result TEXT)")
+    with pytest.raises(RuntimeError, match="no samples and verdicts tables"):
+        load_samples(db)
+
+
 def test_stream_labeled_samples_full_includes_low_score_and_applies_filters() -> None:
     db = _create_test_db([
-        {"sha256": "aaa", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/harvest/low.py", "score": 0},
-        {"sha256": "bbb", "label": "bad", "cleave_result": _minimal_report(), "path": "/repo/harvest/high.py", "score": 42},
-        {"sha256": "ccc", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "skip": "y"},
+        {"sha256": _sha("a"), "label": "good", "report": _minimal_report(), "path": "/repo/harvest/low.py", "score": 0},
+        {"sha256": _sha("b"), "label": "bad", "report": _minimal_report(), "path": "/repo/harvest/high.py", "score": 42},
+        {"sha256": _sha("c"), "label": "good", "report": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "conflict": True},
     ])
     samples = list(stream_labeled_samples_full(db, path_substr="harvest"))
-    assert [sample.sha256 for sample in samples] == ["aaa", "bbb"]
+    assert [sample.sha256 for sample in samples] == [_sha("a"), _sha("b")]
     assert [sample.score for sample in samples] == [0, 42]
+    assert [sample.path for sample in samples] == ["/repo/harvest/low.py", "/repo/harvest/high.py"]
 
 
-def test_stream_labeled_metadata_full_with_size_includes_json_length() -> None:
-    low_report = _minimal_report()
-    high_report = json.dumps({"fs": [{"id": 0, "path": "/tmp/y", "dp": 0, "ts": ["x" * 100]}]})
+def test_stream_labeled_metadata_full_with_size_includes_report_size() -> None:
+    low_report = {**_minimal_report(), "risk": 0}
+    high_report = {"ts": ["x" * 100], "risk": 42}
     db = _create_test_db([
-        {"sha256": "aaa", "label": "good", "cleave_result": low_report, "path": "/repo/harvest/low.py", "score": 0},
-        {"sha256": "bbb", "label": "bad", "cleave_result": high_report, "path": "/repo/harvest/high.py", "score": 42},
-        {"sha256": "ccc", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "skip": "y"},
+        {"sha256": _sha("a"), "label": "good", "report": low_report, "path": "/repo/harvest/low.py", "score": 0},
+        {"sha256": _sha("b"), "label": "bad", "report": high_report, "path": "/repo/harvest/high.py", "score": 42},
+        {"sha256": _sha("c"), "label": "good", "report": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "conflict": True},
     ])
 
     rows = list(stream_labeled_metadata_full_with_size(db, path_substr="harvest"))
 
+    # A bad row's score is its report's risk; a benign row's is read only
+    # under a score bound.
     assert [row[:5] for row in rows] == [
-        (1, "aaa", "/repo/harvest/low.py", 0, 0),
-        (2, "bbb", "/repo/harvest/high.py", 42, 1),
+        (1, _sha("a"), "/repo/harvest/low.py", 0, 0),
+        (2, _sha("b"), "/repo/harvest/high.py", 42, 1),
     ]
-    assert rows[0][5] == len(low_report)
-    assert rows[1][5] == len(high_report)
-    # canonical_sha256 is the trailing element (defaults to sha256 in the demo
-    # rows since we didn't populate canonical separately).
-    assert rows[0][6] == "aaa"
-    assert rows[1][6] == "bbb"
+    assert rows[0][5] == len(compress_report(low_report))
+    assert rows[1][5] == len(compress_report(high_report))
+    # The split key (canonical_sha256) is the trailing element: the file's
+    # own digest.
+    assert rows[0][6] == _sha("a")
+    assert rows[1][6] == _sha("b")
 
 
 def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
-    # SHA256 last bytes: 00=test, 30=dev, 50=bad train, 60=unknown filtered, 70=skip filtered.
+    # SHA256 last bytes: 00=test, 30=dev, 50=bad train, 60=unknown filtered, 70=conflict filtered.
     db = _create_test_db([
-        {"sha256": "00" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 0},
-        {"sha256": "30" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 10},
-        {"sha256": "50" * 32, "label": "bad", "cleave_result": _minimal_report(), "score": 1},
-        {"sha256": "60" * 32, "label": "unknown", "cleave_result": _minimal_report(), "score": 10},
+        {"sha256": "00" * 32, "label": "good", "report": _minimal_report(), "score": 0},
+        {"sha256": "30" * 32, "label": "good", "report": _minimal_report(), "score": 10},
+        {"sha256": "50" * 32, "label": "bad", "report": _minimal_report(), "score": 1},
+        {"sha256": "60" * 32, "label": "unknown", "report": _minimal_report(), "score": 10},
         {
             "sha256": "70" * 32,
             "label": "good",
-            "cleave_result": _minimal_report(),
+            "report": _minimal_report(),
             "score": 10,
-            "skip": "y",
+            "conflict": True,
         },
     ])
 
@@ -343,11 +324,11 @@ def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
 
 def test_labeled_corpus_metadata_full_matches_threshold_corpus() -> None:
     db = _create_test_db([
-        {"sha256": "aaa", "label": "good", "cleave_result": _minimal_report(), "score": 0},
-        {"sha256": "bbb", "label": "bad", "cleave_result": _minimal_report(), "score": 1},
-        {"sha256": "ccc", "label": "unknown", "cleave_result": _minimal_report(), "score": 10},
-        {"sha256": "ddd", "label": "good", "cleave_result": None, "score": 10},
-        {"sha256": "eee", "label": "good", "cleave_result": _minimal_report(), "score": 10, "skip": "y"},
+        {"sha256": _sha("a"), "label": "good", "report": _minimal_report(), "score": 0},
+        {"sha256": _sha("b"), "label": "bad", "report": _minimal_report(), "score": 1},
+        {"sha256": _sha("c"), "label": "unknown", "report": _minimal_report(), "score": 10},
+        {"sha256": _sha("d"), "label": "good", "report": None, "score": 10},
+        {"sha256": _sha("e"), "label": "good", "report": _minimal_report(), "score": 10, "conflict": True},
     ])
 
     metadata = labeled_corpus_metadata_full(db)
@@ -356,6 +337,77 @@ def test_labeled_corpus_metadata_full_matches_threshold_corpus() -> None:
     assert metadata["malware"] == 1
     assert metadata["benign"] == 1
     assert metadata["max_row_id"] == 2
+
+
+def _bad_member(conn: sqlite3.Connection, name: str, crits: list[int], *, scanned=False) -> int:
+    traits = [{"id": f"t/{i}", "crit": crit} for i, crit in enumerate(crits)]
+    report = {"traits": traits, "risk": 5}
+    return add_sample(conn, sha256=_sha(name), label="bad", report=report, scanned=scanned)
+
+
+def test_bad_archive_filler_is_not_trained_on(tmp_path) -> None:
+    """legacy skip-benign-archive-item: a bad member trains only if its own
+    findings convict it (one at crit 5, or two at crit 4)."""
+    db = tmp_path / "members.db"
+    with sqlite3.connect(db) as conn:
+        create_schema(conn)
+        filler = _bad_member(conn, "1", [3, 4])
+        hostile = _bad_member(conn, "2", [5])
+        suspicious = _bad_member(conn, "3", [4, 4])
+        scanned = _bad_member(conn, "4", [1], scanned=True)  # judged on its own bytes
+        good = add_sample(conn, sha256=_sha("5"), label="good", report={"facts": {}},
+                          scanned=False)
+    ids = [row.row_id for row in stream_corpus(db, scores="none")]
+    assert filler not in ids
+    assert ids == [hostile, suspicious, scanned, good]
+    assert labeled_corpus_metadata_full(db)["samples"] == 4
+
+
+def test_member_stub_reports_are_not_trained_on(tmp_path) -> None:
+    """A member whose report is its molecule and risk alone (what an archive's
+    report kept of it) is no analysis of the file; a scanned file's is."""
+    db = tmp_path / "stubs.db"
+    with sqlite3.connect(db) as conn:
+        create_schema(conn)
+        stub = add_sample(conn, sha256=_sha("1"), label="good", report={"mol": "H", "risk": 0},
+                          scanned=False)
+        empty = add_sample(conn, sha256=_sha("2"), label="good", report={}, scanned=False)
+        full = add_sample(conn, sha256=_sha("3"), label="good", scanned=False,
+                          report={"mol": "H", "risk": 0, "facts": {"metrics": {}}})
+        scanned = add_sample(conn, sha256=_sha("4"), label="good", report={"risk": 0})
+    ids = [row.row_id for row in stream_corpus(db)]
+    assert stub not in ids and empty not in ids
+    assert ids == [full, scanned]
+
+
+def test_archive_report_is_rebuilt_from_members(tmp_path) -> None:
+    """A training report lists the archive and every file contents names
+    beneath it, each with what a v8 report moves out (type, depth, path…)."""
+    db = tmp_path / "archive.db"
+    with sqlite3.connect(db) as conn:
+        create_schema(conn)
+        inner = add_sample(conn, sha256=_sha("3"), label="unknown", file_type="javascript",
+                           report={"traits": [{"id": "x/y", "crit": 4}]}, scanned=False)
+        nested = add_sample(conn, sha256=_sha("2"), label="unknown", file_type="zip", report={},
+                            scanned=False, members=[(inner, "lib/index.js")])
+        loose = add_sample(conn, sha256=_sha("4"), label="unknown", file_type="text",
+                           outcome=None, scanned=False)
+        root = add_sample(conn, sha256=_sha("1"), label="bad", file_type="tar", size=99,
+                          report={"mol": "H₂O", "risk": 7}, path="bad/x/pkg.tgz",
+                          mtime="2026-01-02 03:04:05+00:00",
+                          members=[(nested, "a.zip"), (loose, "README")])
+    item = fetch_cleave_results(db, [root, inner])[root]
+    files = item["cleave_result"]["files"]
+    assert [(f["sha"], f["type"], f["depth"], f.get("pid"), f["path"]) for f in files] == [
+        (_sha("1"), "tar", 0, None, "pkg.tgz"),
+        (_sha("2"), "zip", 1, 0, "pkg.tgz!!a.zip"),
+        (_sha("4"), "text", 1, 0, "pkg.tgz!!README"),
+        (_sha("3"), "javascript", 2, 1, "pkg.tgz!!a.zip!!lib/index.js"),
+    ]
+    assert files[0]["size"] == 99
+    assert files[3]["traits"] == [{"id": "x/y", "crit": 4}]
+    assert (item["formula"], item["elements"], item["score"]) == ("H₂O", "HO", 7)
+    assert item["mtime"] == "2026-01-02 03:04:05+00:00"
 
 
 def test_retry_pg_connect_succeeds_after_transient_failure(monkeypatch) -> None:

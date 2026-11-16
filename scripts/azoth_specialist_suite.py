@@ -40,12 +40,8 @@ from collimator.autocollie_selection import (
     selection_record,
     write_selection_report,
 )
-from collimator.filegroups import ARCHIVE_FILETYPES
-from collimator.fit_resources import (
-    claim_oversize_admission,
-    fit_wait_seconds,
-    release_oversize_admission,
-)
+from collimator.filegroups import FILE_GROUPS, TRAINED_GROUPS
+from collimator.fit_resources import claim_oversize_admission, fit_wait_seconds, release_oversize_admission
 from collimator.memory import memory_shares
 
 LOG = logging.getLogger("azoth_specialist_suite")
@@ -302,7 +298,7 @@ def _op_recall(metrics: dict[str, Any] | None) -> float | None:
     return None
 
 
-# Raw single-file compression formats — these have no multi-file
+# filefacts' `compressed` group: single-stream compression, with no multi-file
 # container structure for a specialist to learn from. Litmus decompresses
 # them and re-routes the single inner file; the wrapper itself has no
 # signal of its own. Skip specialist training entirely.
@@ -313,13 +309,7 @@ def _op_recall(metrics: dict[str, Any] | None) -> float | None:
 # member-name patterns, oversized headers, etc.) carries malware
 # signal that a specialist can learn. Those are NOT in this set and
 # DO get trained.
-RAW_COMPRESSED_FILETYPES: frozenset[str] = frozenset({
-    "bz2",
-    "gz",
-    "lzma",
-    "xz",
-    "zst",
-})
+RAW_COMPRESSED_FILETYPES: frozenset[str] = frozenset(FILE_GROUPS["compressed"])
 
 # Backwards-compatible alias. Older code (and possibly downstream
 # scripts) still imports LITMUS_EXTRACTED_FILETYPES; keep it as the
@@ -329,51 +319,13 @@ RAW_COMPRESSED_FILETYPES: frozenset[str] = frozenset({
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = RAW_COMPRESSED_FILETYPES
 
 
-_DEPLOYMENT_GROUP_TYPES: dict[str, tuple[str, ...]] = {
-    "archive": data.expand_filetype_aliases(ARCHIVE_FILETYPES),
-    "scripts": (
-        "batch",
-        "javascript",
-        "lua",
-        "perl",
-        "php",
-        "powershell",
-        "python",
-        "ruby",
-        "shell",
-        "typescript",
-        "vbscript",
-    ),
-    "native": ("elf", "macho", "pe"),
-    "portable": (
-        "dex",
-        "java_class",
-        "pyc",
-        "wasm",
-    ),
-    "documents": ("doc", "docx", "html", "ole", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"),
-    "source": (
-        "c",
-        "cpp",
-        "csharp",
-        "go",
-        "java",
-        "kotlin",
-        "makefile",
-        "rust",
-        "scala",
-        "swift",
-    ),
-    "config": ("ini", "json", "package.json", "plist", "toml", "xml", "yaml", "yml"),
-    "media": ("bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"),
-}
-
+# filefacts' groups, so a group model covers what filefacts groups at runtime.
 # Training SQL matches stored spellings, while calibration and runtime routing
-# use canonical labels. Include both for every group (not only archives), or
-# ooxml/ole_doc/vbs/python_bytecode silently lose their group model.
+# use canonical labels. Include both for every group, or old rows (`oledoc`,
+# `vbscript`, `pyc`) silently lose their group model.
 DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
     group: data.expand_filetype_aliases(file_types)
-    for group, file_types in _DEPLOYMENT_GROUP_TYPES.items()
+    for group, file_types in TRAINED_GROUPS.items()
 }
 
 
@@ -394,14 +346,6 @@ def _strip_nan(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_strip_nan(v) for v in value]
     return value
-
-
-def _label_int(label: str) -> int:
-    return 1 if label == "bad" else 0
-
-
-def _placeholder(db_path: Path | str) -> str:
-    return "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
 
 
 def _read_oof_exclude() -> int | None:
@@ -442,75 +386,30 @@ def _fetch_rows(
     ``experiment.py`` semantics — focuses specialists on confident malware
     without touching benign volume or the honest test eval.
     """
-    where = [
-        data.LABELED_WHERE,
-    ]
-    params: list[Any] = []
-    marker = _placeholder(db_path)
-    if max_id > 0:
-        where.append(f"id <= {marker}")
-        params.append(int(max_id))
-    if min_score is not None:
-        where.append(f"score >= {marker}")
-        params.append(int(min_score))
-
     # EXP_OOF_FOLD_EXCLUDE turns a normal specialist training run into one
-    # half of a k=2 OOF pair. Skipping rows whose canonical hash hashes to
-    # the excluded fold leaves those rows available for honest OOF scoring
+    # half of a k=2 OOF pair. Skipping rows whose split key hashes to the
+    # excluded fold leaves those rows available for honest OOF scoring
     # afterwards. Test partition rows have oof_fold_of() == None and are
     # untouched by this filter (they're already excluded from training via
     # _ids_labels(test=False)).
     oof_exclude = _read_oof_exclude()
-    select = (
-        "SELECT id, sha256, label, canonical_sha256, score, "
-        "COALESCE(NULLIF(file_type, ''), 'unknown')"
-    )
-
-    def _keep(label_int: int, score_val: int, is_test_val: bool) -> bool:
+    rows: list[tuple[int, int, bool, str]] = []
+    for row in data.stream_corpus(
+        db_path, max_id=max_id, file_types=file_types, min_score=min_score,
+        scores="bad" if min_malware_score is not None else "none",
+    ):
+        split_key = row.canonical_sha256
+        if data.is_dev_sample(split_key):
+            continue
+        if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
+            continue
+        is_test_val = data.is_test_sample(split_key)
         # Drop low-confidence malware from TRAINING only; keep all benigns and
         # all test-partition malware (honest eval).
-        return not (
-            min_malware_score is not None
-            and label_int == 1
-            and not is_test_val
-            and score_val < min_malware_score
-        )
-
-    rows: list[tuple[int, int, bool, str]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(list(file_types))
-            query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                for row_id, sha256, label, canonical, score, file_type in cur:
-                    split_key = canonical or sha256
-                    if data.is_dev_sample(split_key):
-                        continue
-                    if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
-                        continue
-                    label_int = _label_int(str(label))
-                    is_test_val = data.is_test_sample(split_key)
-                    if not _keep(label_int, int(score or 0), is_test_val):
-                        continue
-                    rows.append((int(row_id), label_int, is_test_val, str(file_type)))
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            for row_id, sha256, label, canonical, score, file_type in conn.execute(query, params):
-                split_key = canonical or sha256
-                if data.is_dev_sample(split_key):
-                    continue
-                if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
-                    continue
-                label_int = _label_int(str(label))
-                is_test_val = data.is_test_sample(split_key)
-                if not _keep(label_int, int(score or 0), is_test_val):
-                    continue
-                rows.append((int(row_id), label_int, is_test_val, str(file_type)))
+        if (min_malware_score is not None and row.label == 1 and not is_test_val
+                and row.score < min_malware_score):
+            continue
+        rows.append((row.row_id, row.label, is_test_val, row.file_type))
     return rows
 
 
@@ -521,45 +420,13 @@ def _count_rows(
     max_id: int,
     min_score: int | None,
 ) -> dict[str, int]:
-    marker = _placeholder(db_path)
-    where = [
-        data.LABELED_WHERE,
-    ]
-    params: list[Any] = []
-    if max_id > 0:
-        where.append(f"id <= {marker}")
-        params.append(max_id)
-    if min_score is not None:
-        where.append(f"score >= {marker}")
-        params.append(min_score)
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(list(file_types))
-            query = (
-                "SELECT"
-                " COUNT(*) FILTER (WHERE label = 'bad') AS bad,"
-                " COUNT(*) FILTER (WHERE label = 'good') AS good,"
-                " COUNT(*) AS total"
-                " FROM samples WHERE "
-                + " AND ".join(where)
-            )
-            rows = list(data._execute(conn, query, params))  # noqa: SLF001
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            query = (
-                "SELECT"
-                " SUM(CASE WHEN label = 'bad' THEN 1 ELSE 0 END) AS bad,"
-                " SUM(CASE WHEN label = 'good' THEN 1 ELSE 0 END) AS good,"
-                " COUNT(*) AS total"
-                " FROM samples WHERE "
-                + " AND ".join(where)
-            )
-            rows = list(conn.execute(query, params))
-    bad, good, total = rows[0]
-    return {"bad": int(bad or 0), "good": int(good or 0), "total": int(total or 0)}
+    bad = total = 0
+    for row in data.stream_corpus(
+        db_path, max_id=max_id, file_types=file_types, min_score=min_score, scores="none",
+    ):
+        bad += row.label
+        total += 1
+    return {"bad": bad, "good": total - bad, "total": total}
 
 
 def _eligible_filetypes(
@@ -570,27 +437,6 @@ def _eligible_filetypes(
     min_bad: int,
     min_good: int,
 ) -> list[dict[str, Any]]:
-    marker = _placeholder(db_path)
-    where = [
-        data.LABELED_WHERE,
-    ]
-    params: list[Any] = []
-    if min_score is not None:
-        where.append(f"score >= {marker}")
-        params.append(min_score)
-    if max_id > 0:
-        where.append(f"id <= {marker}")
-        params.append(max_id)
-    query = (
-        "SELECT COALESCE(NULLIF(file_type, ''), 'unknown') AS file_type,"
-        " COUNT(*) FILTER (WHERE label = 'bad') AS bad,"
-        " COUNT(*) FILTER (WHERE label = 'good') AS good,"
-        " COUNT(*) AS total"
-        " FROM samples WHERE "
-        + " AND ".join(where)
-        + " GROUP BY 1"
-        + " ORDER BY total DESC"
-    )
     # Group raw rows by canonical route label so both compressed archive
     # variants (tar.gz, tar.bz2, tar.xz, … → tar) AND historical spellings
     # (python-bytecode → python_bytecode, xlsx → ooxml) merge onto one route
@@ -600,22 +446,18 @@ def _eligible_filetypes(
     # and a row stored as `xlsx` trains the same `ooxml` specialist scan routes
     # OOXML files to at scan time.
     grouped: dict[str, dict[str, Any]] = {}
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        # Whole corpus: 27 min through the index on 2026-09-26, ~4 in order.
-        data._read_table_in_order(conn)  # noqa: SLF001
-        rows = data._execute(conn, query, params)  # noqa: SLF001
-        for file_type, bad, good, total in rows:
-            normalized = data.route_filetype(file_type)
-            if not normalized:
-                continue
-            entry = grouped.setdefault(
-                normalized,
-                {"variants": set(), "bad": 0, "good": 0, "total": 0},
-            )
-            entry["variants"].add(str(file_type))
-            entry["bad"] += int(bad)
-            entry["good"] += int(good)
-            entry["total"] += int(total)
+    for row in data.stream_corpus(db_path, max_id=max_id, min_score=min_score, scores="none"):
+        normalized = data.route_filetype(row.file_type)
+        if not normalized:
+            continue
+        entry = grouped.setdefault(
+            normalized,
+            {"variants": set(), "bad": 0, "good": 0, "total": 0},
+        )
+        entry["variants"].add(row.file_type)
+        entry["bad"] += row.label
+        entry["good"] += 1 - row.label
+        entry["total"] += 1
     out: list[dict[str, Any]] = []
     for normalized, agg in sorted(grouped.items(), key=lambda kv: -kv[1]["total"]):
         if normalized in RAW_COMPRESSED_FILETYPES:

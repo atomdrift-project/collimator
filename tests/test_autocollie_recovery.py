@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from autocollie_recover_pass import recovery_routes  # noqa: E402
 from route_sample_counts import _count_labeled, _filetypes_for_route  # noqa: E402
 
+from collimator.demo import add_sample, create_schema  # noqa: E402
+
 
 def _event(kind, route="", **payload):
     return {"ts": "2026-10-20T03:00:00Z", "type": kind, "route": route, "payload": payload}
@@ -55,10 +57,11 @@ def test_all_crashed_route_is_retried_but_failed_variant_with_success_is_retaine
 def test_route_counts_include_stored_office_aliases(tmp_path):
     db = tmp_path / "counts.db"
     with sqlite3.connect(db) as conn:
-        conn.execute("CREATE TABLE samples (file_type TEXT, label TEXT, cleave_result TEXT, skip TEXT)")
-        conn.executemany("INSERT INTO samples VALUES (?, ?, '{}', '')", [
+        create_schema(conn)
+        for i, (file_type, label) in enumerate([
             ("docx", "bad"), ("xlsx", "good"), ("ooxml", "bad"), ("pe", "bad"),
-        ])
+        ]):
+            add_sample(conn, sha256=f"{i:064x}", label=label, file_type=file_type, report={})
     members = _filetypes_for_route("filetypes/ooxml", tmp_path)
     assert {"docx", "xlsx", "ooxml"} <= set(members)
     assert _count_labeled(str(db), members) == {"malware": 2, "benign": 1}

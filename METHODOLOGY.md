@@ -21,7 +21,9 @@ print, with the simplest possible implementation that meets that bar.
 
 ## Partitions
 
-Deterministic by `canonical_sha256` last byte:
+Deterministic by the split key's last byte. Since hopper's verdict schema
+(2026-11-15) the split key is the sample's own sha256 (still exposed as
+`canonical_sha256`): the schema keeps no archive-wide canonical digest.
 
 | Range          | Partition | Approx size  | Use                                           |
 |----------------|-----------|--------------|------------------------------------------------|
@@ -35,10 +37,15 @@ Properties:
   Historical run JSONs that report `test_metrics` retain their semantic
   meaning across the methodology change. They were leaky-test (used for
   selection); they are now honest-test only after the migration below.
-- Every row's partition is computable from its canonical hash. No
-  separate manifest, no per-snapshot drift.
-- Archive-aware grouping (canonical SHA256 = lex-min over inner files)
-  is preserved, so an archive and its constituents always co-locate.
+- Every row's partition is computable from its digest. No separate
+  manifest, no per-snapshot drift.
+- Archive-aware grouping is **not** preserved any more. Legacy hopper
+  stored a canonical SHA256 (lex-min over inner files) and gave archive
+  members their archive's, so an archive and its labeled members
+  co-located. Now every member is a sample of its own, splitting on its own
+  digest, and an archive's training report includes its members' reports:
+  a labeled member can land in dev/test while its archive trains. Restoring
+  co-location needs a grouping key from hopper.
 
 What this partition does **not** prevent:
 

@@ -3,6 +3,7 @@
 import builtins
 import io
 import runpy
+import sys
 
 import pytest
 
@@ -164,6 +165,7 @@ def test_memory_warning_uses_counter_deltas_not_old_events():
     assert memory.memory_warning(before, None, 30) is None
 
 
+@pytest.mark.skipif(sys.platform != 'linux', reason='shell admission runs on the Linux training host, whose /usr/bin/python3 is 3.10+')
 def test_watch_cli_works_without_importing_training_dependencies(tmp_path):
     import subprocess
     from pathlib import Path

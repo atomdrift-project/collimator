@@ -79,10 +79,6 @@ class FeatureMode:
     benign_framework: bool = False
 
 
-def _placeholder(db_path: str) -> str:
-    return "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
-
-
 def _passes_filter(crit: int, filt: str) -> bool:
     if filt == "h":
         return crit >= 5
@@ -105,39 +101,20 @@ def _hash(text: str, bits: int) -> int:
 
 
 def _fetch_rows(db_path: str, file_types: tuple[str, ...], max_id: int) -> list[Row]:
-    marker = _placeholder(db_path)
-    where = [data.LABELED_WHERE]
-    params: list[Any] = []
-    if data._is_pg(db_path):  # noqa: SLF001
-        where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') = ANY({marker})")
-        params.append(list(file_types))
-    else:
-        placeholders = ",".join(marker for _ in file_types)
-        where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') IN ({placeholders})")
-        params.extend(file_types)
-    if max_id:
-        where.append(f"id <= {marker}")
-        params.append(max_id)
-    query = (
-        "SELECT id, sha256, canonical_sha256, label, score, COALESCE(NULLIF(file_type, ''), 'unknown') "
-        "FROM samples WHERE "
-        + " AND ".join(where)
-        + " ORDER BY id"
-    )
-    rows: list[Row] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        for row_id, sha256, canonical, label, score, file_type in data._execute(conn, query, params):  # noqa: SLF001
-            split_key = canonical or sha256
-            rows.append(
-                Row(
-                    row_id=int(row_id),
-                    label=1 if str(label) == "bad" else 0,
-                    file_type=str(file_type),
-                    score=float(score or 0.0),
-                    is_test=data.is_test_sample(str(split_key)),
-                ),
-            )
-    return rows
+    wanted = set(file_types)
+    # A file hopper could not type has no file_type to filter on in SQL.
+    query_types = None if "unknown" in wanted else file_types
+    return [
+        Row(
+            row_id=row.row_id,
+            label=row.label,
+            file_type=row.file_type,
+            score=float(row.score),
+            is_test=data.is_test_sample(row.canonical_sha256),
+        )
+        for row in data.stream_corpus(db_path, max_id=max_id, file_types=query_types)
+        if row.file_type in wanted
+    ]
 
 
 def _cap(rows: list[Row], per_label: int, seed: int) -> list[Row]:

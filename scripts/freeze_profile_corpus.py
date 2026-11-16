@@ -3,30 +3,23 @@
 
 import argparse
 from collections import Counter
-from datetime import date, datetime
 import hashlib
 import json
 from pathlib import Path
 import sqlite3
 import time
 
-from collimator import data
-
-
-COLUMNS = ("id", "sha256", "path", "label", "canonical_sha256", "cleave_result",
-           "formula", "elements", "score", "mtime", "file_type", "skip")
-
-
-def sqlite_value(value):
-    if isinstance(value, (dict, list)):
-        return json.dumps(value)
-    if isinstance(value, (date, datetime)):
-        return str(value)
-    return value
+from collimator import data, demo
 
 
 def freeze(db, output, *, percent="1", pin=0, batch_size=128):
-    predicate = data.sample_predicate(percent)
+    """Copy a digest-hash cohort of the usable labeled corpus into a
+    verdict-schema SQLite DB, under one read-only snapshot.
+
+    Each sample keeps its id, digest (so its partition), label and path; its
+    report is stored as data.py rebuilds it, so the copy trains identically.
+    """
+    data.sample_predicate(percent)  # validates percent
     if pin < 0 or batch_size < 1:
         raise ValueError("pin must be nonnegative and batch size must be positive")
     output = Path(output)
@@ -35,55 +28,38 @@ def freeze(db, output, *, percent="1", pin=0, batch_size=128):
     started = time.monotonic()
     partitions = Counter()
     labels = Counter()
-    where = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
-    if predicate:
-        where += f" AND ({predicate})"
     with data._connect(db, repeatable_read=True) as source, sqlite3.connect(partial) as dest:
-        pg = not isinstance(source, sqlite3.Connection)
-        if pg:
-            source.execute("SET TRANSACTION READ ONLY")
-        if not pin:
-            pin = int(next(data._execute(source, "SELECT MAX(id) FROM samples WHERE " + where))[0] or 0)
-        if not pin:
+        corpus = data._corpus(source, max_id=pin, scores="none", with_path=True, percent=percent)
+        rows = list(corpus)
+        if not rows:
             raise ValueError("sampled corpus is empty")
-        # First use the replica's covering sample index; then fetch reports in
-        # bounded batches, all under the same read-only database snapshot.
-        marker = "%s" if pg else "?"
-        ids = [int(row[0]) for row in data._execute(
-            source, f"SELECT id FROM samples WHERE {where} AND id <= {marker} ORDER BY id", (pin,))]
-        if not ids:
-            raise ValueError("sampled corpus is empty at this pin")
-        dest.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, sha256 TEXT, path TEXT, "
-                     "label TEXT, canonical_sha256 TEXT, cleave_result TEXT, formula TEXT, "
-                     "elements TEXT, score REAL, mtime REAL, file_type TEXT, skip TEXT)")
+        pin = pin or rows[-1].row_id
+        demo.create_schema(dest)
         last_log = 0
-        for offset in range(0, len(ids), batch_size):
-            batch = ids[offset:offset + batch_size]
-            query = f"SELECT {', '.join(COLUMNS)} FROM samples WHERE "
-            if pg:
-                rows = list(data._execute(source, query + "id = ANY(%s)", (batch,)))
-            else:
-                rows = list(data._execute(source, query + f"id IN ({','.join('?' for _ in batch)})", batch))
-            if {int(row[0]) for row in rows} != set(batch):
+        for offset in range(0, len(rows), batch_size):
+            batch = rows[offset:offset + batch_size]
+            reports = data._reports(source, [row.row_id for row in batch])
+            if set(reports) != {row.row_id for row in batch}:
                 raise ValueError("capture lost rows within its database snapshot")
-            for row in rows:
-                partitions[data.partition_of(row[4] or row[1])] += 1
-                labels[row[3]] += 1
-            dest.executemany("INSERT INTO samples VALUES (" + ",".join("?" for _ in COLUMNS) + ")",
-                             [tuple(sqlite_value(v) for v in row)
-                              for row in rows])
+            for row in batch:
+                item = reports[row.row_id]
+                label = "bad" if row.label else "good"
+                partitions[row.partition] += 1
+                labels[label] += 1
+                demo.add_report(dest, row.row_id, item["cleave_result"], label=label,
+                                sha256=row.sha256, path=row.path or None,
+                                mtime=item["mtime"] or None)
             now = time.monotonic()
-            if now - last_log >= 30 or offset + len(batch) == len(ids):
+            if now - last_log >= 30 or offset + len(batch) == len(rows):
                 dest.commit()
-                print(f"[freeze] {offset + len(batch)}/{len(ids)} rows; {now-started:.1f}s", flush=True)
+                done = offset + len(batch)
+                print(f"[freeze] {done}/{len(rows)} rows; {now-started:.1f}s", flush=True)
                 last_log = now
-        dest.execute("CREATE INDEX samples_filetype_id ON samples(file_type, id)")
-        dest.commit()
     final = output / "corpus.sqlite"
     partial.rename(final)
     with final.open("rb") as handle:
         digest = hashlib.file_digest(handle, "sha256").hexdigest()
-    manifest = dict(sample_percent=percent, snapshot_max_id=pin, rows=len(ids),
+    manifest = dict(sample_percent=percent, snapshot_max_id=pin, rows=len(rows),
                     partitions=dict(partitions), labels=dict(labels), sha256=digest,
                     bytes=final.stat().st_size, wall_seconds=time.monotonic() - started)
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

@@ -479,16 +479,15 @@ def test_sha_bucket_matches_partition_of_and_tolerates_missing_hashes() -> None:
 def test_fetch_file_types_returns_canonical_types_for_requested_rows(tmp_path) -> None:
     import sqlite3
 
+    from collimator.demo import add_sample, create_schema
+
     db = tmp_path / "samples.db"
     conn = sqlite3.connect(db)
-    conn.execute(
-        "CREATE TABLE samples (id INTEGER PRIMARY KEY, label TEXT, cleave_result TEXT, "
-        "skip TEXT, file_type TEXT)"
-    )
-    conn.executemany(
-        "INSERT INTO samples VALUES (?, ?, '{}', '', ?)",
-        [(1, "bad", "tar.gz"), (2, "good", ""), (3, "good", "elf"), (4, "bad", "pe")],
-    )
+    create_schema(conn)
+    rows = [(1, "bad", "tar.gz"), (2, "good", ""), (3, "good", "elf"), (4, "bad", "pe")]
+    for row_id, label, file_type in rows:
+        add_sample(conn, sample_id=row_id, sha256=f"{row_id:064x}", label=label,
+                   file_type=file_type, report={})
     conn.commit()
     conn.close()
 

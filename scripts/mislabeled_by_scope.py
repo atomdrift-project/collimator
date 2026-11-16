@@ -58,15 +58,17 @@ from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 
 def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, str, str, str]]:
-    """Bulk-fetch (sha256, path, parent, label, skip) by id from hopper.samples.
+    """Bulk-fetch (sha256, path, parent, label, skip) by id from hopper.
 
-    ``parent`` is the sha256 of the containing archive for extracted members
-    (empty for standalone files). Triage uses it to pull the whole archive by
-    sha — reliable even when the archive isn't itself a tracked sample row.
+    ``path`` is the file's newest location. ``parent`` is the sha256 of an
+    archive that lists the file among its members (empty for standalone
+    files). Triage uses it to pull the whole archive by sha — reliable even
+    when the archive isn't itself a tracked sample row. ``skip`` is what
+    hopper still flags: 'conflict' for a good/bad label conflict.
 
     Deliberately NOT gated on ``LABELED_WHERE``: a row the operator has since
-    moved to another pool (good ↔ bad, or out to purgatory/sighted), or that
-    hopper has flagged (``skip`` set), still resolves here and carries its
+    moved to another pool (good ↔ bad, or out to inconclusive/sighted), or that
+    hopper has flagged, still resolves here and carries its
     CURRENT label. The score table's verdict for such a row is stale, so triage
     shouldn't spend a download on it — but it should say WHY, which it can only
     do if the row comes back. Gating here would make an already-relocated
@@ -75,19 +77,21 @@ def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, st
     """
     if not row_ids:
         return {}
-    try:
-        import psycopg
-    except ImportError:
-        sys.exit("psycopg is required to resolve row_id → (sha256, path); "
-                 "install it or pre-populate")
+    from collimator import data  # noqa: PLC0415
+
     out: dict[int, tuple[str, str, str, str, str]] = {}
-    with psycopg.connect(db_dsn, connect_timeout=10) as conn, conn.cursor() as cur:
-        cur.execute(
-            "SELECT id, sha256, path, parent, label, skip FROM samples WHERE id = ANY(%s)",
-            (list(row_ids),),
-        )
-        for rid, sha, path, parent, label, skip in cur.fetchall():
-            out[int(rid)] = (sha, path, parent or "", label or "", skip or "")
+    with data._connect(db_dsn) as conn:  # noqa: SLF001
+        rows = data._execute(conn, """
+            SELECT s.id, encode(s.sha256, 'hex'),
+                   (SELECT l.path FROM locations l WHERE l.sample_id = s.id
+                    ORDER BY l.seen_at DESC, l.path LIMIT 1),
+                   (SELECT encode(p.sha256, 'hex') FROM contents c JOIN samples p ON p.id = c.parent_id
+                    WHERE c.child_ids @> ARRAY[s.id] LIMIT 1),
+                   s.label::text,
+                   CASE WHEN s.label_source = 'conflict' THEN 'conflict' ELSE '' END
+            FROM samples s WHERE s.id = ANY(%s)""", (list(row_ids),))  # noqa: SLF001
+        for rid, sha, path, parent, label, skip in rows:
+            out[int(rid)] = (sha, path or "", parent or "", label or "", skip or "")
     return out
 
 

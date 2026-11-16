@@ -13,7 +13,7 @@ import sys
 import pytest
 
 from collimator import data, features
-from collimator.demo import create_demo_db
+from collimator.demo import add_sample, create_demo_db, create_schema
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,30 +33,37 @@ def test_invalid_sample_percent_fails(percent):
         data.sample_predicate(percent)
 
 
-def test_hash_sample_rehashes_canonical_key_and_preserves_suffix_splits():
-    with sqlite3.connect(":memory:") as db:
-        db.create_function("md5", 1, lambda value: hashlib.md5(value.encode()).hexdigest())
-        db.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT)")
+def _sampled_db(path):
+    """An empty verdict-schema DB."""
+    with sqlite3.connect(path) as db:
+        create_schema(db)
+    return path
+
+
+def test_hash_sample_rehashes_digest_and_preserves_suffix_splits(tmp_path):
+    path = _sampled_db(tmp_path / "hashes.db")
+    with sqlite3.connect(path) as db:
         # Every train/dev/test suffix and both OOF halves survive selection.
         for suffix in range(256):
-            canonical = selected_hash(True, f"{suffix % 2:02x}{suffix:02x}")
-            db.execute("INSERT INTO samples VALUES (?,?,?)", (suffix, "f" * 64, canonical))
-        # Canonical key wins over a row hash that would itself be selected.
-        db.execute("INSERT INTO samples VALUES (256,?,?)", (selected_hash(True), selected_hash(False)))
-        # Empty canonical hashes fall back to the row hash, as partitioning does.
-        db.execute("INSERT INTO samples VALUES (257,?,'')", (selected_hash(True),))
-        selected = list(db.execute("SELECT id FROM samples WHERE " + data.sample_predicate("2")))
-        assert {row[0] for row in selected} == set(range(256)) | {257}
-        hashes = [row[0] for row in db.execute("SELECT canonical_sha256 FROM samples WHERE id<256")]
-        assert {data.partition_of(h) for h in hashes} == {"train", "dev", "test"}
-        assert {data.oof_fold_of(h) for h in hashes} == {0, 1, None}
-        assert data.sample_predicate("100") == ""
-        cutoff = int(.02 * 2**32)
+            add_sample(db, sample_id=suffix, sha256=selected_hash(True, f"{suffix % 2:02x}{suffix:02x}"),
+                       label="good", report={})
+        add_sample(db, sample_id=256, sha256=selected_hash(False), label="good", report={})
+    with data._connect(path) as db:
+        selected = list(db.execute("SELECT s.id FROM samples s WHERE " + data.sample_predicate("2")))
+        assert {row[0] for row in selected} == set(range(256))
+        hashes = [row[0] for row in db.execute("SELECT encode(s.sha256, 'hex') FROM samples s WHERE s.id<256")]
+    assert {data.partition_of(h) for h in hashes} == {"train", "dev", "test"}
+    assert {data.oof_fold_of(h) for h in hashes} == {0, 1, None}
+    assert data.sample_predicate("100") == ""
+    cutoff = int(.02 * 2**32)
+    with sqlite3.connect(":memory:") as db:
+        db.create_function("encode", 2, lambda value, _fmt: bytes(value).hex())
+        db.execute("CREATE TABLE samples (sha256 BLOB)")
+        db.execute("INSERT INTO samples VALUES (?)", (bytes(32),))
         for prefix, expected in ((cutoff - 1, 1), (cutoff, 0)):
-            db.create_function("md5", 1, lambda _: f"{prefix:08x}" + "0" * 56)
-            db.execute("DELETE FROM samples")
-            db.execute("INSERT INTO samples VALUES (0,?,NULL)", (f"{prefix:08x}" + "0" * 56,))
-            assert db.execute("SELECT count(*) FROM samples WHERE " + data.sample_predicate("2")).fetchone()[0] == expected
+            db.create_function("md5", 1, lambda _: f"{prefix:08x}" + "0" * 24)
+            query = "SELECT count(*) FROM samples s WHERE " + data.sample_predicate("2")
+            assert db.execute(query).fetchone()[0] == expected
 
 
 def test_default_plan_is_one_percent_fresh_and_isolated(tmp_path):
@@ -109,17 +116,6 @@ def test_specialist_recipes_use_isolated_caches_and_memory_history(tmp_path, tar
     assert "--feature-cache-dir out/cache/" not in recipe
 
 
-def test_sampled_selection_allows_index_scans(monkeypatch):
-    from unittest.mock import Mock
-    conn = Mock()
-    monkeypatch.setattr(data, "SAMPLE_PREDICATE", data.sample_predicate("1"))
-    data._read_table_in_order(conn)
-    conn.execute.assert_not_called()
-    monkeypatch.setattr(data, "SAMPLE_PREDICATE", "")
-    data._read_table_in_order(conn)
-    assert conn.execute.call_count == 3
-
-
 def test_calibration_general_scores_use_requested_pin():
     recipe = subprocess.check_output([
         "make", "-n", "-o", "venv", "-o", "check-db", "azoth-calibrate",
@@ -132,38 +128,26 @@ def test_calibration_general_scores_use_requested_pin():
 
 
 def test_sampled_path_lookup_preserves_filters_order_and_limit(tmp_path, monkeypatch):
-    path = tmp_path / "metadata.db"
-    chosen, excluded = selected_hash(True), selected_hash(False)
+    path = _sampled_db(tmp_path / "metadata.db")
+    chosen = {rid: selected_hash(True, f"{rid:02x}80") for rid in (1, 3, 4, 5, 6)}
+    excluded = selected_hash(False)
     predicate = data.sample_predicate("2")
-    where = "label IN ('bad','good') AND cleave_result IS NOT NULL AND skip=''"
     monkeypatch.setattr(data, "SAMPLE_PREDICATE", predicate)
-    monkeypatch.setattr(data, "LABELED_WHERE", f"{where} AND ({predicate})")
+    monkeypatch.setattr(data, "LABELED_WHERE", f"{data.LABELED_WHERE} AND ({predicate})")
     with sqlite3.connect(path) as conn:
-        conn.create_function("md5", 1, lambda value: hashlib.md5(value.encode()).hexdigest())
-        conn.execute("CREATE TABLE samples (id INTEGER PRIMARY KEY, sha256 TEXT, "
-                     "canonical_sha256 TEXT, path TEXT, score INTEGER, label TEXT, "
-                     "cleave_result TEXT, skip TEXT)")
-        conn.executemany("INSERT INTO samples VALUES (?,?,?,?,?,'bad','{}','')", [
-            (1, chosen, chosen, '/ignore', 5),
-            (2, excluded, excluded, '/keep', 5),
-            (3, chosen, chosen, '/KEEP', 5),
-            (4, chosen, chosen, '/keep', 3),
-            (5, chosen, chosen, '/keep', 7),
-            (6, chosen, chosen, '/keep', 5),
-        ])
-        # Execute both query shapes; SQLite also supports materialized CTEs.
-        for postgres in (False, True):
-            query = data._metadata_full_query(
-                data.LABELED_WHERE + ' AND id <= 5 AND score >= ? AND score <= ?',
-                postgres=postgres, path_predicate='LOWER(path) LIKE ?', limit=1,
-            )
-            assert conn.execute(query, (4, 6, '%keep%')).fetchall() == [
-                (3, chosen, '/KEEP', 5, 'bad', chosen),
-            ]
-        conn.commit()
+        for rid, sha, where, risk in [
+            (1, chosen[1], '/ignore', 5),
+            (2, excluded, '/keep', 5),
+            (3, chosen[3], '/KEEP', 5),
+            (4, chosen[4], '/keep4', 3),
+            (5, chosen[5], '/keep5', 7),
+            (6, chosen[6], '/keep6', 5),
+        ]:
+            add_sample(conn, sample_id=rid, sha256=sha, label="bad", path=where,
+                       report={"traits": [{"id": "x", "crit": 5}], "risk": risk})
     assert list(data.stream_labeled_metadata_full(
         path, path_substr='keep', min_score=4, max_score=6, max_id=5, limit=1,
-    )) == [(3, chosen, '/KEEP', 5, 1, chosen)]
+    )) == [(3, chosen[3], '/KEEP', 5, 1, chosen[3])]
 
 
 def test_profile_cleanup_only_cancels_its_own_active_queries(monkeypatch):
@@ -201,28 +185,19 @@ def test_failed_pipeline_writes_result_without_claiming_target_met(tmp_path, mon
     assert "EXP_MAX_ID=1" in command
 
 
-def test_sampled_file_types_scan_cohort_once_and_filter_requested_ids(tmp_path, monkeypatch):
-    path = tmp_path / "types.db"
-    canonical = selected_hash(True)
+def test_sampled_file_types_filter_cohort_and_requested_ids(tmp_path, monkeypatch):
+    path = _sampled_db(tmp_path / "types.db")
     with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT, "
-                   "label TEXT, skip TEXT, cleave_result TEXT, file_type TEXT)")
-        db.executemany("INSERT INTO samples VALUES (?,?,?,'good','','{}','elf')",
-                       [(i, canonical, canonical) for i in range(602)])
-        db.execute("UPDATE samples SET skip='excluded' WHERE id=2")
-        db.execute("UPDATE samples SET file_type='' WHERE id=3")
+        for i in range(602):
+            add_sample(db, sample_id=i, sha256=selected_hash(True, f"{i:04x}"), label="good",
+                       report={}, file_type="" if i == 3 else "elf",
+                       label_source="conflict" if i == 2 else None)
+        add_sample(db, sample_id=700, sha256=selected_hash(False), label="good", report={},
+                   file_type="elf")
     predicate = data.sample_predicate("2")
     monkeypatch.setattr(data, "SAMPLE_PREDICATE", predicate)
-    monkeypatch.setattr(data, "LABELED_WHERE", "label IN ('bad','good') AND "
-                        f"cleave_result IS NOT NULL AND skip='' AND ({predicate})")
-    calls = []
-    original = data._execute
-    def execute(conn, query, params=None):
-        calls.append(query)
-        yield from original(conn, query, params)
-    monkeypatch.setattr(data, "_execute", execute)
-    result = data.fetch_file_types(path, range(1, 601))
-    assert len(calls) == 1
+    monkeypatch.setattr(data, "LABELED_WHERE", f"{data.LABELED_WHERE} AND ({predicate})")
+    result = data.fetch_file_types(path, [*range(1, 601), 700])
     assert set(result) == set(range(1, 601)) - {2}
     assert result[3] == "unknown"
 
@@ -274,12 +249,10 @@ def test_timing_report_separates_merge_phases_and_signature_reuse(tmp_path):
 def test_shared_sampling_reaches_general_and_specialist_queries(tmp_path):
     path = tmp_path / "sample.db"
     with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT, "
-                   "label TEXT, score INTEGER, skip TEXT, cleave_result TEXT, file_type TEXT)")
+        create_schema(db)
         for index in range(100):
-            canonical = selected_hash(index < 2, f"{index:02x}80")
-            db.execute("INSERT INTO samples VALUES (?,?,?,'good',5,'','{}','elf')",
-                       (index + 1, canonical, canonical))
+            add_sample(db, sample_id=index + 1, sha256=selected_hash(index < 2, f"{index:02x}80"),
+                       label="good", file_type="elf", report={"risk": 5})
     code = """
 import json, sys
 sys.path.insert(0, 'scripts')

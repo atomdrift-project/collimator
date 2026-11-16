@@ -184,7 +184,7 @@ run_experiment filetypes/jar jar_portable_kv_bytecode \
   EXP_FORMAT_HINTS=1 EXP_EMBER_LITE_FEATURES=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0 \
   EXP_TAXONOMY_FEATURES=1
 
-run_experiment filegroups/portable portable_bytecode_ngram \
+run_experiment filegroups/bytecode bytecode_ngram \
   EXP_FORMAT_HINTS=1 EXP_TAXONOMY_FEATURES=1 COLLIMATOR_OBJECTIVE_TRIGRAMS=1 \
   COLLIMATOR_BIGRAM_MAX=10000 COLLIMATOR_TRIGRAM_MAX=2500
 
@@ -221,7 +221,7 @@ run_experiment filetypes/html html_script_document_hybrid \
   COLLIMATOR_TRIGRAM_MAX=3000
 
 # Small or odd routes: negative-space and high-risk probes.
-run_experiment filegroups/media media_negative_space \
+run_experiment filegroups/images images_negative_space \
   EXP_FORMAT_HINTS=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0 \
   EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HOSTILE_FINDING_DENSITY=1 \
   EXP_HOSTILE_DEPTH_WEIGHT=1

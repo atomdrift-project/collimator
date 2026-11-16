@@ -11,6 +11,8 @@ _comma := ,
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
 DB ?= postgres://hopper@localhost:5432/hopper
+# The schema holding hopper's verdict tables; collimator only reads it.
+export HOPPER_SCHEMA ?= verdict
 PROFILE_PERCENT ?= 1
 PROFILE_WORKERS ?= 48
 PROFILE_PROFILER ?= cprofile
@@ -575,13 +577,13 @@ ifndef DB
 	$(error DB is required. Usage: make azoth-full-train DB=postgres://hopper@localhost/hopper)
 endif
 
-# Fail if the newest sample is older than 24 hours (replication may be broken)
+# Fail if the newest scan is older than 2 hours (replication may be broken)
 check-db-fresh: check-db
-	@age_hours=$$(psql "$(DB)" -tAc \
-		"SELECT EXTRACT(EPOCH FROM now() - MAX(updated_at)) / 3600 FROM samples;") ; \
+	@age_hours=$$(PGOPTIONS='-c default_transaction_read_only=on' psql "$(DB)" -tAc \
+		"SELECT EXTRACT(EPOCH FROM now() - MAX(scanned_at)) / 3600 FROM $(HOPPER_SCHEMA).scans;") ; \
 	age_hours=$${age_hours%.*} ; \
 	if [ "$$age_hours" -gt 2 ] 2>/dev/null; then \
-		echo "ERROR: newest sample is $${age_hours}h old (>2h). Check logical replication status:" >&2 ; \
+		echo "ERROR: newest scan is $${age_hours}h old (>2h). Check logical replication status:" >&2 ; \
 		echo "  sudo -u postgres psql -d hopper -c \"SELECT * FROM pg_stat_subscription;\"" >&2 ; \
 		echo "  tail -20 /var/log/postgresql/postgresql-17-main.log" >&2 ; \
 		exit 1 ; \
@@ -2256,6 +2258,14 @@ lint: venv
 	$(VENV_DIR)/bin/ruff check src/ tests/
 	$(VENV_DIR)/bin/mypy src/collimator/
 
+# Filegroup routes are filefacts' groups; refresh the vendored table after
+# filefacts adds or regroups a file type.
+FILEFACTS_DIR ?= ../filefacts
+
+.PHONY: sync-file-groups
+sync-file-groups:
+	cp $(FILEFACTS_DIR)/docs/file-groups.json src/collimator/data/file_groups.json
+
 XDG_DATA_HOME ?= $(HOME)/.local/share
 LIGHTGBM_ARS_DIR ?= ../lightgbm-ars
 
@@ -2383,7 +2393,7 @@ autocollie-screen: venv check-db autocollie-build
 # screen command, just like `autocollie screen ... && make azoth-full-train`.
 # Share the memory budget during concurrent screens; the subsequent full train
 # gets the normal single-job memory budget.
-# Usage: make autocollie-full-train ROUTES=general,filegroups/archive MAX_CPU_THREADS=64
+# Usage: make autocollie-full-train ROUTES=general,filegroups/archives MAX_CPU_THREADS=64
 autocollie-full-train: EXPERIMENTS = 2
 autocollie-full-train: ROUTE_CONCURRENCY = 2
 autocollie-full-train:

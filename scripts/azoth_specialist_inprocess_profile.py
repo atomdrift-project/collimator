@@ -42,16 +42,9 @@ def main() -> int:
     spec = features.FeatureSpec.load(args.spec)
 
     # Fetch ~n-train row ids for the filetype.
-    with data._connect(args.db) as conn, conn.cursor() as cur:  # noqa: SLF001
-        cur.execute(
-            "SELECT id, sha256, canonical_sha256, label FROM samples "
-            "WHERE file_type = %s AND label IN ('bad','good') AND cleave_result IS NOT NULL "
-            "AND skip = '' AND score >= 3 ORDER BY id LIMIT %s",
-            (args.filetype, args.n_train),
-        )
-        rows = []
-        for rid, sha, canon, label in cur:
-            rows.append((int(rid), 1 if label == "bad" else 0))
+    corpus = data.stream_corpus(args.db, file_types=(args.filetype,), min_score=3,
+                                limit=args.n_train)
+    rows = [(row.row_id, row.label) for row in corpus]
     print(f"loaded {len(rows)} {args.filetype} rows", file=sys.stderr)
 
     pr = cProfile.Profile()

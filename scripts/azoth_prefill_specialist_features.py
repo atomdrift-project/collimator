@@ -61,10 +61,6 @@ from azoth_specialist_suite import (  # noqa: E402
 LOG = logging.getLogger("azoth_prefill_specialist_features")
 
 
-def _placeholder(db_path: Path | str) -> str:
-    return "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
-
-
 def _fetch_union_rows(
     db_path: Path | str,
     file_types: tuple[str, ...],
@@ -78,50 +74,13 @@ def _fetch_union_rows(
     they don't belong in the train-side cache. The benchmark step (when
     not skipped) does its own test-row extraction.
     """
-    where = [
-        data.LABELED_WHERE,
+    return [
+        (row.row_id, row.label, row.canonical_sha256)
+        for row in data.stream_corpus(
+            db_path, max_id=max_id, file_types=file_types, min_score=min_score, scores="none",
+        )
+        if not data.is_test_sample(row.canonical_sha256)
     ]
-    params: list[Any] = []
-    marker = _placeholder(db_path)
-    if max_id > 0:
-        where.append(f"id <= {marker}")
-        params.append(int(max_id))
-    if min_score is not None:
-        where.append(f"score >= {marker}")
-        params.append(int(min_score))
-    select = "SELECT id, sha256, label, canonical_sha256 "
-    rows: list[tuple[int, int, str]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(list(file_types))
-            query = select + "FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                for row_id, sha256, label, canonical in cur:
-                    split_key = canonical or sha256
-                    if data.is_test_sample(split_key):
-                        continue
-                    rows.append((
-                        int(row_id),
-                        1 if str(label) == "bad" else 0,
-                        str(split_key),
-                    ))
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            query = select + "FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            for row_id, sha256, label, canonical in conn.execute(query, params):
-                split_key = canonical or sha256
-                if data.is_test_sample(split_key):
-                    continue
-                rows.append((
-                    int(row_id),
-                    1 if str(label) == "bad" else 0,
-                    str(split_key),
-                ))
-    return rows
 
 
 def _enumerate_routes(

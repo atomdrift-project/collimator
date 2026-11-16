@@ -113,6 +113,8 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.stats as stats
 
+from .data import expand_filetype_aliases
+from .filegroups import FILE_GROUPS
 from .memory import available_memory_gb, cgroup_headroom_gb, memory_shares
 from .errors import FactProfileError
 from .vocabulary import CountView, DiskTrigramCandidates, TrigramSource, VocabularyCounts
@@ -595,6 +597,9 @@ EXPECTED_GHOSTS = {
         "metadata/binary/linking",
     ],
     "javascript": [
+        # Names no trait, so this feature is 1 for every JavaScript file.
+        # Deployed specs carry it by this name; replace it only at a retrain,
+        # in lockstep with scan's EXPECTED_GHOSTS.
         "micro-behaviors/javascript/async",
         "metadata/package/versioning",
     ],
@@ -602,23 +607,13 @@ EXPECTED_GHOSTS = {
 
 FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "tiered_trigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space", "symbols", "kv", "textenc", "ruleword", "descword", "fullword", "ruletextword", "contextword")
 
+# filefacts' groups, widened to the spellings older cleave stored, so a format
+# hint names the group filefacts reports. `unknown` is left out: a file with no
+# identified type counts toward `format:unknown_file_fraction` instead.
 FORMAT_GROUPS: dict[str, frozenset[str]] = {
-    "script": frozenset({
-        "batch", "javascript", "lua", "perl", "php", "powershell", "python",
-        "ruby", "shell", "typescript", "vbscript",
-    }),
-    "native_binary": frozenset({"elf", "macho", "pe"}),
-    "archive_package": frozenset({
-        "7z", "apk", "cab", "deb", "egg", "gz", "jar", "msi", "rar", "rpm",
-        "tar", "tgz", "vsix", "war", "whl", "xpi", "xz", "zip", "zst",
-    }),
-    "document": frozenset({"doc", "docx", "html", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"}),
-    "source_code": frozenset({
-        "c", "cpp", "csharp", "go", "java", "kotlin", "makefile", "rust",
-        "scala", "swift",
-    }),
-    "config_data": frozenset({"ini", "json", "plist", "toml", "xml", "yaml", "yml"}),
-    "media": frozenset({"bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"}),
+    group: frozenset(expand_filetype_aliases(types))
+    for group, types in FILE_GROUPS.items()
+    if group != "unknown"
 }
 
 _FORMAT_GROUP_ORDER = tuple(FORMAT_GROUPS)
@@ -1244,6 +1239,90 @@ def _backfill_renamed_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+# Signature findings cleave renamed (2026-11, `metadata/signed/` to
+# `metadata/signature/<trust state>/`), spelled as the deployed model was
+# trained to read them. Keep in sync with scan's `legacy_finding_id`
+# (src/features/names.rs); drop both at the next retrain on new reports.
+_LEGACY_SIGNATURE_IDS: dict[str, str] = {
+    "metadata/signature/invalid/tampered::macho-code-directory": (
+        "metadata/signed/integrity::macho-code-directory-invalid"
+    ),
+    "metadata/signature/code-directory::hardened-runtime-dup": (
+        "metadata/signed/trust-level::hardened-runtime-dup"
+    ),
+    "metadata/signature/code-directory::developer-team-identifier": (
+        "metadata/signed/trust-level::developer-team-identifier"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-nt-kernel-image": (
+        "metadata/signed/platform::microsoft-nt-kernel-image"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-signed-edge-runtime-context": (
+        "metadata/signed/certificate/signature::microsoft-signed-edge-runtime-context"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-signed-kernel32-context": (
+        "metadata/signed/trust-level::microsoft-signed-kernel32-context"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-signed-kernelbase-context": (
+        "metadata/signed/trust-level::microsoft-signed-kernelbase-context"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-signed-kernel-api-dll-context": (
+        "metadata/signed/trust-level::microsoft-signed-kernel-api-dll-context"
+    ),
+    "well-known/app/system/microsoft/platform::microsoft-signed-system-component-context": (
+        "metadata/signed/trust-level::microsoft-signed-system-component-context"
+    ),
+}
+# Directory renames under `metadata/signature/`, most specific first.
+_LEGACY_SIGNATURE_DIRS: tuple[tuple[str, str], ...] = (
+    ("certificate/integrity", "certificate/signature"),
+    ("certificate/format", "trust-level"),
+    ("absent", "trust-level"),
+    ("ad-hoc", "trust-level"),
+    ("certificate", "certificate"),
+    ("entitlements", "entitlements"),
+    ("code-directory", "code-directory"),
+    ("resource", "resource"),
+    ("script", "script"),
+)
+_SIGNATURE_STATES = (
+    "verified",
+    "unverified",
+    "self-signed",
+    "invalid/tampered",
+    "invalid/bad-signature",
+)
+_LEGACY_SIGNER_KINDS = {
+    "platform": "platform",
+    "developer": "developer",
+    "id": "id",
+    "signer": "leaf",
+    "subject": "unknown",
+}
+
+
+def legacy_finding_id(fid: str) -> str:
+    """`fid` as the deployed model knows it (see _LEGACY_SIGNATURE_IDS)."""
+    old = _LEGACY_SIGNATURE_IDS.get(fid)
+    if old is not None:
+        return old
+    if not fid.startswith("metadata/signature/"):
+        return fid
+    rest = fid[len("metadata/signature/"):]
+    path, sep, leaf = rest.partition("::")
+    for new, old_dir in _LEGACY_SIGNATURE_DIRS:
+        if path.startswith(new):
+            tail = path[len(new):]
+            if not tail or tail.startswith("/"):
+                return f"metadata/signed/{old_dir}{tail}{sep}{leaf}"
+    for state in _SIGNATURE_STATES:
+        if path.startswith(state + "/"):
+            kind = _LEGACY_SIGNER_KINDS.get(path[len(state) + 1:])
+            if kind is None:
+                break
+            return f"metadata/signed/{kind}::{leaf}"
+    return fid
+
+
 def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
     """Reuse normalized metrics within a single report extraction."""
     cache = _report_feature_cache.get()
@@ -1353,8 +1432,9 @@ def file_risk(file_entry: dict[str, Any]) -> Any:
 
 
 def finding_id(finding: dict[str, Any]) -> Any:
-    """Return a finding's id (v7 `id`, else v4 `i`)."""
-    return _alias(finding, "id", "i")
+    """Return a finding's id (v7 `id`, else v4 `i`), under its trained name."""
+    fid = _alias(finding, "id", "i")
+    return legacy_finding_id(fid) if isinstance(fid, str) else fid
 
 
 def finding_conf(finding: dict[str, Any]) -> Any:
@@ -4133,9 +4213,9 @@ def _apply_format_hint_features(
         _assign(vec, lookup.get(f"format:{group}_hostile_fraction"), group_hostile_counts[group] / group_denom)
 
     _assign(vec, lookup.get("format:group_count_log"), math.log1p(len(present_groups)))
-    _assign(vec, lookup.get("format:mixed_script_binary"), 1.0 if {"script", "native_binary"} <= present_groups else 0.0)
-    _assign(vec, lookup.get("format:mixed_archive_script"), 1.0 if {"archive_package", "script"} <= present_groups else 0.0)
-    _assign(vec, lookup.get("format:mixed_archive_binary"), 1.0 if {"archive_package", "native_binary"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:mixed_script_binary"), 1.0 if {"scripts", "native"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:mixed_archive_script"), 1.0 if {"archives", "scripts"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:mixed_archive_binary"), 1.0 if {"archives", "native"} <= present_groups else 0.0)
     _assign(vec, lookup.get("format:unknown_file_fraction"), (total_files - known_files) / total_files)
 
 
@@ -4649,16 +4729,17 @@ def _apply_intent_gap_features(
     vec: np.ndarray,
 ) -> None:
     """Group 22: package intent gaps (risky behavior without documentation)."""
-    has_doc = "metadata/package/documentation" in summary.sample_paths
-    has_help = "metadata/package/help" in summary.sample_paths
-    intent_signal = has_doc or has_help
+    intent_signal = "metadata/package/documentation" in summary.sample_paths
 
-    # Define risky behaviors that should normally be documented.
+    # Define risky behaviors that should normally be documented. `filesystem`
+    # is persistence alone, as the deployed models were trained; widening it to
+    # `micro-behaviors/fs` changes the feature, so it waits for a retrain, in
+    # lockstep with scan's `write_intent_gap_features`.
     risky_behaviors = {
-        "network": ["objectives/network", "micro-behaviors/network"],
-        "filesystem": ["objectives/persistence", "micro-behaviors/filesystem"],
+        "network": ["micro-behaviors/network"],
+        "filesystem": ["objectives/persistence"],
         "execution": ["objectives/execution", "micro-behaviors/process/create"],
-        "crypto": ["objectives/crypto", "micro-behaviors/crypto"],
+        "crypto": ["micro-behaviors/crypto"],
     }
 
     for cat, traits in sorted(risky_behaviors.items()):
@@ -6014,8 +6095,14 @@ def _extract_labeled_metadata_db_batch_worker(
     fetch_sec = time.monotonic() - fetch_started
     _check_missing_cleave_rows(ids, reports_map)
     # Keep only rows still present, so the returned metadata stays aligned with
-    # the extracted feature rows (the caller cross-checks their lengths).
-    kept_meta = [row for row in batch_meta if int(row[0]) in reports_map]
+    # the extracted feature rows (the caller cross-checks their lengths). Each
+    # row's score becomes its report's risk: a metadata pass reads risk only
+    # where it must (data.stream_corpus).
+    kept_meta: list[LabeledMetadata] = [
+        (*row[:3], int(reports_map[int(row[0])]["score"]), *row[4:])
+        for row in batch_meta
+        if int(row[0]) in reports_map
+    ]
     batch = [
         (reports_map[int(row[0])], int(row[4]))
         for row in kept_meta

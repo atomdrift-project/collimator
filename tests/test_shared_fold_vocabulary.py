@@ -11,6 +11,7 @@ import sys
 import pytest
 
 from collimator import features
+from collimator.demo import write_reports
 from collimator.vocabulary import VocabularyCounts
 
 
@@ -24,16 +25,17 @@ def corpus(tmp_path, monkeypatch):
     features.feature_config_from_env.cache_clear()
     path = tmp_path/"samples.sqlite"
     rows = [(i, int((i//2)%3 != 0)) for i in range(1, 41)]
-    with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE samples(id INTEGER PRIMARY KEY,cleave_result TEXT,formula TEXT,elements TEXT,score INTEGER,mtime TEXT)")
-        for rid, label in rows:
-            tokens = [f"fold{rid%2}/path{i}::finding" for i in range(rid%4, rid%4+5)]
-            files = [{"type":"elf", "ts":[{"i":t,"l":4,"c":1.0} for t in tokens],
-                      "ms":{"binary":{"size":rid}}}]
-            if rid%5 == 0:
-                files.append({"type":"pdf", "ts":[{"i":t,"l":4,"c":1.0} for t in tokens[:3]]})
-            report = json.dumps({"v":"4","fs":files}) if rid != 17 else "null"
-            db.execute("INSERT INTO samples VALUES(?,?,?,?,?,?)", (rid,report,"C2H6",f"E{rid%3}",label*5,""))
+    stored = []
+    for rid, label in rows:
+        tokens = [f"fold{rid%2}/path{i}::finding" for i in range(rid%4, rid%4+5)]
+        files = [{"type":"elf", "ts":[{"i":t,"l":4,"c":1.0} for t in tokens],
+                  "ms":{"binary":{"size":rid}}}]
+        if rid%5 == 0:
+            files.append({"type":"pdf", "ts":[{"i":t,"l":4,"c":1.0} for t in tokens[:3]]})
+        report = {"v":"4","fs":files} if rid != 17 else "null"
+        # elements are the formula's letters, so the formula carries their variety.
+        stored.append({"id": rid, "report": report, "formula": f"E{rid%3}", "score": label*5})
+    write_reports(path, stored)
     yield path, rows
     features.feature_config_from_env.cache_clear()
 

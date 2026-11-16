@@ -262,89 +262,45 @@ def _gather_diverse_fixture_reports(
 
     Ensures coverage across:
     - File types: PE, ELF, Macho, JavaScript, Python, Go, Rust, Shell, etc.
-    - Score ranges: low (3-10), medium (11-50), high (50+)
     - Labels: malware and benign
+    - Malware risk: high (50+) and low (3-5), the FN population
     - Multi-file samples: archives/packages with inner files
-    - Edge cases: unsigned binaries, packed, supply-chain patterns
 
+    One pass over the corpus fills a uniform reservoir per bucket.
     Returns ~50-80 reports covering all important code paths.
     """
-    import psycopg  # noqa: PLC0415
+    import random  # noqa: PLC0415
 
-    reports: list[dict] = []
-    seen_ids: set[int] = set()
-
-    dsn = str(db_path)
-    if not dsn.startswith(("postgres://", "postgresql://")):
-        # SQLite fallback — just stream whatever is available.
-        for report, _label in data.stream_reports(db_path):
-            reports.append(report)
-            if len(reports) >= 30:
-                break
-        return reports
-
-    conn = psycopg.connect(dsn)
-
-    def _fetch(query: str, params: list | None = None) -> None:
-        with conn.cursor() as cur:
-            cur.execute(query, params or [])
-            for (rid, raw) in cur:
-                rid = int(rid)
-                if rid in seen_ids:
-                    continue
-                seen_ids.add(rid)
-                report = json.loads(raw) if isinstance(raw, str) else raw
-                if isinstance(report, dict):
-                    reports.append(report)
-
-    # Cover each major file type × label combo
     file_types = ["pe", "elf", "macho", "javascript", "python", "go",
                   "rust", "shell", "c", "ruby", "perl"]
-    for ft in file_types:
-        for label in ["bad", "good"]:
-            _fetch(
-                "SELECT id, cleave_result FROM samples "
-                "WHERE file_type = %s AND label = %s AND cleave_result IS NOT NULL "
-                "AND score >= 3 AND skip = '' ORDER BY random() LIMIT %s",
-                [ft, label, target_per_bucket],
-            )
+    buckets: dict[tuple[str, int], list[int]] = {}
+    seen: dict[tuple[str, int], int] = {}
+    rng = random.Random(0)
 
-    # Multi-file samples (archives, packages with inner files)
-    _fetch(
-        "SELECT id, cleave_result FROM samples "
-        "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
-        "AND label = 'bad' AND jsonb_array_length(cleave_result->'fs') > 1 "
-        "ORDER BY random() LIMIT %s",
-        [target_per_bucket],
-    )
-    _fetch(
-        "SELECT id, cleave_result FROM samples "
-        "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
-        "AND label = 'good' AND jsonb_array_length(cleave_result->'fs') > 1 "
-        "ORDER BY random() LIMIT %s",
-        [target_per_bucket],
-    )
+    def offer(key: tuple[str, int], row_id: int) -> None:
+        n = seen[key] = seen.get(key, 0) + 1
+        bucket = buckets.setdefault(key, [])
+        if len(bucket) < target_per_bucket:
+            bucket.append(row_id)
+        elif (slot := rng.randrange(n)) < target_per_bucket:
+            bucket[slot] = row_id
 
-    # High-score malware (likely to exercise many features)
-    _fetch(
-        "SELECT id, cleave_result FROM samples "
-        "WHERE label = 'bad' AND cleave_result IS NOT NULL "
-        "AND score >= 50 AND skip = '' ORDER BY random() LIMIT %s",
-        [target_per_bucket],
-    )
-
-    # Low-score edge cases (the FN population)
-    _fetch(
-        "SELECT id, cleave_result FROM samples "
-        "WHERE label = 'bad' AND cleave_result IS NOT NULL "
-        "AND score >= 3 AND score <= 5 AND skip = '' ORDER BY random() LIMIT %s",
-        [target_per_bucket],
-    )
-
-    conn.close()
+    wanted = set(file_types)
+    for row in data.stream_corpus(db_path):
+        file_type = data.route_filetype(row.file_type)
+        if file_type in wanted:
+            offer((file_type, row.label), row.row_id)
+        elif row.label == 1 and row.score >= 50:
+            offer(("high-risk", 1), row.row_id)
+        elif row.label == 1 and 3 <= row.score <= 5:
+            offer(("low-risk", 1), row.row_id)
+        else:
+            offer(("other", row.label), row.row_id)
+    ids = sorted({rid for bucket in buckets.values() for rid in bucket})
+    reports = [item["cleave_result"] for item in data.fetch_cleave_results(db_path, ids).values()]
     log.info("fixture: gathered %d diverse reports (%d file types, %d with inner files)",
-             len(reports), len(file_types), sum(1 for r in reports if any(
-                 f.get("dp", 0) > 0 for f in features.report_files(r))))
+             len(reports), len(file_types),
+             sum(1 for r in reports if len(features.report_files(r)) > 1))
     return reports
 
 

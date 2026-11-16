@@ -28,10 +28,6 @@ LOG = logging.getLogger("elf_model_benchmark")
 NATIVE_BINARY_TYPES = ("elf", "macho", "pe")
 
 
-def _label_int(label: str) -> int:
-    return 1 if label == "bad" else 0
-
-
 def _fetch_rows(
     db_path: Path | str,
     *,
@@ -40,68 +36,12 @@ def _fetch_rows(
     min_score: int | None,
 ) -> list[tuple[int, int, bool, str]]:
     """Return row_id, label, is_test, file_type for labeled samples."""
-    where = [data.LABELED_WHERE]
-    params: list[Any] = []
-    if max_id > 0:
-        where.append("id <= %s" if data._is_pg(db_path) else "id <= ?")  # noqa: SLF001
-        params.append(int(max_id))
-    if min_score is not None:
-        where.append("score >= %s" if data._is_pg(db_path) else "score >= ?")  # noqa: SLF001
-        params.append(int(min_score))
-
-    rows: list[tuple[int, int, bool, str]] = []
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            where.append("file_type = ANY(%s)")
-            params.append(list(file_types))
-            select = (
-                "SELECT id, sha256, label, canonical_sha256, "
-                "COALESCE(NULLIF(file_type, ''), 'unknown')"
-            )
-            query = (
-                select
-                + " FROM samples WHERE "
-                + " AND ".join(where)
-                + " ORDER BY id"
-            )
-            with conn.cursor() as cur:
-                cur.execute(query, params)
-                iterable = cur
-                for row_id, sha256, label, canonical, file_type in iterable:
-                    split_key = canonical or sha256
-                    rows.append(
-                        (
-                            int(row_id),
-                            _label_int(str(label)),
-                            data.is_test_sample(split_key),
-                            str(file_type),
-                        ),
-                    )
-        else:
-            placeholders = ",".join("?" for _ in file_types)
-            where.append(f"file_type IN ({placeholders})")
-            params.extend(file_types)
-            select = (
-                "SELECT id, sha256, label, canonical_sha256, "
-                "COALESCE(NULLIF(file_type, ''), 'unknown')"
-            )
-            query = (
-                select
-                + " FROM samples WHERE "
-                + " AND ".join(where)
-                + " ORDER BY id"
-            )
-            for row_id, sha256, label, canonical, file_type in conn.execute(query, params):
-                split_key = canonical or sha256
-                rows.append(
-                    (
-                        int(row_id),
-                        _label_int(str(label)),
-                        data.is_test_sample(split_key),
-                        str(file_type),
-                    ),
-                )
-    return rows
+    return [
+        (row.row_id, row.label, data.is_test_sample(row.canonical_sha256), row.file_type)
+        for row in data.stream_corpus(
+            db_path, max_id=max_id, file_types=file_types, min_score=min_score, scores="none",
+        )
+    ]
 
 
 def _ids_labels(

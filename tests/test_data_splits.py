@@ -1,4 +1,4 @@
-"""Tests for deterministic three-way splitting via canonical_sha256.
+"""Tests for deterministic three-way splitting by split key.
 
 Split rule:
 
@@ -6,14 +6,13 @@ Split rule:
     dev:   TEST_BUCKET_MAX <= byte < DEV_BUCKET_MAX     (12.5%)
     train: byte >= DEV_BUCKET_MAX                       (75%)
 
-canonical_sha256 is the lexicographic minimum SHA256 across a sample and
-all its embedded files (pre-computed by hopper). This ensures archives
-sharing an inner file always land in the same partition.
+The split key is the file's own sha256: hopper's verdict schema keeps no
+canonical (archive-wide) digest, and every archive member is a sample of its
+own.
 """
 
 from __future__ import annotations
 
-import json
 import sqlite3
 
 from collimator.data import (
@@ -25,74 +24,7 @@ from collimator.data import (
     partition_of,
     stream_partitioned_metadata_grouped,
 )
-from collimator.demo import create_demo_db
-
-
-def _hopper_schema_sql() -> str:
-    return """
-        CREATE TABLE samples (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sha256 TEXT UNIQUE NOT NULL,
-            source TEXT NOT NULL DEFAULT '',
-            feed TEXT NOT NULL DEFAULT '',
-            ecosystem TEXT NOT NULL DEFAULT '',
-            filename TEXT NOT NULL DEFAULT '',
-            file_type TEXT NOT NULL DEFAULT '',
-            size_bytes INTEGER NOT NULL DEFAULT 0,
-            label TEXT NOT NULL DEFAULT 'unknown',
-            label_source TEXT NOT NULL DEFAULT '',
-            cleave_result TEXT,
-            risk TEXT NOT NULL DEFAULT '',
-            finding_count INTEGER NOT NULL DEFAULT 0,
-            path TEXT NOT NULL DEFAULT '',
-            status TEXT NOT NULL DEFAULT '',
-            note TEXT NOT NULL DEFAULT '',
-            canonical_sha256 TEXT NOT NULL DEFAULT '',
-            parent TEXT NOT NULL DEFAULT '',
-            skip TEXT NOT NULL DEFAULT '',
-            formula TEXT NOT NULL DEFAULT '',
-            elements TEXT NOT NULL DEFAULT '',
-            score INTEGER NOT NULL DEFAULT 10,
-            mtime DATETIME,
-            created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-            updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-            analyzed_at DATETIME
-        )
-    """
-
-
-def _make_report(outer_sha: str, embedded_shas: list[str]) -> str:
-    files = [{
-        "id": 0,
-        "path": f"/tmp/{outer_sha}.zip",
-        "depth": 0,
-        "file_type": "zip",
-        "sha256": outer_sha,
-        "findings": [],
-        "imports": [],
-        "sections": [],
-        "strings": [],
-        "metrics": {},
-    }]
-    for i, sha in enumerate(embedded_shas, start=1):
-        files.append({
-            "id": i,
-            "parent_id": 0,
-            "path": f"member-{i}.py",
-            "depth": 1,
-            "file_type": "python",
-            "sha256": sha,
-            "findings": [],
-            "imports": [],
-            "sections": [],
-            "strings": [],
-            "metrics": {},
-        })
-    return json.dumps({
-        "version": "3",
-        "files": files,
-        "summary": {"files_analyzed": len(files), "duration_ms": 1, "tools": ["test"]},
-    })
+from collimator.demo import add_sample, create_demo_db, create_schema
 
 
 def test_is_test_sample_deterministic() -> None:
@@ -181,36 +113,25 @@ def test_oof_fold_balanced_across_full_byte_space() -> None:
     assert n_zeros == n_ones
 
 
-def test_canonical_sha256_determines_partition(tmp_path) -> None:
-    """Samples sharing a canonical_sha256 must land in the same partition.
-
-    Two archives with different outer SHA256s but the same canonical_sha256
-    (because they share an embedded file that is the lex-min) get identical
-    partition assignments.
-    """
+def test_own_digest_determines_partition(tmp_path) -> None:
+    """Each sample splits on its own digest, archives and their members alike."""
     db_path = tmp_path / "samples.db"
-    # canonical = min(outer, embedded...).  Both samples share embedded "11"*32
-    # which is lex-min for both, so both get canonical = "11"*32.
-    canonical = "11" * 32
+    member = "11" * 32
     conn = sqlite3.connect(str(db_path))
     try:
-        conn.execute(_hopper_schema_sql())
-        conn.executemany(
-            "INSERT INTO samples (sha256, label, canonical_sha256, cleave_result)"
-            " VALUES (?, ?, ?, ?)",
-            [
-                ("aa" * 32, "good", canonical, _make_report("aa" * 32, [canonical])),
-                ("bb" * 32, "bad", canonical, _make_report("bb" * 32, [canonical])),
-            ],
-        )
+        create_schema(conn)
+        inner = add_sample(conn, sha256=member, label="bad", file_type="python", scanned=False,
+                           report={"traits": [{"id": "objectives/exfil", "crit": 5}], "risk": 9})
+        for outer, label in (("aa" * 32, "good"), ("bb" * 32, "bad")):
+            add_sample(conn, sha256=outer, label=label, report={}, file_type="zip",
+                       members=[(inner, "member-1.py")])
         conn.commit()
     finally:
         conn.close()
 
     rows = list(stream_partitioned_metadata_grouped(db_path))
-    assert len(rows) == 2
-    # Both must end up in the same partition since they share canonical_sha256.
-    assert rows[0][2] == rows[1][2]
+    assert [row[3] for row in rows] == [member, "aa" * 32, "bb" * 32]
+    assert all(row[2] == partition_of(row[3]) for row in rows)
 
 
 def test_partitioned_metadata_labels(tmp_path) -> None:

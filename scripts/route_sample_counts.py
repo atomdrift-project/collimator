@@ -16,9 +16,8 @@ Output format (JSON to stdout):
   }
 
 For ``filegroups/<X>`` and ``general`` the counts pool across all member
-filetypes (mapped via the deployed bundle's config.json filetype_to_group).
-The restored archive group uses the trainer's shared membership so it also
-works before the first bundle containing that group is built.
+filetypes (filefacts' groups, so the counts hold before any bundle with
+that group is built).
 filegroup/general routes train on pooled data so their counts reflect what
 the model actually sees.
 
@@ -40,11 +39,12 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import data as cdata  # noqa: E402
-from collimator.filegroups import ARCHIVE_FILETYPES  # noqa: E402
+from collimator.filegroups import FILE_GROUPS  # noqa: E402
 
 
 def _filetypes_for_route(route: str, bundle_root: Path) -> list[str] | None:
-    """``filetypes/X`` → X and stored aliases; ``filegroups/X`` → members from
+    """``filetypes/X`` → X and stored aliases; ``filegroups/X`` → filefacts'
+    group X, or for a group filefacts no longer has, its members in the
     bundle's filetype_to_group; ``general`` → None (means all)."""
     if route == "general":
         return None
@@ -52,8 +52,8 @@ def _filetypes_for_route(route: str, bundle_root: Path) -> list[str] | None:
         return list(cdata.expand_filetype_aliases((route.split("/", 1)[1],)))
     if route.startswith("filegroups/"):
         group = route.split("/", 1)[1]
-        if group == "archive":
-            return list(cdata.expand_filetype_aliases(ARCHIVE_FILETYPES))
+        if group in FILE_GROUPS:
+            return list(cdata.expand_filetype_aliases(FILE_GROUPS[group]))
         config_path = bundle_root / "config.json"
         if not config_path.is_file():
             # No bundle config. Best we can do is empty — caller treats
@@ -68,47 +68,16 @@ def _filetypes_for_route(route: str, bundle_root: Path) -> list[str] | None:
 def _count_labeled(db_path: str, file_types: list[str] | None) -> dict[str, int]:
     """Return {"malware": N_bad, "benign": N_good} for the route's
     pooled filetype set. None file_types means "all" (the general route)."""
-    is_pg = cdata._is_pg(db_path)  # noqa: SLF001
-    where_base = cdata.LABELED_WHERE
-    n_mal = 0
-    n_ben = 0
-    with cdata._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if is_pg:
-            with conn.cursor() as cur:
-                if file_types is None:
-                    cur.execute(
-                        f"SELECT label, count(*) FROM samples WHERE {where_base} GROUP BY label",  # noqa: S608
-                    )
-                else:
-                    cur.execute(
-                        f"SELECT label, count(*) FROM samples WHERE {where_base} "  # noqa: S608
-                        f"AND file_type = ANY(%s) GROUP BY label",
-                        [file_types],
-                    )
-                for label, n in cur:
-                    if label == "bad":
-                        n_mal = int(n)
-                    elif label == "good":
-                        n_ben = int(n)
-        else:
-            if file_types is None:
-                query = (
-                    f"SELECT label, count(*) FROM samples WHERE {where_base} GROUP BY label"  # noqa: S608
-                )
-                params: list = []
-            else:
-                placeholders = ",".join("?" for _ in file_types)
-                query = (
-                    f"SELECT label, count(*) FROM samples WHERE {where_base} "  # noqa: S608
-                    f"AND file_type IN ({placeholders}) GROUP BY label"
-                )
-                params = list(file_types)
-            for label, n in conn.execute(query, params):
-                if label == "bad":
-                    n_mal = int(n)
-                elif label == "good":
-                    n_ben = int(n)
-    return {"malware": n_mal, "benign": n_ben}
+    if file_types is not None and not file_types:
+        return {"malware": 0, "benign": 0}
+    n_mal = n_all = 0
+    rows = cdata.stream_corpus(
+        db_path, file_types=tuple(file_types) if file_types else None, scores="none",
+    )
+    for row in rows:
+        n_mal += row.label
+        n_all += 1
+    return {"malware": n_mal, "benign": n_all - n_mal}
 
 
 def main() -> int:
