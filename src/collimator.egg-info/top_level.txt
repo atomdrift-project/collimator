@@ -1,2 +1,1 @@
-azoth_trainer
 collimator

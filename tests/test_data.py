@@ -474,3 +474,26 @@ def test_retry_pg_connect_gives_up_after_max_attempts(monkeypatch) -> None:
         data_mod._retry_pg_connect("postgres://x/y")
     # Must have retried at least once before exhausting the time budget.
     assert fake.attempts >= 2, "must retry before giving up within the time budget"
+
+
+def test_old_report_spellings_give_formula_and_score():
+    """Versions 4 to 6 spell the molecule ``f`` and the risk ``x``; legacy formula and
+    score equalled them on every frozen row, so the derived fields must read them."""
+    from collimator import data
+
+    assert data._risk({"risk": 9, "x": 3}) == 9
+    assert data._risk({"x": 40.0}) == 40
+    assert data._risk({"f": "H2"}) == 0
+    assert data._risk({"x": "not a number"}) == 0
+    assert data._molecule({"mol": "Os", "f": "H2"}) == "Os"
+    assert data._molecule({"f": "K(Mc)"}) == "K(Mc)"
+    assert data._molecule({"risk": 1}) == ""
+
+
+def test_old_report_stub_is_a_molecule_only_report():
+    from collimator import data
+
+    assert data._molecule_only({"mol": "Os", "risk": 4})
+    assert data._molecule_only({"f": "H2", "x": 3})
+    assert data._molecule_only({"x": 1})
+    assert not data._molecule_only({"f": "H2", "x": 3, "ts": [{"i": "t", "l": 2}]})

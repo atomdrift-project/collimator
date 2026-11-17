@@ -626,15 +626,25 @@ def _molecule_only(report: dict[str, Any]) -> bool:
     excerpts only for rows that were never members (legacy parent = ''), so
     the members legacy trained on mostly kept a stub.
     """
-    return report.keys() <= {"mol", "risk"}
+    return report.keys() <= {"mol", "risk", "f", "x"}
 
 
 def _risk(report: dict[str, Any]) -> int:
-    """The report's risk: legacy samples.score."""
+    """The report's risk: legacy samples.score.
+
+    Versions 4 to 6 spell it ``x`` (legacy score equalled it on every one of
+    43,205 frozen rows), as they spell the molecule ``f``.
+    """
     try:
-        return int(report.get("risk") or 0)
+        return int(report.get("risk") or report.get("x") or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _molecule(report: dict[str, Any]) -> str:
+    """The report's molecule, legacy samples.formula: ``mol``, or ``f`` before version 7."""
+    formula = report.get("mol", report.get("f"))
+    return formula if isinstance(formula, str) else ""
 
 
 _SUBSCRIPTS = str.maketrans("", "", "₀₁₂₃₄₅₆₇₈₉")
@@ -985,6 +995,25 @@ def _newest_locations(conn: Any, ids: list[int]) -> dict[int, tuple[str, str]]:
     return out
 
 
+# Scan scores each archive member on its own, as a one-entry report that keeps
+# its place in the archive (scan's score_embedded_files: every embedded node,
+# depth > 0, gets its own verdict). Models at ABI 20, which collimator trains,
+# read that depth as it is. A sample hopper never scanned on its own is such a
+# member, so it trains as scan serves it: alone, nested. Its true depth is not in
+# the schema without walking up contents; on legacy's member rows (python_bytecode,
+# json, jar, elf) depth 1 scores within a few points of the true depth.
+MEMBER_DEPTH = 1
+
+
+def _scanned(conn: Any, ids: list[int]) -> set[int]:
+    """The ids hopper scanned on its own (a scans row); the rest are members."""
+    out: set[int] = set()
+    for chunk in _chunks(sorted(set(ids)), _PG_CHUNK if _pg_conn(conn) else _SQLITE_CHUNK):
+        clause, params = _in(conn, "sample_id", chunk)
+        out.update(int(row_id) for (row_id,) in _execute(conn, f"SELECT sample_id FROM scans WHERE {clause}", params))
+    return out
+
+
 def _reports(
     conn: Any, ids: list[int], evaluation_labels: dict[int, int] | None = None,
 ) -> dict[int, dict[str, Any]]:
@@ -998,6 +1027,10 @@ def _reports(
     with those keys restored and paths joined with "!!" as cleave writes them.
     A member atomscan holds no report for is listed by type and size alone.
     The root's path is the file name of its newest location.
+
+    A sample hopper never scanned on its own (no scans row) is an archive member:
+    it is reported alone, one entry at MEMBER_DEPTH, with nothing beneath it, as
+    scan featurizes a member it scores (see MEMBER_DEPTH).
 
     A sample without an atomscan report is absent from the result.
     """
@@ -1019,7 +1052,9 @@ def _reports(
                 continue
             files[rid] = (bytes(sha256).hex(), file_type or "", int(size or 0), report)
             roots[rid] = (xmin, digest)
-    tree = _members(conn, list(roots))
+    scanned = _scanned(conn, list(roots))
+    tree = _members(conn, [rid for rid in roots if rid in scanned])
+    tree.update({rid: [(rid, -1, 0, "")] for rid in roots if rid not in scanned})
     listed = {fid for entries in tree.values() for fid, _p, _d, _r in entries}
     files.update(_file_rows(conn, listed - files.keys()))
     places = _newest_locations(conn, list(roots))
@@ -1035,14 +1070,15 @@ def _reports(
             entry.update(id=index, depth=depth, sha=sha256, type=file_type, size=size)
             if parent < 0:
                 entry["path"] = path.rsplit("/", 1)[-1]
+                if rid not in scanned:
+                    entry["depth"] = MEMBER_DEPTH
             else:
                 entry["pid"] = parent
                 entry["path"] = f"{paths[parent]}!!{rel}"
             paths.append(entry["path"])
             entries.append(entry)
         root = entries[0]
-        formula = root.get("mol")
-        formula = formula if isinstance(formula, str) else ""
+        formula = _molecule(root)
         item: dict[str, Any] = {
             "cleave_result": {"files": entries},
             "formula": formula,
