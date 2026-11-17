@@ -83,10 +83,26 @@ def reference(directory, spec, cases, natives=None):
 
 
 def generate(output, args):
-    environment({})
+    # Quadgram columns are only emitted when enabled, as in the JS recipe.
+    environment({"COLLIMATOR_TIERED_CRIT_QUADGRAMS": "1", "COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT": "2"})
     cases = reports()
     # Enough repetitions for normal vocabulary support floors, without a DB.
     base = features.build_vocab([case["report"] for case in cases] * 32, n_workers=1)
+    # build_vocab never discovers tiered quadgrams (they need labels), so derive
+    # them from the synthetic reports to prove Scan matches the training tokens.
+    # A non-default floor (2) also proves Scan applies the spec's per-order gate.
+    quadgrams = set()
+    for case in cases:
+        summary = features._summarize_report_files(features.report_files(case["report"]))
+        tokens = features._ranked_tiered_tokens(
+            summary.sample_paths, summary.path_scores, order=4, min_crit=2)
+        quadgrams.update(features._quadgram_tokens(tokens))
+    assert quadgrams, "synthetic reports must yield tiered quadgrams"
+    quadgrams = sorted(quadgrams)[:500]
+    base = replace(base, tiered_quadgram_vocab=quadgrams,
+                   tiered_min_crit=(*tuple(base.tiered_min_crit)[:2], 2),
+                   feature_names=base.feature_names + [f"tierquad:{q}" for q in quadgrams],
+                   total_features=base.total_features + len(quadgrams))
     combinations = [None] + [f["spec"] for f in fixtures()[::9]]
     combinations.append(combinations[-1])  # Also exercise z-score preprocessing.
     bundles = []

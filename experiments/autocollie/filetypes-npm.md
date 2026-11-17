@@ -554,3 +554,30 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261115T165855-filetypes-npm` — 2026-11-15T16:58:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `50dc0fe44f0d8a7a` | inherit_from_filetypes_rar_6e0f7b5c | ok | 0.9835 | 0.9908 | 0.9156 | 328 | [log](out/autocollie/runs/2026-11-15T17-00-48_20261115T165855-filetypes-npm_inherit_from_filetypes_rar_6e0f7b5c.log) |
+
+Rejected before run:
+
+- `hnm_0005_w8` — training.estimators: 800 above max 600
+- `hnm_0012_w18` — training.estimators: 800 above max 600
+- `max_delta_step_5` — training.estimators: 800 above max 600
+- `max_delta_step_10` — training.estimators: 800 above max 600
+- `scale_pos_weight_025` — training.estimators: 800 above max 600
+- `min_child_samples_10` — training.estimators: 800 above max 600
+- `num_leaves_16` — training.estimators: 800 above max 600
+- `learning_rate_002` — training.estimators: 800 above max 600
+- `reg_lambda_1` — training.estimators: 800 above max 600
+- `text_metrics_full` — training.estimators: 800 above max 600
+- `rule_description_keywords_balanced_mi` — training.estimators: 800 above max 600
+- `keyword_min_freq_3` — training.estimators: 800 above max 600
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_6e0f7b5c`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/rar (key=6e0f7b5cf4b938e7, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

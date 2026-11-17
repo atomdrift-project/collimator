@@ -497,3 +497,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T215411-filetypes-whl` — 2026-11-12T21:54:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f325964c94c6d95` | inherit_from_filetypes_asar_787904d9 | ok | 0.9218 | 0.9967 | 0.8226 | 327 | [log](out/autocollie/runs/2026-11-12T22-03-17_20261112T215411-filetypes-whl_inherit_from_filetypes_asar_787904d9.log) |
+| `c8a41ffa769c8af8` | whl_ctx_mi_mds5 | ok | 0.9049 | 0.9959 | 0.8220 | 1929 | [log](out/autocollie/runs/2026-11-12T22-08-59_20261112T215411-filetypes-whl_whl_ctx_mi_mds5.log) |
+| `2d2eaf78b0e24ced` | whl_ctx_mi_mds10 | ok | 0.9087 | 0.9961 | 0.8245 | 45 | [log](out/autocollie/runs/2026-11-12T22-41-12_20261112T215411-filetypes-whl_whl_ctx_mi_mds10.log) |
+| `68d20bc74eb4ad7d` | whl_ctx_mi_mcs50 | ok | 0.9071 | 0.9961 | 0.8317 | 44 | [log](out/autocollie/runs/2026-11-12T22-41-58_20261112T215411-filetypes-whl_whl_ctx_mi_mcs50.log) |
+| `43e9bc57cd810d98` | whl_ctx_mi_reg_lambda2 | ok | 0.9043 | 0.9960 | 0.8266 | 44 | [log](out/autocollie/runs/2026-11-12T22-42-44_20261112T215411-filetypes-whl_whl_ctx_mi_reg_lambda2.log) |
+| `58e647d4eca9c41d` | whl_ctx_mi_lr0025 | ok | 0.8949 | 0.9955 | 0.8263 | 50 | [log](out/autocollie/runs/2026-11-12T22-43-30_20261112T215411-filetypes-whl_whl_ctx_mi_lr0025.log) |
+| `8d44eb19cf7a6aa4` | whl_ctx_mi_subsample06 | ok | 0.9079 | 0.9959 | 0.8290 | 38 | [log](out/autocollie/runs/2026-11-12T22-44-21_20261112T215411-filetypes-whl_whl_ctx_mi_subsample06.log) |
+| `e131f3841e0e0a4e` | whl_ctx_mi_col_sample06 | ok | 0.9080 | 0.9962 | 0.8326 | 50 | [log](out/autocollie/runs/2026-11-12T22-45-00_20261112T215411-filetypes-whl_whl_ctx_mi_col_sample06.log) |
+| `216a7395e292d940` | whl_ctx_mi_depth4 | ok | 0.9073 | 0.9963 | 0.8392 | 1990 | [log](out/autocollie/runs/2026-11-12T22-45-52_20261112T215411-filetypes-whl_whl_ctx_mi_depth4.log) |
+| `8fe6dc0495ec6b85` | whl_ctx_mi_depth2 | ok | 0.8969 | 0.9956 | 0.8207 | 2044 | [log](out/autocollie/runs/2026-11-12T23-19-06_20261112T215411-filetypes-whl_whl_ctx_mi_depth2.log) |
+| `6770bb40b9b07f82` | whl_ctx_mi_min_malware_score_2 | ok | 0.9100 | 0.9962 | 0.8350 | 1972 | [log](out/autocollie/runs/2026-11-12T23-53-15_20261112T215411-filetypes-whl_whl_ctx_mi_min_malware_score_2.log) |
+| `baa4206c05c8b6bc` | whl_ctx_mi_min_malware_score_0 | ok | 0.9100 | 0.9962 | 0.8350 | 329 | [log](out/autocollie/runs/2026-11-13T00-26-11_20261112T215411-filetypes-whl_whl_ctx_mi_min_malware_score_0.log) |
+| `5549ade9dfe0453f` | whl_ctx_mi_seed_search_k3 | ok | 0.9093 | 0.9962 | 0.8261 | 48 | [log](out/autocollie/runs/2026-11-13T00-31-42_20261112T215411-filetypes-whl_whl_ctx_mi_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_asar_787904d9`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/asar (key=787904d926d7c7e0, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`whl_ctx_mi_mds5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Tests if relaxing the leaf-output cap from 2 to 5 improves L25 recall@1FP by allowing stronger splits on the balanced_mi context features, building on the 0.4209 baseline.
+- **`whl_ctx_mi_mds10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Investigates if a higher leaf-output cap of 10 further boosts L25 recall@1FP by enabling more aggressive gradient updates, following the trend from mds5.
+- **`whl_ctx_mi_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Reduces min_child_samples to 50 to test if smaller leaf populations improve L25 recall@1FP by capturing finer-grained patterns in the small malware cohort.
+- **`whl_ctx_mi_reg_lambda2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Increases L2 regularization to 2 to test if stronger penalty improves L25 recall@1FP by reducing overfitting to noise in the context keyword features.
+- **`whl_ctx_mi_lr0025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Halves the learning rate to 0.025 to test if slower convergence improves L25 recall@1FP by allowing more nuanced feature interactions in the boosted trees.
+- **`whl_ctx_mi_subsample06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Reduces row subsampling to 0.6 to test if increased stochasticity improves L25 recall@1FP by acting as a regularizer against overfitting to specific malware samples.
+- **`whl_ctx_mi_col_sample06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Reduces column subsampling to 0.6 to test if feature subsampling improves L25 recall@1FP by decorrelating trees and reducing variance in the high-dimensional context space.
+- **`whl_ctx_mi_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Increases trait_path_depth to 4 to test if longer finding prefixes improve L25 recall@1FP by capturing more specific malware behaviors in the context keywords.
+- **`whl_ctx_mi_depth2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Decreases trait_path_depth to 2 to test if shorter, more general prefixes improve L25 recall@1FP by increasing feature coverage and reducing sparsity in the context keywords.
+- **`whl_ctx_mi_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Lowers min_malware_score to 2 to test if including lower-severity malware in training improves L25 recall@1FP by providing more diverse positive examples for the classifier.
+- **`whl_ctx_mi_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Sets min_malware_score to 0 to test if using all available malware samples improves L25 recall@1FP by maximizing the positive class size and reducing class imbalance.
+- **`whl_ctx_mi_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 …` — Enables best-of-3 seed search to test if selecting the best-performing seed improves L25 recall@1FP by mitigating variance in the training process.
+
+</details>
+

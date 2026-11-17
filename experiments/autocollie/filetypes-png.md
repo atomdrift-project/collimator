@@ -1306,3 +1306,75 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261112T173904-filetypes-png` — 2026-11-12T17:39:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `285c06b3d24bda94` | inherit_from_filetypes_bmp_c901faf3 | ok | 0.1635 | 0.5430 | 0.1100 | 7 | [log](out/autocollie/runs/2026-11-12T17-42-01_20261112T173904-filetypes-png_inherit_from_filetypes_bmp_c901faf3.log) |
+| `f52171cd86fdf5dd` | png_hnf001_hnw12 | ok | 0.9729 | 0.9961 | 0.9312 | 12 | [log](out/autocollie/runs/2026-11-12T17-42-10_20261112T173904-filetypes-png_png_hnf001_hnw12.log) |
+| `8ddd7c63b976de1a` | png_hnf002_hnw16 | ok | 0.9726 | 0.9958 | 0.9285 | 7 | [log](out/autocollie/runs/2026-11-12T17-42-23_20261112T173904-filetypes-png_png_hnf002_hnw16.log) |
+| `31351489fd5b731c` | png_hnf0005_hnw20 | ok | 0.9729 | 0.9962 | 0.9271 | 6 | [log](out/autocollie/runs/2026-11-12T17-42-31_20261112T173904-filetypes-png_png_hnf0005_hnw20.log) |
+| `faf059dd72c99c71` | png_hnf0015_hnw18 | ok | 0.9720 | 0.9957 | 0.9329 | 6 | [log](out/autocollie/runs/2026-11-12T17-42-38_20261112T173904-filetypes-png_png_hnf0015_hnw18.log) |
+| `08e59da167562c9f` | png_depth4_hnf01 | ok | 0.9738 | 0.9962 | 0.9242 | 10 | [log](out/autocollie/runs/2026-11-12T17-42-45_20261112T173904-filetypes-png_png_depth4_hnf01.log) |
+| `d49567d88e918b3b` | png_depth2_hnf01 | ok | 0.9731 | 0.9963 | 0.9300 | 11 | [log](out/autocollie/runs/2026-11-12T17-42-57_20261112T173904-filetypes-png_png_depth2_hnf01.log) |
+| `97a64c22bd5ff3af` | png_reglambda2_hnf01 | ok | 0.9735 | 0.9961 | 0.9326 | 6 | [log](out/autocollie/runs/2026-11-12T17-43-09_20261112T173904-filetypes-png_png_reglambda2_hnf01.log) |
+| `19a1e90c2df92ad0` | png_regalpha05_hnf01 | ok | 0.9732 | 0.9961 | 0.9342 | 6 | [log](out/autocollie/runs/2026-11-12T17-43-16_20261112T173904-filetypes-png_png_regalpha05_hnf01.log) |
+| `4e2df4e910143d9b` | png_mcs50_hnf01 | ok | 0.9728 | 0.9961 | 0.9300 | 6 | [log](out/autocollie/runs/2026-11-12T17-43-23_20261112T173904-filetypes-png_png_mcs50_hnf01.log) |
+| `cb122ccff094f76d` | png_numleaves128_hnf01 | ok | 0.9729 | 0.9961 | 0.9312 | 6 | [log](out/autocollie/runs/2026-11-12T17-43-30_20261112T173904-filetypes-png_png_numleaves128_hnf01.log) |
+| `6214c60eef1104e4` | png_lr003_hnf01 | ok | 0.9722 | 0.9960 | 0.9273 | 7 | [log](out/autocollie/runs/2026-11-12T17-43-37_20261112T173904-filetypes-png_png_lr003_hnf01.log) |
+| `f52171cd86fdf5dd` | png_seed_search_k3_hnf01 | dup | 0.9729 | 0.9961 | 0.9312 | 1 | [log](out/autocollie/runs/2026-11-12T17-43-45_20261112T173904-filetypes-png_png_seed_search_k3_hnf01.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_bmp_c901faf3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/bmp (key=c901faf3a47a9314, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_hnf001_hnw12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests a lower hard-negative fraction (0.01) with weight 12 to reduce benign overfitting and improve L25 recall from the 0.6042 baseline by sharpening the decision boundary.
+- **`png_hnf002_hnw16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Evaluates a slightly higher hard-negative fraction (0.02) with weight 16 to balance recall and precision, aiming to lift L25 recall beyond the 0.6042 control.
+- **`png_hnf0005_hnw20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Explores a very low hard-negative fraction (0.005) with high weight 20 to minimize benign interference and potentially increase L25 recall from the current 0.6042.
+- **`png_hnf0015_hnw18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests an intermediate hard-negative fraction (0.015) with weight 18 to find an optimal balance for L25 recall improvement over the 0.6042 baseline.
+- **`png_depth4_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines trait_path_depth 4 (previously 0.5365) with the best hard-negative settings to see if deeper features synergize with tuned negatives for L25 recall.
+- **`png_depth2_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests trait_path_depth 2 with tuned hard negatives to check if shallower features reduce noise and improve L25 recall from the 0.6042 baseline.
+- **`png_reglambda2_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Increases L2 regularization to 2.0 with tuned hard negatives to prevent overfitting and potentially improve L25 recall from the 0.6042 baseline.
+- **`png_regalpha05_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Adds L1 regularization (0.5) with tuned hard negatives to sparsify features and improve L25 recall from the 0.6042 baseline.
+- **`png_mcs50_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Reduces min_child_samples to 50 with tuned hard negatives to allow finer splits and potentially improve L25 recall from the 0.6042 baseline.
+- **`png_numleaves128_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Increases num_leaves to 128 with tuned hard negatives to capture more complex patterns and improve L25 recall from the 0.6042 baseline.
+- **`png_lr003_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Lowers learning rate to 0.03 with tuned hard negatives to improve generalization and potentially lift L25 recall from the 0.6042 baseline.
+- **`png_seed_search_k3_hnf01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Uses seed search (k=3) with tuned hard negatives to find a more robust model and improve L25 recall from the 0.6042 baseline.
+
+</details>
+
+## Cycle `20261115T151042-filetypes-png` — 2026-11-15T15:10:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a0d5fcb04a8a1a92` | inherit_from_filetypes_iso_306f9f77 | ok | 0.1635 | 0.5430 | 0.1100 | 7 | [log](out/autocollie/runs/2026-11-15T15-12-43_20261115T151042-filetypes-png_inherit_from_filetypes_iso_306f9f77.log) |
+| `f022b30577a18b46` | png_ruletext_seeds789_replicate | ok | 0.9682 | 0.9948 | 0.8912 | 16 | [log](out/autocollie/runs/2026-11-15T15-13-25_20261115T151042-filetypes-png_png_ruletext_seeds789_replicate.log) |
+| `2547989246ada8f0` | png_ruletext_balanced_mi | ok | 0.9740 | 0.9961 | 0.9298 | 14 | [log](out/autocollie/runs/2026-11-15T15-13-41_20261115T151042-filetypes-png_png_ruletext_balanced_mi.log) |
+| `ff44174c1e6a98f6` | png_ruletext_kw_minfreq2 | ok | 0.9740 | 0.9961 | 0.9298 | 11 | [log](out/autocollie/runs/2026-11-15T15-13-56_20261115T151042-filetypes-png_png_ruletext_kw_minfreq2.log) |
+| `21eb03ecc8331054` | png_ruletext_kw_vocab25k | ok | 0.9740 | 0.9961 | 0.9298 | 12 | [log](out/autocollie/runs/2026-11-15T15-14-08_20261115T151042-filetypes-png_png_ruletext_kw_vocab25k.log) |
+| `faa65aa7ab86490a` | png_ruletext_rulekw_add | ok | 0.9735 | 0.9961 | 0.9232 | 14 | [log](out/autocollie/runs/2026-11-15T15-14-22_20261115T151042-filetypes-png_png_ruletext_rulekw_add.log) |
+| `501c807ef905e9d1` | png_ruletext_depth4 | ok | 0.9743 | 0.9962 | 0.9261 | 8 | [log](out/autocollie/runs/2026-11-15T15-14-37_20261115T151042-filetypes-png_png_ruletext_depth4.log) |
+| `4709559b1d784b7a` | png_ruletext_mcs50 | ok | 0.9741 | 0.9962 | 0.9298 | 9 | [log](out/autocollie/runs/2026-11-15T15-14-46_20261115T151042-filetypes-png_png_ruletext_mcs50.log) |
+| `d8b067152da18435` | png_ruletext_numleaves128 | ok | 0.9740 | 0.9961 | 0.9298 | 7 | [log](out/autocollie/runs/2026-11-15T15-14-57_20261115T151042-filetypes-png_png_ruletext_numleaves128.log) |
+| `7701af5cce7c39bb` | png_ruletext_maxdelta2 | ok | 0.9738 | 0.9960 | 0.9307 | 7 | [log](out/autocollie/runs/2026-11-15T15-15-05_20261115T151042-filetypes-png_png_ruletext_maxdelta2.log) |
+| `b181643f4d803ab7` | png_ruletext_reglambda2 | ok | 0.9736 | 0.9959 | 0.9279 | 7 | [log](out/autocollie/runs/2026-11-15T15-15-13_20261115T151042-filetypes-png_png_ruletext_reglambda2.log) |
+| `3a88446ff39e3a8a` | png_ruletext_hnf02_hnw8 | ok | 0.9740 | 0.9961 | 0.9281 | 7 | [log](out/autocollie/runs/2026-11-15T15-15-21_20261115T151042-filetypes-png_png_ruletext_hnf02_hnw8.log) |
+| `3afcdbe780818073` | png_ruletext_minmal4 | ok | 0.6005 | 0.9142 | 0.5065 | 7 | [log](out/autocollie/runs/2026-11-15T15-15-29_20261115T151042-filetypes-png_png_ruletext_minmal4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_306f9f77`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=306f9f777342637a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ruletext_seeds789_replicate`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Replicate the strongest historical L25 recall@1FP of 0.6042 on the current cohort to establish a comparable control for subsequent training-only follow-ups.
+- **`png_ruletext_balanced_mi`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Switch keyword selection from frequency to balanced_mi for the rule_description vocabulary to improve L25 recall@1FP by ranking more discriminative trait-description words.
+- **`png_ruletext_kw_minfreq2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Lower keyword_min_freq from 5 to 2 to expand the rule_description vocabulary and capture rarer malware-specific terms, aiming to improve L25 recall@1FP beyond the 0.6042 baseline.
+- **`png_ruletext_kw_vocab25k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Raise keyword_vocab_max to 25000 for the rule_description source to test whether additional selected words improve L25 recall@1FP, given the current 181-word vocabulary is far below the cap.
+- **`png_ruletext_rulekw_add`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Enable rule_keywords alongside rule_description_keywords to add relative-rule-ID words, testing whether the combined vocabulary improves L25 recall@1FP over the 0.6042 ruletext-only baseline.
+- **`png_ruletext_depth4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Increase trait_path_depth from 3 to 4 to capture more specific finding-prefix traits, aiming to improve L25 recall@1FP by reducing false positives from overly generic features.
+- **`png_ruletext_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Reduce min_child_samples from 100 to 50 to allow finer leaf splits, testing whether this improves L25 recall@1FP by capturing rare malware patterns in the ruletext feature space.
+- **`png_ruletext_numleaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Increase num_leaves from 96 to 128 to allow more complex decision boundaries, aiming to improve L25 recall@1FP by better separating malware from benign PNGs.
+- **`png_ruletext_maxdelta2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Set max_delta_step to 2 to cap leaf outputs and reduce overfitting, testing whether this improves L25 recall@1FP by stabilizing the model on the small malware cohort.
+- **`png_ruletext_reglambda2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Increase reg_lambda from 1 to 2 to add L2 regularization, aiming to improve L25 recall@1FP by reducing variance and improving generalization on the PNG route.
+- **`png_ruletext_hnf02_hnw8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Adjust hard_negative_fraction to 0.2 and hard_negative_weight to 8, transferring the JPEG sister configuration to test whether stronger hard-negative emphasis improves L25 recall@1FP.
+- **`png_ruletext_minmal4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Raise min_malware_score to 4 to drop low-severity malware from training, testing whether focusing on high-severity samples improves L25 recall@1FP by reducing label noise.
+
+</details>
+

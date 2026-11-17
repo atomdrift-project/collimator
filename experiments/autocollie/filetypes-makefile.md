@@ -984,3 +984,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T171842-filetypes-makefile` — 2026-11-12T17:18:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6813c0d00d445dce` | inherit_from_filetypes_rar_5e4387a9 | ok | 0.1583 | 0.8633 | 0.1228 | 7 | [log](out/autocollie/runs/2026-11-12T17-21-11_20261112T171842-filetypes-makefile_inherit_from_filetypes_rar_5e4387a9.log) |
+| `88b14c23ff64933a` | hnm01w10_ctxmi_depth3 | ok | 0.8343 | 0.9943 | 0.7701 | 16 | [log](out/autocollie/runs/2026-11-12T17-21-22_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_depth3.log) |
+| `de886467a4a79e61` | hnm01w10_ctxmi_depth5 | ok | 0.8518 | 0.9968 | 0.7869 | 14 | [log](out/autocollie/runs/2026-11-12T17-21-39_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_depth5.log) |
+| `510ce1a9b8ce0e07` | hnm01w10_ctxmi_mds2 | ok | 0.1794 | 0.8891 | 0.1162 | 16 | [log](out/autocollie/runs/2026-11-12T17-21-54_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds2.log) |
+| `242fe257c1857a8e` | hnm01w10_ctxmi_mds4 | ok | 0.1652 | 0.5825 | 0.2164 | 18 | [log](out/autocollie/runs/2026-11-12T17-22-24_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds4.log) |
+| `0c830900d1c2c504` | hnm01w10_ctxmi_mds1 | ok | 0.7984 | 0.9897 | 0.7182 | 18 | [log](out/autocollie/runs/2026-11-12T17-22-54_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds1.log) |
+| `8e57beb4c30ee314` | hnm01w10_ctxmi_mds0_control | ok | 0.8342 | 0.9952 | 0.7869 | 16 | [log](out/autocollie/runs/2026-11-12T17-23-25_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds0_control.log) |
+| `a037d87debdc28ec` | hnm01w10_ctxmi_mds2_depth3 | ok | 0.1910 | 0.8635 | 0.2621 | 16 | [log](out/autocollie/runs/2026-11-12T17-23-54_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds2_depth3.log) |
+| `32c8089a6fbf41c0` | hnm01w10_ctxmi_mds4_depth5 | ok | 0.1770 | 0.5806 | 0.1950 | 16 | [log](out/autocollie/runs/2026-11-12T17-24-22_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds4_depth5.log) |
+| `753db95aa8ec9139` | hnm01w10_ctxmi_mds2_depth5 | ok | 0.1693 | 0.8816 | 0.1724 | 15 | [log](out/autocollie/runs/2026-11-12T17-24-51_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds2_depth5.log) |
+| `873a463e1af6255e` | hnm01w10_ctxmi_mds4_depth3 | ok | 0.1676 | 0.5805 | 0.2266 | 17 | [log](out/autocollie/runs/2026-11-12T17-25-10_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds4_depth3.log) |
+| `3552d9e57325e53c` | hnm01w10_ctxmi_mds1_depth3 | ok | 0.7892 | 0.9881 | 0.7222 | 18 | [log](out/autocollie/runs/2026-11-12T17-25-31_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds1_depth3.log) |
+| `79ed3fa3fc17f2cb` | hnm01w10_ctxmi_mds1_depth5 | ok | 0.7990 | 0.9890 | 0.7191 | 17 | [log](out/autocollie/runs/2026-11-12T17-25-52_20261112T171842-filetypes-makefile_hnm01w10_ctxmi_mds1_depth5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_5e4387a9`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/rar (key=5e4387a9435e2a1c, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hnm01w10_ctxmi_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing trait_path_depth from 4 to 3 improves L25 recall over the 0.6234 baseline by capturing broader finding prefixes while maintaining specificity.
+- **`hnm01w10_ctxmi_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing trait_path_depth from 4 to 5 improves L25 recall over the 0.6234 baseline by isolating more specific malicious patterns in the makefile context.
+- **`hnm01w10_ctxmi_mds2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if filtering out low-severity malware (min_malware_score 2) improves L25 recall over the 0.6234 baseline by reducing noise in the positive class during training.
+- **`hnm01w10_ctxmi_mds4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if filtering out low-severity malware (min_malware_score 4) improves L25 recall over the 0.6234 baseline by focusing training on high-confidence malicious samples.
+- **`hnm01w10_ctxmi_mds1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if filtering out the lowest severity malware (min_malware_score 1) improves L25 recall over the 0.6234 baseline by removing the noisiest positive examples.
+- **`hnm01w10_ctxmi_mds0_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Serves as the explicit control for min_malware_score experiments, confirming the 0.6234 L25 recall baseline with min_malware_score 0 on the current cohort.
+- **`hnm01w10_ctxmi_mds2_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 2 with trait_path_depth 3 to test if the interaction of cleaner positives and broader prefixes improves L25 recall beyond individual changes.
+- **`hnm01w10_ctxmi_mds4_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 4 with trait_path_depth 5 to test if the interaction of high-confidence positives and specific prefixes improves L25 recall beyond individual changes.
+- **`hnm01w10_ctxmi_mds2_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 2 with trait_path_depth 5 to test if the interaction of cleaner positives and specific prefixes improves L25 recall beyond individual changes.
+- **`hnm01w10_ctxmi_mds4_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 4 with trait_path_depth 3 to test if the interaction of high-confidence positives and broader prefixes improves L25 recall beyond individual changes.
+- **`hnm01w10_ctxmi_mds1_depth3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 1 with trait_path_depth 3 to test if the interaction of slightly cleaner positives and broader prefixes improves L25 recall beyond individual changes.
+- **`hnm01w10_ctxmi_mds1_depth5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Combines min_malware_score 1 with trait_path_depth 5 to test if the interaction of slightly cleaner positives and specific prefixes improves L25 recall beyond individual changes.
+
+</details>
+

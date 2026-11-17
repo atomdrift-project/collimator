@@ -147,6 +147,11 @@ echo "nightly($mode): oom_score_adj $(cat /proc/$$/oom_score_adj)"
 echo "== prune feature cache =="
 make azoth-prune-feature-cache || echo "nightly($mode): feature-cache prune failed — continuing."
 
+# Experiment-cache matrices (~36G each, content-hashed) were never pruned and
+# reached ~970G. Same policy: safe mid-flight, never fatal.
+echo "== prune experiment cache =="
+make azoth-prune-experiment-cache || echo "nightly($mode): experiment-cache prune failed — continuing."
+
 [ -n "${NIGHTLY_ALLOW_REGRESSION:-}" ] && export AZOTH_ALLOW_REGRESSION=1
 
 # Cap parallelism for the unattended run. The retrain's vocabulary pass

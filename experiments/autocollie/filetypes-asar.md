@@ -87,3 +87,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T144415-filetypes-asar` — 2026-11-12T14:44:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `02f3ef3d892e9d40` | inherit_from_filetypes_iso_da51097b | ok | 0.9984 | 0.9989 | 0.9859 | 10 | [log](out/autocollie/runs/2026-11-12T14-46-30_20261112T144415-filetypes-asar_inherit_from_filetypes_iso_da51097b.log) |
+| `c0b4537547b0b193` | asar_depth4_baseline | ok | 1.0000 | 1.0000 | 1.0000 | 48 | [log](out/autocollie/runs/2026-11-12T14-46-43_20261112T144415-filetypes-asar_asar_depth4_baseline.log) |
+| `7785426b3e6a2347` | asar_depth5_baseline | ok | 1.0000 | 1.0000 | 1.0000 | 46 | [log](out/autocollie/runs/2026-11-12T14-47-32_20261112T144415-filetypes-asar_asar_depth5_baseline.log) |
+| `add528b2c422d55d` | asar_depth3_subsample_0_5 | ok | 0.9701 | 0.9770 | 0.9091 | 8 | [log](out/autocollie/runs/2026-11-12T14-48-20_20261112T144415-filetypes-asar_asar_depth3_subsample_0_5.log) |
+| `95f8279abe675098` | asar_depth3_subsample_0_7 | ok | 0.9992 | 0.9994 | 0.9859 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-29_20261112T144415-filetypes-asar_asar_depth3_subsample_0_7.log) |
+| `1e019f9f4631abe8` | asar_depth3_col_sample_0_6 | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-11-12T14-48-33_20261112T144415-filetypes-asar_asar_depth3_col_sample_0_6.log) |
+| `61914227f2ad9835` | asar_depth3_num_leaves_128 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-38_20261112T144415-filetypes-asar_asar_depth3_num_leaves_128.log) |
+| `1e1e7ca80bc650c3` | asar_depth3_num_leaves_64 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-42_20261112T144415-filetypes-asar_asar_depth3_num_leaves_64.log) |
+| `76539e92bd754595` | asar_depth3_lr_0_03 | ok | 0.9992 | 0.9994 | 0.9859 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-46_20261112T144415-filetypes-asar_asar_depth3_lr_0_03.log) |
+| `5cc461f9760b2088` | asar_depth3_lr_0_07 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-50_20261112T144415-filetypes-asar_asar_depth3_lr_0_07.log) |
+| `e5aed60b6020fb61` | asar_depth3_reg_lambda_2 | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-11-12T14-48-54_20261112T144415-filetypes-asar_asar_depth3_reg_lambda_2.log) |
+| `c58cfc069021152f` | asar_depth3_reg_alpha_0_1 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-11-12T14-48-59_20261112T144415-filetypes-asar_asar_depth3_reg_alpha_0_1.log) |
+| `01fe13d278f69ea6` | asar_depth3_mms_50 | ok | 0.9984 | 0.9989 | 0.9859 | 5 | [log](out/autocollie/runs/2026-11-12T14-49-02_20261112T144415-filetypes-asar_asar_depth3_mms_50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_da51097b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=da51097b3299fa9e, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`asar_depth4_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing trait_path_depth from 2 to 4 improves L25 recall by capturing more specific finding prefixes, building on the depth3 success.
+- **`asar_depth5_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing trait_path_depth to 5 improves L25 recall by maximizing prefix specificity, following the depth exploration sequence.
+- **`asar_depth3_subsample_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing subsample to 0.5 improves L25 recall by increasing stochasticity and potentially finding a better local optimum than 0.6.
+- **`asar_depth3_subsample_0_7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing subsample to 0.7 improves L25 recall by reducing variance compared to 0.6 while maintaining some stochasticity.
+- **`asar_depth3_col_sample_0_6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing colsample_bytree to 0.6 improves L25 recall by increasing feature diversity and reducing overfitting on specific features.
+- **`asar_depth3_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing num_leaves to 128 improves L25 recall by allowing more complex decision boundaries than 96.
+- **`asar_depth3_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing num_leaves to 64 improves L25 recall by acting as stronger regularization than 96, potentially reducing noise.
+- **`asar_depth3_lr_0_03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing learning_rate to 0.03 improves L25 recall by allowing finer-grained updates and potentially better convergence.
+- **`asar_depth3_lr_0_07`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing learning_rate to 0.07 improves L25 recall by accelerating convergence and potentially capturing stronger signals faster.
+- **`asar_depth3_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if increasing reg_lambda to 2 improves L25 recall by applying stronger L2 regularization to reduce overfitting.
+- **`asar_depth3_reg_alpha_0_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if adding L1 regularization (reg_alpha=0.1) improves L25 recall by promoting sparsity in feature usage.
+- **`asar_depth3_mms_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Tests if reducing min_child_samples to 50 improves L25 recall by allowing smaller leaf nodes to capture more specific patterns.
+
+</details>
+

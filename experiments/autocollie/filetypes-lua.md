@@ -414,3 +414,75 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T191144-filetypes-lua` — 2026-11-12T19:11:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2ff5b53d99a4f6d5` | inherit_from_filetypes_chm_6cb7bde5 | ok | 0.7332 | 0.9945 | 0.5714 | 16 | [log](out/autocollie/runs/2026-11-12T19-13-57_20261112T191144-filetypes-lua_inherit_from_filetypes_chm_6cb7bde5.log) |
+| `e166a7094df4803f` | hard_neg_02_w5_depth3 | ok | 0.8120 | 0.9988 | 0.7143 | 12 | [log](out/autocollie/runs/2026-11-12T19-14-16_20261112T191144-filetypes-lua_hard_neg_02_w5_depth3.log) |
+| `7a2f28d468f77ba3` | hard_neg_01_w12_depth3 | ok | 0.8136 | 0.9989 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-12T19-14-29_20261112T191144-filetypes-lua_hard_neg_01_w12_depth3.log) |
+| `1c37d5d97aac77d2` | scale_pos_weight_2_depth3 | ok | 0.7954 | 0.9963 | 0.6667 | 1 | [log](out/autocollie/runs/2026-11-12T19-14-32_20261112T191144-filetypes-lua_scale_pos_weight_2_depth3.log) |
+| `88c32044f950cf15` | rule_desc_keywords_minfreq1 | ok | 0.7977 | 0.9982 | 0.6154 | 14 | [log](out/autocollie/runs/2026-11-12T19-14-34_20261112T191144-filetypes-lua_rule_desc_keywords_minfreq1.log) |
+| `a205bdbe000218a9` | min_malware_score_0_depth3 | ok | 0.7757 | 0.9982 | 0.7143 | 12 | [log](out/autocollie/runs/2026-11-12T19-14-49_20261112T191144-filetypes-lua_min_malware_score_0_depth3.log) |
+| `c04284ef57569a5e` | min_malware_score_2_depth3 | ok | 0.7757 | 0.9982 | 0.7143 | 7 | [log](out/autocollie/runs/2026-11-12T19-15-02_20261112T191144-filetypes-lua_min_malware_score_2_depth3.log) |
+| `e452a19d050827aa` | max_delta_step_5_depth3 | ok | 0.8019 | 0.9972 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-12T19-15-11_20261112T191144-filetypes-lua_max_delta_step_5_depth3.log) |
+| `aaf899a47105c577` | max_delta_step_10_depth3 | ok | 0.7839 | 0.9973 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-12T19-15-14_20261112T191144-filetypes-lua_max_delta_step_10_depth3.log) |
+| `0ddee82d93d4b61c` | min_child_samples_30_depth3 | ok | 0.7836 | 0.9987 | 0.6250 | 2 | [log](out/autocollie/runs/2026-11-12T19-15-17_20261112T191144-filetypes-lua_min_child_samples_30_depth3.log) |
+| `6b803b80c98fe1a6` | learning_rate_003_depth3 | ok | 0.7503 | 0.9980 | 0.6250 | 2 | [log](out/autocollie/runs/2026-11-12T19-15-19_20261112T191144-filetypes-lua_learning_rate_003_depth3.log) |
+| `46948906218dd241` | seed_search_k3_depth3 | ok | 0.7987 | 0.9982 | 0.7368 | 3 | [log](out/autocollie/runs/2026-11-12T19-15-22_20261112T191144-filetypes-lua_seed_search_k3_depth3.log) |
+| `def68c8f1ab7351e` | text_metrics_full_depth3 | ok | 0.8007 | 0.9986 | 0.6667 | 11 | [log](out/autocollie/runs/2026-11-12T19-15-26_20261112T191144-filetypes-lua_text_metrics_full_depth3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_6cb7bde5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=6cb7bde52b52dc97, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_neg_02_w5_depth3`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Reproduces the 0.8333 L25 recall from the older hard_negative_sweep run on the current cohort to confirm if the 0.2/5.0 hard-negative weighting remains effective with the updated 9-malware set.
+- **`hard_neg_01_w12_depth3`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_TRAIN_SAMPLES=30000` — Tests the alternative 0.01/12.0 hard-negative configuration from the 0.8333 L25 recall run to determine if lower fraction with higher weight outperforms the 0.2/5.0 setting on the current cohort.
+- **`scale_pos_weight_2_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_SCALE_POS_WEIGHT_MULT=2 EXP_TRAIN_SAMPLES=30000` — Evaluates the scale_pos_weight_mult=2 setting from the 0.8333 L25 recall mp3-inherited run to see if class weighting alone can recover the high recall without hard negatives.
+- **`rule_desc_keywords_minfreq1`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_KEYWORD_MIN_FREQ=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=4 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Tests the rule+description keyword combination with min_freq=1 from the 0.8333 L25 recall run to verify if broader keyword coverage improves recall on the current cohort.
+- **`min_malware_score_0_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests removing the malware severity cutoff (min_malware_score=0) to include lower-severity malware in training, aiming to improve L25 recall by increasing the positive class signal.
+- **`min_malware_score_2_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests a moderate malware severity cutoff (min_malware_score=2) to balance class weight inflation against recall loss, targeting the 0.6667 L25 recall baseline.
+- **`max_delta_step_5_depth3`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests max_delta_step=5 to allow larger leaf updates than the current 0, aiming to improve L25 recall by enabling faster convergence on the small malware cohort.
+- **`max_delta_step_10_depth3`** `EXP_MAX_DELTA_STEP=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests max_delta_step=10 based on the chrome_manifest 1.0000 L25 recall result, to see if aggressive leaf updates improve recall on the current Lua cohort.
+- **`min_child_samples_30_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=30 EXP_TRAIN_SAMPLES=30000` — Tests min_child_samples=30 to reduce regularization compared to the 50/100 baselines, aiming to improve L25 recall by allowing more flexible splits on the small malware set.
+- **`learning_rate_003_depth3`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests learning_rate=0.03 based on the bmp 1.0000 L25 recall result, to see if a lower learning rate with fixed 250 estimators improves L25 recall stability.
+- **`seed_search_k3_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests seed_search_k=3 to average over multiple seeds, aiming to improve L25 recall robustness against seed variance observed in the 0.6667 baseline runs.
+- **`text_metrics_full_depth3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Tests enabling text_metrics_full to add structural text features, aiming to improve L25 recall by providing additional signal for Lua script obfuscation patterns.
+
+</details>
+
+## Cycle `20261115T140602-filetypes-lua` — 2026-11-15T14:06:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ae96bc8f6ca9816` | inherit_from_filetypes_iso_306f9f77 | ok | 0.7325 | 0.9984 | 0.6250 | 7 | [log](out/autocollie/runs/2026-11-15T14-07-01_20261115T140602-filetypes-lua_inherit_from_filetypes_iso_306f9f77.log) |
+| `f1784104f202d0b8` | hard_neg_01_w12_seed_search | ok | 0.8136 | 0.9989 | 0.6667 | 10 | [log](out/autocollie/runs/2026-11-15T14-07-13_20261115T140602-filetypes-lua_hard_neg_01_w12_seed_search.log) |
+| `fc6bf13eccf14d6c` | hard_neg_01_w12_depth4 | ok | 0.8347 | 0.9993 | 0.5714 | 14 | [log](out/autocollie/runs/2026-11-15T14-07-42_20261115T140602-filetypes-lua_hard_neg_01_w12_depth4.log) |
+| `18dcfb4c3a0cc547` | hard_neg_01_w12_depth2 | ok | 0.8628 | 0.9994 | 0.6667 | 13 | [log](out/autocollie/runs/2026-11-15T14-08-13_20261115T140602-filetypes-lua_hard_neg_01_w12_depth2.log) |
+| `32ec2d280e7f04cd` | hard_neg_01_w12_mds0 | ok | 0.8003 | 0.9963 | 0.5000 | 9 | [log](out/autocollie/runs/2026-11-15T14-08-44_20261115T140602-filetypes-lua_hard_neg_01_w12_mds0.log) |
+| `b471c9ac6a50b75a` | hard_neg_01_w12_mds1 | ok | 0.8003 | 0.9963 | 0.5000 | 8 | [log](out/autocollie/runs/2026-11-15T14-08-53_20261115T140602-filetypes-lua_hard_neg_01_w12_mds1.log) |
+| `2050b3750261a750` | hard_neg_01_w12_mds2 | ok | 0.8003 | 0.9963 | 0.5000 | 8 | [log](out/autocollie/runs/2026-11-15T14-09-01_20261115T140602-filetypes-lua_hard_neg_01_w12_mds2.log) |
+| `38c06db69ca8f593` | hard_neg_01_w12_lr003 | ok | 0.7885 | 0.9969 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-10_20261115T140602-filetypes-lua_hard_neg_01_w12_lr003.log) |
+| `e50cc3616714ae49` | hard_neg_01_w12_mds_step5 | ok | 0.7949 | 0.9983 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-13_20261115T140602-filetypes-lua_hard_neg_01_w12_mds_step5.log) |
+| `fdfe12208710ba54` | hard_neg_01_w12_mds_step10 | ok | 0.8175 | 0.9991 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-16_20261115T140602-filetypes-lua_hard_neg_01_w12_mds_step10.log) |
+| `1b9407b0638f9126` | hard_neg_01_w12_mcs50 | ok | 0.8165 | 0.9989 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-19_20261115T140602-filetypes-lua_hard_neg_01_w12_mcs50.log) |
+| `c403a588b1e09ef4` | hard_neg_01_w12_mcs200 | ok | 0.8448 | 0.9991 | 0.6154 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-22_20261115T140602-filetypes-lua_hard_neg_01_w12_mcs200.log) |
+| `801769d2d9b0bac7` | hard_neg_01_w12_reg_lambda_2 | ok | 0.7656 | 0.9989 | 0.6667 | 2 | [log](out/autocollie/runs/2026-11-15T14-09-25_20261115T140602-filetypes-lua_hard_neg_01_w12_reg_lambda_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_306f9f77`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=306f9f777342637a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_neg_01_w12_seed_search`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Confirm the top historical L25 recall (0.7778) by adding seed_search_k=3 to the winning hard-negative configuration to stabilize the tiny 9-malware cohort.
+- **`hard_neg_01_w12_depth4`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Test if increasing trait_path_depth to 4 improves L25 recall over the depth-3 baseline by capturing more specific Lua finding hierarchies.
+- **`hard_neg_01_w12_depth2`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Test if reducing trait_path_depth to 2 improves L25 recall by broadening feature coverage for the sparse malware class.
+- **`hard_neg_01_w12_mds0`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Investigate if lowering min_malware_score to 0 retains more low-severity malware training samples to improve L25 recall.
+- **`hard_neg_01_w12_mds1`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Investigate if lowering min_malware_score to 1 retains slightly more malware training samples than the current cutoff of 4 to improve L25 recall.
+- **`hard_neg_01_w12_mds2`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Investigate if lowering min_malware_score to 2 retains more malware training samples than the current cutoff of 4 to improve L25 recall.
+- **`hard_neg_01_w12_lr003`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test if reducing learning_rate to 0.03 improves L25 recall by allowing finer-grained updates for the hard-negative weighted model.
+- **`hard_neg_01_w12_mds_step5`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test if setting max_delta_step to 5 improves L25 recall by capping leaf outputs and stabilizing the hard-negative weighted model.
+- **`hard_neg_01_w12_mds_step10`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_DELTA_STEP=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test if setting max_delta_step to 10 improves L25 recall by capping leaf outputs and stabilizing the hard-negative weighted model.
+- **`hard_neg_01_w12_mcs50`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000` — Test if reducing min_child_samples to 50 improves L25 recall by allowing the model to fit smaller malware clusters.
+- **`hard_neg_01_w12_mcs200`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_TRAIN_SAMPLES=30000` — Test if increasing min_child_samples to 200 improves L25 recall by enforcing stronger regularization against noise.
+- **`hard_neg_01_w12_reg_lambda_2`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Test if increasing reg_lambda to 2 improves L25 recall by adding L2 regularization to the hard-negative weighted model.
+
+</details>
+

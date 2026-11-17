@@ -1197,3 +1197,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T181937-filetypes-java_class` — 2026-11-12T18:19:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1bdf8983c7475a4` | inherit_from_filetypes_chm_6cb7bde5 | ok | 0.9605 | 0.9909 | 0.7514 | 20 | [log](out/autocollie/runs/2026-11-12T18-25-38_20261112T181937-filetypes-java_class_inherit_from_filetypes_chm_6cb7bde5.log) |
+| `be7141415809d46b` | rule_kw_depth_4 | ok | 0.9797 | 0.9953 | 0.9582 | 20 | [log](out/autocollie/runs/2026-11-12T18-26-03_20261112T181937-filetypes-java_class_rule_kw_depth_4.log) |
+| `0e342c540351a152` | rule_kw_depth_2 | ok | 0.9816 | 0.9968 | 0.9388 | 14 | [log](out/autocollie/runs/2026-11-12T18-26-24_20261112T181937-filetypes-java_class_rule_kw_depth_2.log) |
+| `28831a4efbf65ada` | rule_kw_balanced_mi | ok | 0.9811 | 0.9955 | 0.7653 | 14 | [log](out/autocollie/runs/2026-11-12T18-26-40_20261112T181937-filetypes-java_class_rule_kw_balanced_mi.log) |
+| `c0f02b22dba6b199` | rule_kw_vocab_5k | ok | 0.9811 | 0.9955 | 0.7653 | 14 | [log](out/autocollie/runs/2026-11-12T18-26-55_20261112T181937-filetypes-java_class_rule_kw_vocab_5k.log) |
+| `fd234c8c3842b735` | rule_kw_freq_floor_5 | ok | 0.9811 | 0.9955 | 0.7653 | 14 | [log](out/autocollie/runs/2026-11-12T18-27-10_20261112T181937-filetypes-java_class_rule_kw_freq_floor_5.log) |
+| `4b3508e109227b5f` | rule_kw_lr_003 | ok | 0.9783 | 0.9966 | 0.9246 | 2 | [log](out/autocollie/runs/2026-11-12T18-27-25_20261112T181937-filetypes-java_class_rule_kw_lr_003.log) |
+| `58f94d49ef471b33` | rule_kw_reg_lambda_05 | ok | 0.9780 | 0.9955 | 0.8656 | 2 | [log](out/autocollie/runs/2026-11-12T18-27-28_20261112T181937-filetypes-java_class_rule_kw_reg_lambda_05.log) |
+| `c6535a2e0af81ec1` | rule_kw_min_child_50 | ok | 0.9782 | 0.9954 | 0.9368 | 2 | [log](out/autocollie/runs/2026-11-12T18-27-32_20261112T181937-filetypes-java_class_rule_kw_min_child_50.log) |
+| `3eace7717e5bd145` | rule_kw_seed_search_3 | ok | 0.9786 | 0.9954 | 0.9519 | 5 | [log](out/autocollie/runs/2026-11-12T18-27-35_20261112T181937-filetypes-java_class_rule_kw_seed_search_3.log) |
+| `d65f4c871224fb95` | rule_kw_hard_neg_0 | ok | 0.9819 | 0.9968 | 0.9406 | 2 | [log](out/autocollie/runs/2026-11-12T18-27-41_20261112T181937-filetypes-java_class_rule_kw_hard_neg_0.log) |
+| `44f50db1075c8ca7` | rule_kw_num_leaves_64 | ok | 0.9811 | 0.9955 | 0.7653 | 3 | [log](out/autocollie/runs/2026-11-12T18-27-45_20261112T181937-filetypes-java_class_rule_kw_num_leaves_64.log) |
+| `a4a1370cfce83169` | rule_kw_subsample_07 | ok | 0.9803 | 0.9959 | 0.9233 | 2 | [log](out/autocollie/runs/2026-11-12T18-27-49_20261112T181937-filetypes-java_class_rule_kw_subsample_07.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_6cb7bde5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=6cb7bde52b52dc97, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rule_kw_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if deeper trait path specificity (depth 4) improves L25 recall over the 0.9481 baseline by isolating more precise Java class finding prefixes while retaining rule keywords.
+- **`rule_kw_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if shallower trait path specificity (depth 2) improves L25 recall by capturing broader Java class patterns that might be missed at depth 3, potentially increasing recall@1FP.
+- **`rule_kw_balanced_mi`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if balanced mutual information selection improves L25 recall by prioritizing discriminative rule keywords over frequent ones, potentially reducing false positives from common benign Java terms.
+- **`rule_kw_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing the rule keyword vocabulary cap to 5000 improves L25 recall by pruning noisy low-frequency terms, focusing the model on the most significant Java class indicators.
+- **`rule_kw_freq_floor_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if raising the keyword minimum frequency floor to 5 improves L25 recall by filtering out rare, potentially noisy rule keywords that may cause false positives on benign Java classes.
+- **`rule_kw_lr_003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if a lower learning rate (0.03) improves L25 recall by allowing more gradual convergence and better generalization on the rule keyword features, potentially reducing overfitting to specific Java patterns.
+- **`rule_kw_reg_lambda_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reduced L2 regularization (0.5) improves L25 recall by allowing the model to fit the rule keyword features more closely, potentially capturing subtle Java class malware signatures.
+- **`rule_kw_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing min_child_samples to 50 improves L25 recall by allowing the model to split on smaller subsets of Java class samples, potentially capturing rare but high-severity malware patterns.
+- **`rule_kw_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if best-of-3 seed search improves L25 recall by selecting the most robust model configuration for the rule keyword features, mitigating variance in Java class malware detection.
+- **`rule_kw_hard_neg_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if removing hard negative weighting improves L25 recall by allowing the model to focus purely on the rule keyword signal without the bias introduced by upweighted benign Java classes.
+- **`rule_kw_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing num_leaves to 64 improves L25 recall by simplifying the model structure, potentially reducing overfitting to specific Java class rule keywords and improving generalization.
+- **`rule_kw_subsample_07`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if reducing row subsampling to 0.7 improves L25 recall by introducing more stochasticity in the training process, potentially helping the model escape local minima in Java class malware detection.
+
+</details>
+

@@ -83,3 +83,75 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T131334-filetypes-iso` — 2026-11-12T13:13:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `297499959ba39e5b` | inherit_from_filetypes_jsp_785debcd | ok | 0.9853 | 0.5000 | 0.9926 | 18 | [log](out/autocollie/runs/2026-11-12T13-15-37_20261112T131334-filetypes-iso_inherit_from_filetypes_jsp_785debcd.log) |
+| `14aaeca93534a126` | iso_min_malware_score_1 | ok | 0.9853 | 0.5000 | 0.9926 | 17 | [log](out/autocollie/runs/2026-11-12T13-15-59_20261112T131334-filetypes-iso_iso_min_malware_score_1.log) |
+| `413361e8fc256412` | iso_min_malware_score_0 | ok | 0.9853 | 0.5000 | 0.9926 | 17 | [log](out/autocollie/runs/2026-11-12T13-16-16_20261112T131334-filetypes-iso_iso_min_malware_score_0.log) |
+| `a2a467cc8894a931` | iso_min_sample_score_1 | ok | 0.9853 | 0.5000 | 0.9926 | 4 | [log](out/autocollie/runs/2026-11-12T13-16-34_20261112T131334-filetypes-iso_iso_min_sample_score_1.log) |
+| `a2a467cc8894a931` | iso_min_sample_score_2 | dup | 0.9853 | 0.5000 | 0.9926 | 1 | [log](out/autocollie/runs/2026-11-12T13-16-39_20261112T131334-filetypes-iso_iso_min_sample_score_2.log) |
+| `a2a467cc8894a931` | iso_min_sample_score_3 | dup | 0.9853 | 0.5000 | 0.9926 | 1 | [log](out/autocollie/runs/2026-11-12T13-16-41_20261112T131334-filetypes-iso_iso_min_sample_score_3.log) |
+| `130c764e561480dd` | iso_max_delta_step_1 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-43_20261112T131334-filetypes-iso_iso_max_delta_step_1.log) |
+| `e88b17acf578338c` | iso_max_delta_step_10 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-45_20261112T131334-filetypes-iso_iso_max_delta_step_10.log) |
+| `93b1826505a94867` | iso_scale_pos_weight_2 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-48_20261112T131334-filetypes-iso_iso_scale_pos_weight_2.log) |
+| `fc1fe7ed42dc4c51` | iso_scale_pos_weight_5 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-50_20261112T131334-filetypes-iso_iso_scale_pos_weight_5.log) |
+| `a84741cb3b3d1558` | iso_hard_negative_0_1 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-52_20261112T131334-filetypes-iso_iso_hard_negative_0_1.log) |
+| `64ce5b24148bec1f` | iso_hard_negative_0_5 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-55_20261112T131334-filetypes-iso_iso_hard_negative_0_5.log) |
+| `da51097b3299fa9e` | iso_seed_search_k3 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-12T13-16-57_20261112T131334-filetypes-iso_iso_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_785debcd`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=785debcd46e9909b, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`iso_min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Tests if lowering the malware severity cutoff from 4 to 1 recovers low-severity samples to improve L25 recall, which is currently 0.0000.
+- **`iso_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if removing the malware severity cutoff entirely (0) maximizes training data diversity to improve L25 recall, which is currently 0.0000.
+- **`iso_min_sample_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_SAMPLE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if dropping all samples below severity 1 reduces noise from benign low-severity files to improve L25 recall, which is currently 0.0000.
+- **`iso_min_sample_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_SAMPLE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if dropping all samples below severity 2 further filters noise to improve L25 recall, which is currently 0.0000.
+- **`iso_min_sample_score_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_SAMPLE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Tests if dropping all samples below severity 3 aligns with the tar sister route's setting to improve L25 recall, which is currently 0.0000.
+- **`iso_max_delta_step_1`** `EXP_MAX_DELTA_STEP=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if capping leaf output at 1 prevents score saturation and improves ranking to lift L25 recall, which is currently 0.0000.
+- **`iso_max_delta_step_10`** `EXP_MAX_DELTA_STEP=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if allowing larger leaf outputs (10) helps the model fit the minority class better to improve L25 recall, which is currently 0.0000.
+- **`iso_scale_pos_weight_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=2 EXP_TRAIN_SAMPLES=30000` — Tests if upweighting the positive class by 2x compensates for the extreme class imbalance to improve L25 recall, which is currently 0.0000.
+- **`iso_scale_pos_weight_5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=5 EXP_TRAIN_SAMPLES=30000` — Tests if aggressively upweighting the positive class by 5x forces the model to prioritize malware detection to improve L25 recall, which is currently 0.0000.
+- **`iso_hard_negative_0_1`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if upweighting 10% of benigns as hard negatives with weight 1 improves discrimination to lift L25 recall, which is currently 0.0000.
+- **`iso_hard_negative_0_5`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if upweighting 5% of benigns as hard negatives with weight 5 (tar transfer) improves discrimination to lift L25 recall, which is currently 0.0000.
+- **`iso_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests if averaging 3 seeds reduces variance and stabilizes the decision boundary to improve L25 recall, which is currently 0.0000.
+
+</details>
+
+## Cycle `20261115T140224-filetypes-iso` — 2026-11-15T14:02:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c25e4d00cced9700` | inherit_from_filetypes_dex_6f24b7be | ok | 0.9853 | 0.5000 | 0.9926 | 22 | [log](out/autocollie/runs/2026-11-15T14-03-10_20261115T140224-filetypes-iso_inherit_from_filetypes_dex_6f24b7be.log) |
+| `421acee9dd1a451c` | iso_min_malware_score_2 | ok | 0.9853 | 0.5000 | 0.9926 | 16 | [log](out/autocollie/runs/2026-11-15T14-03-37_20261115T140224-filetypes-iso_iso_min_malware_score_2.log) |
+| `91ddd63cab208c34` | iso_min_malware_score_1 | ok | 0.9853 | 0.5000 | 0.9926 | 4 | [log](out/autocollie/runs/2026-11-15T14-03-54_20261115T140224-filetypes-iso_iso_min_malware_score_1.log) |
+| `5fccdfb5a0d6fa7e` | iso_min_malware_score_0 | ok | 0.9853 | 0.5000 | 0.9926 | 4 | [log](out/autocollie/runs/2026-11-15T14-03-58_20261115T140224-filetypes-iso_iso_min_malware_score_0.log) |
+| `bc3817423a24b439` | iso_max_delta_step_2 | ok | 0.9853 | 0.5000 | 0.9926 | 4 | [log](out/autocollie/runs/2026-11-15T14-04-03_20261115T140224-filetypes-iso_iso_max_delta_step_2.log) |
+| `4716f6cc485ffbe4` | iso_max_delta_step_5 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-08_20261115T140224-filetypes-iso_iso_max_delta_step_5.log) |
+| `e1fb76ea0637ee9e` | iso_max_delta_step_10 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-11_20261115T140224-filetypes-iso_iso_max_delta_step_10.log) |
+| `322d69fa693637d4` | iso_scale_pos_weight_2 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-13_20261115T140224-filetypes-iso_iso_scale_pos_weight_2.log) |
+| `0474359436de87db` | iso_scale_pos_weight_5 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-15_20261115T140224-filetypes-iso_iso_scale_pos_weight_5.log) |
+| `f9fcd93a5516d06b` | iso_hard_negative_0_5 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-18_20261115T140224-filetypes-iso_iso_hard_negative_0_5.log) |
+| `959b9d8b1ef6663c` | iso_hard_negative_0_1 | ok | 0.9853 | 0.5000 | 0.9926 | 1 | [log](out/autocollie/runs/2026-11-15T14-04-20_20261115T140224-filetypes-iso_iso_hard_negative_0_1.log) |
+| `717ae0a03ae3238d` | iso_seed_search_k3 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-23_20261115T140224-filetypes-iso_iso_seed_search_k3.log) |
+| `306f9f777342637a` | iso_min_sample_score_1 | ok | 0.9853 | 0.5000 | 0.9926 | 2 | [log](out/autocollie/runs/2026-11-15T14-04-26_20261115T140224-filetypes-iso_iso_min_sample_score_1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_6f24b7be`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=6f24b7be5747bb12, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`iso_min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Test min_malware_score=2 to retain low-severity malware in training, potentially improving recall on the 467 malware samples where the current cutoff of 4 might be discarding useful signal.
+- **`iso_min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Test min_malware_score=1 to include even lower-severity malware, maximizing training data volume for the minority class to boost L25 recall.
+- **`iso_min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Test min_malware_score=0 to use all available malware training data, serving as a baseline for maximum data inclusion.
+- **`iso_max_delta_step_2`** `EXP_MAX_DELTA_STEP=2 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test max_delta_step=2 to constrain leaf outputs, potentially stabilizing training and improving generalization compared to the unbounded default.
+- **`iso_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test max_delta_step=5 to allow slightly larger leaf updates, exploring the trade-off between fitting speed and overfitting risk.
+- **`iso_max_delta_step_10`** `EXP_MAX_DELTA_STEP=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test max_delta_step=10 to permit larger leaf outputs, potentially capturing stronger signals from the high-volume malware class.
+- **`iso_scale_pos_weight_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=2 EXP_TRAIN_SAMPLES=30000` — Test scale_pos_weight_mult=2 to increase the penalty for missing malware, aiming to boost recall at the cost of potential false positives.
+- **`iso_scale_pos_weight_5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=5 EXP_TRAIN_SAMPLES=30000` — Test scale_pos_weight_mult=5 to heavily penalize missed malware, targeting maximum recall in the L25 budget.
+- **`iso_hard_negative_0_5`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test hard_negative_fraction=0.05 with weight=5 to focus training on difficult benign samples, potentially reducing FP risk while maintaining recall.
+- **`iso_hard_negative_0_1`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test hard_negative_fraction=0.1 with weight=1 to broaden the hard-negative focus, potentially improving robustness against benign variations.
+- **`iso_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Test seed_search_k=3 to select the best-performing model among three seeds, aiming to capture a lucky initialization that yields higher recall.
+- **`iso_min_sample_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_SAMPLE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Test min_sample_score=1 to filter out very low-quality samples from both classes, potentially cleaning the training signal and improving model stability.
+
+</details>
+

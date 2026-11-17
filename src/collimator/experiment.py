@@ -435,6 +435,13 @@ def _load_matrix_cache(
         raise ValueError("cached evaluation rows are misaligned")
     log.info("loaded cached matrices: %d train, %d test, %d features",
              X_train.shape[0], X_test.shape[0], spec.total_features)
+    # Refresh mtime so azoth-prune-experiment-cache evicts by last use, not by
+    # creation time; a matrix still being reused must not age out.
+    for p in (npz_path, spec_path, xtrain_path, xtest_path):
+        try:
+            os.utime(p)
+        except OSError:
+            pass
     return spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids, evaluation_revision
 
 
@@ -844,7 +851,7 @@ def run_experiment(
     max_depth: int = 6,
     learning_rate: float = 0.03,
     early_stopping_rounds: int = 25,
-    min_child_weight: int = 5,
+    min_child_weight: float = 5,
     min_child_samples: int | None = None,
     num_leaves: int | None = None,
     colsample_bytree: float = 0.8,
@@ -913,7 +920,7 @@ def run_experiment(
         "max_depth": int(max_depth),
         "learning_rate": float(learning_rate),
         "early_stopping_rounds": int(early_stopping_rounds),
-        "min_child_weight": int(min_child_weight),
+        "min_child_weight": float(min_child_weight),
         "min_child_samples": min_child_samples,
         "num_leaves": num_leaves,
         "colsample_bytree": float(colsample_bytree),

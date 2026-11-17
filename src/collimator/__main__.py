@@ -620,7 +620,7 @@ def main() -> None:
         "--max-test-samples", type=int, default=0,
         help="Cap external test set via reservoir sampling (0 = full test bucket, default: 0)",
     )
-    p_exp.add_argument("--min-child-weight", type=int, default=5, help="Minimum child weight")
+    p_exp.add_argument("--min-child-weight", type=float, default=5, help="Minimum child weight")
     p_exp.add_argument("--min-child-samples", type=int, default=None, help="LightGBM minimum samples per leaf")
     p_exp.add_argument("--num-leaves", type=int, default=None, help="LightGBM leaves per tree")
     p_exp.add_argument("--max-delta-step", type=float, default=0.0,

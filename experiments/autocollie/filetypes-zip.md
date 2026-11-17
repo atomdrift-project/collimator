@@ -1384,3 +1384,41 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261112T162724-filetypes-zip` — 2026-11-12T16:27:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fa5747706234755e` | inherit_from_filetypes_dex_cdfeadfd | ok | 0.9717 | 0.9706 | 0.9145 | 474 | [log](out/autocollie/runs/2026-11-12T16-32-06_20261112T162724-filetypes-zip_inherit_from_filetypes_dex_cdfeadfd.log) |
+| `032a57a84c4f5de3` | zip_depth4_lr01_confirm | ok | 0.9843 | 0.9831 | 0.9550 | 546 | [log](out/autocollie/runs/2026-11-12T16-42-33_20261112T162724-filetypes-zip_zip_depth4_lr01_confirm.log) |
+| `cb6dffbeb9c0d936` | zip_depth4_hardneg_001_w20 | ok | 0.9970 | 0.9968 | 0.9661 | 141 | [log](out/autocollie/runs/2026-11-12T16-51-24_20261112T162724-filetypes-zip_zip_depth4_hardneg_001_w20.log) |
+| `3652c99ff19a1f1e` | zip_depth4_hardneg_0005_w20 | ok | 0.9969 | 0.9967 | 0.9715 | 143 | [log](out/autocollie/runs/2026-11-12T16-53-49_20261112T162724-filetypes-zip_zip_depth4_hardneg_0005_w20.log) |
+| `7ba958ea78f7f4d5` | zip_depth4_hardneg_0015_w16 | ok | 0.9970 | 0.9968 | 0.9690 | 40 | [log](out/autocollie/runs/2026-11-12T16-54-32_20261112T162724-filetypes-zip_zip_depth4_hardneg_0015_w16.log) |
+| `600390488fb11966` | zip_depth4_lr01_hardneg_001_w20 | ok | 0.9906 | 0.9894 | 0.9498 | 28 | [log](out/autocollie/runs/2026-11-12T16-55-14_20261112T162724-filetypes-zip_zip_depth4_lr01_hardneg_001_w20.log) |
+| `efb4e8bba2f9f9eb` | zip_depth4_lr01_num_leaves_64 | ok | 0.9940 | 0.9934 | 0.9588 | 40 | [log](out/autocollie/runs/2026-11-12T16-55-44_20261112T162724-filetypes-zip_zip_depth4_lr01_num_leaves_64.log) |
+| `9ed2df5245cade77` | zip_depth4_lr01_min_child_50 | ok | 0.9885 | 0.9879 | 0.9505 | 27 | [log](out/autocollie/runs/2026-11-12T16-56-27_20261112T162724-filetypes-zip_zip_depth4_lr01_min_child_50.log) |
+| `498f7a91668f75c7` | zip_depth4_lr01_reg_lambda_1 | ok | 0.9940 | 0.9935 | 0.9562 | 40 | [log](out/autocollie/runs/2026-11-12T16-56-56_20261112T162724-filetypes-zip_zip_depth4_lr01_reg_lambda_1.log) |
+| `aa3360639b4b72ac` | zip_depth4_lr01_scale_pos_05 | ok | 0.9849 | 0.9827 | 0.9517 | 32 | [log](out/autocollie/runs/2026-11-12T16-57-39_20261112T162724-filetypes-zip_zip_depth4_lr01_scale_pos_05.log) |
+| `ec069c1a6077fe2d` | zip_depth4_lr01_max_delta_5 | ok | 0.9842 | 0.9830 | 0.9555 | 29 | [log](out/autocollie/runs/2026-11-12T16-58-13_20261112T162724-filetypes-zip_zip_depth4_lr01_max_delta_5.log) |
+| `f7ce83e0f69f188c` | zip_depth4_lr01_seed_search_k3 | ok | 0.9932 | 0.9924 | 0.9501 | 107 | [log](out/autocollie/runs/2026-11-12T16-58-51_20261112T162724-filetypes-zip_zip_depth4_lr01_seed_search_k3.log) |
+
+Rejected before run:
+
+- `zip_depth4_lr005` — training.learning_rate: 0.005 below min 0.01
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_dex_cdfeadfd`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/dex (key=cdfeadfd11e247ed, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_depth4_lr01_confirm`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the top historical depth=4 setting with the best measured learning_rate=0.01 to push L25 recall beyond 0.8003 by refining the decision boundary on the most specific trait prefixes.
+- **`zip_depth4_hardneg_001_w20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Applies the strongest hard-negative weighting (0.01 fraction, weight 20) to the depth=4 configuration to address the 'or_loses' diagnostic by sharpening the threshold for the top-ranked benigns.
+- **`zip_depth4_hardneg_0005_w20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests an even smaller hard-negative fraction (0.005) with high weight (20) at depth=4 to isolate the effect of extreme hard-negative emphasis on L25 recall without over-regularizing the model.
+- **`zip_depth4_hardneg_0015_w16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Explores the intermediate hard-negative setting (0.015 fraction, weight 16) at depth=4 to find a balance between recall and precision that may exceed the 0.8003 L25 baseline.
+- **`zip_depth4_lr01_hardneg_001_w20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the low learning rate (0.01) with aggressive hard-negative weighting (0.01/20) at depth=4 to maximize L25 recall by simultaneously slowing convergence and penalizing the hardest benigns.
+- **`zip_depth4_lr01_num_leaves_64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves to 64 with depth=4 and lr=0.01 to allow the model to capture more complex interactions in the zip file structure, aiming to improve L25 recall beyond the 32-leaf limit.
+- **`zip_depth4_lr01_min_child_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Raises min_child_samples to 50 with depth=4 and lr=0.01 to reduce overfitting on small zip cohorts, potentially stabilizing L25 recall by ensuring more robust splits.
+- **`zip_depth4_lr01_reg_lambda_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces reg_lambda to 1 with depth=4 and lr=0.01 to allow more flexibility in the model, which may improve L25 recall if the current regularization is too restrictive for the specific zip patterns.
+- **`zip_depth4_lr01_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases scale_pos_weight_mult to 0.5 with depth=4 and lr=0.01 to better balance the class distribution, aiming to improve L25 recall by giving more weight to the minority malware class.
+- **`zip_depth4_lr01_max_delta_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases max_delta_step to 5 with depth=4 and lr=0.01 to allow larger updates per tree, which may help the model converge faster and improve L25 recall on the specific zip malware signatures.
+- **`zip_depth4_lr01_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses seed_search_k=3 with depth=4 and lr=0.01 to average over multiple seeds, reducing variance and potentially improving L25 recall by finding a more robust operating point.
+
+</details>
+

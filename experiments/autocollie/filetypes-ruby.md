@@ -417,3 +417,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T183550-filetypes-ruby` — 2026-11-12T18:35:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `99d9240927ae4073` | inherit_from_filetypes_chm_6cb7bde5 | ok | 0.9287 | 0.9991 | 0.8493 | 15 | [log](out/autocollie/runs/2026-11-12T18-37-59_20261112T183550-filetypes-ruby_inherit_from_filetypes_chm_6cb7bde5.log) |
+| `5c08f1be28a461df` | ruby_depth4_ruletext | ok | 0.8814 | 0.9830 | 0.7797 | 16 | [log](out/autocollie/runs/2026-11-12T18-38-20_20261112T183550-filetypes-ruby_ruby_depth4_ruletext.log) |
+| `8ca32b0ef45bc91d` | ruby_depth5_ruletext | ok | 0.8939 | 0.9797 | 0.7797 | 14 | [log](out/autocollie/runs/2026-11-12T18-38-37_20261112T183550-filetypes-ruby_ruby_depth5_ruletext.log) |
+| `974d49fa118b9aba` | ruby_textmetrics_depth3 | ok | 0.8896 | 0.9814 | 0.7797 | 11 | [log](out/autocollie/runs/2026-11-12T18-38-52_20261112T183550-filetypes-ruby_ruby_textmetrics_depth3.log) |
+| `3c31c66ba1f89026` | ruby_kv_vocab_depth3 | ok | 0.8788 | 0.9788 | 0.8197 | 13 | [log](out/autocollie/runs/2026-11-12T18-39-05_20261112T183550-filetypes-ruby_ruby_kv_vocab_depth3.log) |
+| `9c855fb8d357a1fc` | ruby_severity_fractions | ok | 0.9073 | 0.9861 | 0.8387 | 11 | [log](out/autocollie/runs/2026-11-12T18-39-19_20261112T183550-filetypes-ruby_ruby_severity_fractions.log) |
+| `4de04485cbd41412` | ruby_min_malware_score_1 | ok | 0.9073 | 0.9967 | 0.8136 | 12 | [log](out/autocollie/runs/2026-11-12T18-39-31_20261112T183550-filetypes-ruby_ruby_min_malware_score_1.log) |
+| `578f92f1b2d0dcc8` | ruby_min_malware_score_3 | ok | 0.9073 | 0.9967 | 0.8136 | 8 | [log](out/autocollie/runs/2026-11-12T18-39-43_20261112T183550-filetypes-ruby_ruby_min_malware_score_3.log) |
+| `02e232412338331e` | ruby_max_delta_step_5 | ok | 0.8977 | 0.9878 | 0.7586 | 12 | [log](out/autocollie/runs/2026-11-12T18-39-53_20261112T183550-filetypes-ruby_ruby_max_delta_step_5.log) |
+| `93a9c349e2b18bbe` | ruby_min_child_samples_50 | ok | 0.8924 | 0.9854 | 0.8333 | 2 | [log](out/autocollie/runs/2026-11-12T18-40-06_20261112T183550-filetypes-ruby_ruby_min_child_samples_50.log) |
+| `29fae44648a50d5c` | ruby_num_leaves_128 | ok | 0.8930 | 0.9807 | 0.8000 | 1 | [log](out/autocollie/runs/2026-11-12T18-40-08_20261112T183550-filetypes-ruby_ruby_num_leaves_128.log) |
+| `42e1f32065d368b6` | ruby_seed_search_k3 | ok | 0.8930 | 0.9807 | 0.8000 | 2 | [log](out/autocollie/runs/2026-11-12T18-40-11_20261112T183550-filetypes-ruby_ruby_seed_search_k3.log) |
+| `b1f2c04677399fdf` | ruby_reg_lambda_2 | ok | 0.8904 | 0.9860 | 0.7931 | 2 | [log](out/autocollie/runs/2026-11-12T18-40-14_20261112T183550-filetypes-ruby_ruby_reg_lambda_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_6cb7bde5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=6cb7bde52b52dc97, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ruby_depth4_ruletext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_DESCRIPTION_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests if deeper trait prefixes (depth 4) capture more specific Ruby malware patterns to improve L25 recall beyond the 0.8974 baseline.
+- **`ruby_depth5_ruletext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_DESCRIPTION_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=5` — Investigates if maximum specificity at depth 5 reduces noise and improves L25 recall by isolating rare but high-signal Ruby traits.
+- **`ruby_textmetrics_depth3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Combines text metrics with depth 3 to see if structural text features complement deeper trait paths for better L25 recall.
+- **`ruby_kv_vocab_depth3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=3` — Enables KV vocabulary at depth 3 to test if key-value pairs provide distinct signal for Ruby malware detection to boost L25 recall.
+- **`ruby_severity_fractions`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Tests if severity fraction features help distinguish high-severity Ruby malware from benign scripts to improve L25 recall.
+- **`ruby_min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Filters out low-severity malware (score < 1) from training to reduce noise and potentially improve L25 recall on high-confidence samples.
+- **`ruby_min_malware_score_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Aggressively filters malware (score < 3) to focus training on high-severity Ruby threats, aiming to sharpen L25 recall.
+- **`ruby_max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests if capping leaf output changes (max_delta_step=5) stabilizes training and improves L25 recall by preventing overfitting to rare samples.
+- **`ruby_min_child_samples_50`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000` — Reduces min_child_samples to 50 to allow finer-grained splits on the small malware cohort, potentially improving L25 recall.
+- **`ruby_num_leaves_128`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Increases tree complexity (num_leaves=128) to capture more complex interactions in Ruby malware features for better L25 recall.
+- **`ruby_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses best-of-3 seed search to mitigate variance in the small malware cohort, aiming to find a more robust model for L25 recall.
+- **`ruby_reg_lambda_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases L2 regularization to 2 to prevent overfitting on the small malware set, potentially improving generalization and L25 recall.
+
+</details>
+

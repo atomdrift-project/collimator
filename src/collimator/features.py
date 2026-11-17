@@ -2498,9 +2498,20 @@ def _build_feature_names(
 _OFFSET_FAMILY_PAIRS = (("present:", "maxcrit:"), ("bigrams:", "unsigned_bigram:"))
 
 
+# Tiered quadgram names are discovered per training run (frequency-ranked
+# combinations), so a literal allowlist can never enumerate them. Scan matches
+# them generically from the spec (`tierquad:` slots), so one family entry admits
+# every discovered quadgram while the caps (tiered_quadgram_max/min_freq) still
+# bound the vocabulary.
+_ALLOWED_FAMILIES = ("tierquad:",)
+
+
 def _allowed_with_pair(name: str, allowed: "frozenset[str]") -> bool:
     if name in allowed:
         return True
+    for family in _ALLOWED_FAMILIES:
+        if name.startswith(family) and f"{family}*" in allowed:
+            return True
     for a, b in _OFFSET_FAMILY_PAIRS:
         if name.startswith(a):
             return (b + name[len(a):]) in allowed
@@ -3319,14 +3330,15 @@ def _topk_file_risk_features(
     sorting. This keeps the top-k from surfacing 0.1-crit noise on archives
     that have no real findings.
     """
+    empty: tuple[float, ...] = (0.0,) * (8 if include_breadth_density else 4)
     if k <= 0 or not files:
-        return 0.0, 0.0, 0.0, 0.0
+        return empty
 
     stats = [_file_risk_stats(file_entry) for file_entry in files]
     if min_crit > 0:
         stats = [s for s in stats if s.max_crit >= min_crit]
         if not stats:
-            return 0.0, 0.0, 0.0, 0.0
+            return empty
     top_suspicious = sorted(
         stats,
         key=lambda s: (s.suspicious_ratio, s.suspicious_findings, s.hostile_ratio, s.hostile_findings),

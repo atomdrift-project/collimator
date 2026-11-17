@@ -1862,3 +1862,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261115T170751-filegroups-config` — 2026-11-15T17:07:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f0e7a37e96ced1e` | inherit_from_filetypes_rar_6e0f7b5c | ok | 0.8996 | 0.9071 | 0.8874 | 23 | [log](out/autocollie/runs/2026-11-15T17-09-00_20261115T170751-filegroups-config_inherit_from_filetypes_rar_6e0f7b5c.log) |
+| `e8bc5d4ae83bb91f` | max_delta_step_5 | ok | 0.9756 | 0.9807 | 0.8020 | 23 | [log](out/autocollie/runs/2026-11-15T17-09-28_20261115T170751-filegroups-config_max_delta_step_5.log) |
+| `030a996fac7e22c2` | max_delta_step_10 | ok | 0.9756 | 0.9807 | 0.8020 | 4 | [log](out/autocollie/runs/2026-11-15T17-09-54_20261115T170751-filegroups-config_max_delta_step_10.log) |
+| `1fa1aced38f68cd9` | min_child_samples_10 | ok | 0.9712 | 0.9763 | 0.6145 | 6 | [log](out/autocollie/runs/2026-11-15T17-09-59_20261115T170751-filegroups-config_min_child_samples_10.log) |
+| `3bc96f6d6b7fc71f` | num_leaves_32 | ok | 0.9771 | 0.9817 | 0.9145 | 4 | [log](out/autocollie/runs/2026-11-15T17-10-07_20261115T170751-filegroups-config_num_leaves_32.log) |
+| `f322512fd43ef6d6` | reg_lambda_5 | ok | 0.9711 | 0.9781 | 0.7075 | 4 | [log](out/autocollie/runs/2026-11-15T17-10-12_20261115T170751-filegroups-config_reg_lambda_5.log) |
+| `16712f12e8e685f6` | hard_negative_fraction_0 | ok | 0.9752 | 0.9807 | 0.8995 | 3 | [log](out/autocollie/runs/2026-11-15T17-10-18_20261115T170751-filegroups-config_hard_negative_fraction_0.log) |
+| `b74b172348b3bcaa` | scale_pos_weight_1 | ok | 0.9756 | 0.9807 | 0.8020 | 4 | [log](out/autocollie/runs/2026-11-15T17-10-23_20261115T170751-filegroups-config_scale_pos_weight_1.log) |
+| `6b2e4d1956c6e7d4` | trait_path_depth_4 | ok | 0.9694 | 0.9778 | 0.7112 | 22 | [log](out/autocollie/runs/2026-11-15T17-10-28_20261115T170751-filegroups-config_trait_path_depth_4.log) |
+| `11ae18ebe2ebe6d2` | trait_path_depth_2 | ok | 0.9739 | 0.9788 | 0.4858 | 19 | [log](out/autocollie/runs/2026-11-15T17-10-51_20261115T170751-filegroups-config_trait_path_depth_2.log) |
+| `c2ce07377e63a226` | severity_fractions_enable | ok | 0.9781 | 0.9823 | 0.6746 | 22 | [log](out/autocollie/runs/2026-11-15T17-11-20_20261115T170751-filegroups-config_severity_fractions_enable.log) |
+| `83d0e06b35f944a4` | context_keywords_enable | ok | 0.9817 | 0.9853 | 0.8752 | 32 | [log](out/autocollie/runs/2026-11-15T17-11-46_20261115T170751-filegroups-config_context_keywords_enable.log) |
+| `b783df911c9e82de` | min_malware_score_4 | ok | 0.9725 | 0.9780 | 0.9017 | 25 | [log](out/autocollie/runs/2026-11-15T17-12-21_20261115T170751-filegroups-config_min_malware_score_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_6e0f7b5c`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/rar (key=6e0f7b5cf4b938e7, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`max_delta_step_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve L25 recall@1FP by capping leaf outputs to reduce overconfident scores that may push malware below the single-FP threshold.
+- **`max_delta_step_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a stronger leaf cap than the current 0 to see if further score regularization improves L25 recall@1FP without sacrificing zero-FP recall.
+- **`min_child_samples_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reducing min_child_samples from 100 to 10 may let the model capture rarer config-file malware patterns, improving L25 recall@1FP.
+- **`num_leaves_32`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Fewer leaves than the current 96 may reduce overfitting and improve generalization, lifting L25 recall@1FP on the dev cohort.
+- **`reg_lambda_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Stronger L2 regularization may stabilize scores and improve L25 recall@1FP by reducing false-positive risk from noisy features.
+- **`hard_negative_fraction_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Removing hard-negative upweighting tests whether the current 0.2 fraction is hurting L25 recall@1FP by over-penalizing benign configs.
+- **`scale_pos_weight_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Restoring the default class weight (mult=1) tests whether the current 0.25 multiplier is too aggressive and limiting L25 recall@1FP.
+- **`trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Deeper finding-prefix specificity may reveal config-file malware traits that improve L25 recall@1FP beyond the current depth-3 baseline.
+- **`trait_path_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Shallower prefixes may generalize better across config variants, potentially improving L25 recall@1FP by capturing broader malware signals.
+- **`severity_fractions_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adding severity-fraction features may help rank config malware higher, improving L25 recall@1FP as seen in the historical severity_fractions_enable run.
+- **`context_keywords_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enabling context keywords may capture config-specific textual signals that improve L25 recall@1FP, a feature family not yet tested on this route.
+- **`min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Raising the malware training cutoff to 4 may remove noisy low-severity samples, improving L25 recall@1FP by focusing the model on clearer config malware.
+
+</details>
+

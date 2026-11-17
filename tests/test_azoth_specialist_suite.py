@@ -664,3 +664,11 @@ def test_tree_rss_counts_the_fit_and_its_workers() -> None:
         worker.kill()
         worker.wait()
     assert suite._tree_rss_kb(worker.pid) == 0  # gone: counts nothing
+
+
+def test_allowlist_family_entry_admits_discovered_tiered_quadgrams():
+    from collimator import features
+    allowed = frozenset({"tierbi:a + b", "tierquad:*"})
+    assert features._allowed_with_pair("tierquad:n:a + n:b + n:c + n:d", allowed)
+    assert not features._allowed_with_pair("tiertri:n:a + n:b + n:c", allowed)
+    assert not features._allowed_with_pair("tierquad:n:a + n:b + n:c + n:d", frozenset({"tierbi:a + b"}))

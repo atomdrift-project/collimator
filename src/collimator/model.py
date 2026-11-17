@@ -152,7 +152,7 @@ def create_classifier(
     max_depth: int = 10,
     learning_rate: float = 0.02,
     early_stopping_rounds: int = 100,
-    min_child_weight: int = 5,
+    min_child_weight: float = 5,
     min_child_samples: int | None = None,
     num_leaves: int | None = None,
     colsample_bytree: float = 0.8,

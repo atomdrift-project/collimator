@@ -414,3 +414,75 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T142405-filegroups-archive` — 2026-11-12T14:24:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `40b16ece68cb7987` | inherit_from_filetypes_iso_da51097b | ok | 0.9587 | 0.9449 | 0.8314 | 486 | [log](out/autocollie/runs/2026-11-12T14-28-26_20261112T142405-filegroups-archive_inherit_from_filetypes_iso_da51097b.log) |
+| `16bb7b6ec97f4e65` | hard_neg_001_w12_confirm | ok | 0.9613 | 0.9491 | 0.8796 | 79 | [log](out/autocollie/runs/2026-11-12T14-37-08_20261112T142405-filegroups-archive_hard_neg_001_w12_confirm.log) |
+| `c11aea24ece7642f` | hard_neg_001_w16 | ok | 0.9604 | 0.9470 | 0.8857 | 25 | [log](out/autocollie/runs/2026-11-12T14-38-34_20261112T142405-filegroups-archive_hard_neg_001_w16.log) |
+| `3096973f9aa0f58c` | hard_neg_0005_w8 | ok | 0.9595 | 0.9463 | 0.8792 | 26 | [log](out/autocollie/runs/2026-11-12T14-39-02_20261112T142405-filegroups-archive_hard_neg_0005_w8.log) |
+| `61549651105db44c` | hard_neg_0015_w12 | ok | 0.9601 | 0.9470 | 0.8840 | 25 | [log](out/autocollie/runs/2026-11-12T14-39-31_20261112T142405-filegroups-archive_hard_neg_0015_w12.log) |
+| `8928c549367f5ca7` | hard_neg_001_w20 | ok | 0.9629 | 0.9507 | 0.8830 | 26 | [log](out/autocollie/runs/2026-11-12T14-39-59_20261112T142405-filegroups-archive_hard_neg_001_w20.log) |
+| `8b5b8a1a5463c8d0` | hard_neg_0005_w16 | ok | 0.9616 | 0.9501 | 0.8828 | 26 | [log](out/autocollie/runs/2026-11-12T14-40-28_20261112T142405-filegroups-archive_hard_neg_0005_w16.log) |
+| `c9e022957013a2b7` | hard_neg_002_w8 | ok | 0.9607 | 0.9474 | 0.8886 | 26 | [log](out/autocollie/runs/2026-11-12T14-40-57_20261112T142405-filegroups-archive_hard_neg_002_w8.log) |
+| `3820d656b9b87ec4` | hard_neg_0015_w16 | ok | 0.9633 | 0.9522 | 0.8805 | 26 | [log](out/autocollie/runs/2026-11-12T14-41-26_20261112T142405-filegroups-archive_hard_neg_0015_w16.log) |
+| `fb94856049c106a2` | hard_neg_0005_w20 | ok | 0.9613 | 0.9485 | 0.8853 | 27 | [log](out/autocollie/runs/2026-11-12T14-41-55_20261112T142405-filegroups-archive_hard_neg_0005_w20.log) |
+| `1d8ff19ec11dda60` | hard_neg_002_w12 | ok | 0.9627 | 0.9498 | 0.9029 | 29 | [log](out/autocollie/runs/2026-11-12T14-42-30_20261112T142405-filegroups-archive_hard_neg_002_w12.log) |
+| `1999b9969227d903` | hard_neg_001_w18 | ok | 0.9610 | 0.9475 | 0.8809 | 28 | [log](out/autocollie/runs/2026-11-12T14-43-08_20261112T142405-filegroups-archive_hard_neg_001_w18.log) |
+| `54208e5dd1178889` | hard_neg_0015_w20 | ok | 0.9655 | 0.9548 | 0.8960 | 28 | [log](out/autocollie/runs/2026-11-12T14-43-45_20261112T142405-filegroups-archive_hard_neg_0015_w20.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_iso_da51097b`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/iso (key=da51097b3299fa9e, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_neg_001_w12_confirm`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Confirms the top hard-negative configuration (0.01/12) which achieved 0.6379 L25 recall, to verify stability against the 0.6481 peak of 0.01/8.
+- **`hard_neg_001_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests a higher hard-negative weight (16) with the optimal 0.01 fraction to see if stronger penalty on hard negatives improves L25 recall beyond 0.6481.
+- **`hard_neg_0005_w8`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests a lower hard-negative fraction (0.005) with weight 8 to explore if a smaller subset of hard negatives yields better L25 recall than the 0.01 baseline.
+- **`hard_neg_0015_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests a higher hard-negative fraction (0.015) with weight 12 to determine if increasing the hard-negative pool improves L25 recall over the 0.01/12 result.
+- **`hard_neg_001_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests the maximum hard-negative weight (20) with the 0.01 fraction to check if extreme penalty on hard negatives boosts L25 recall.
+- **`hard_neg_0005_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Combines low fraction (0.005) with high weight (16) to test if a small but heavily penalized hard-negative set improves L25 recall.
+- **`hard_neg_002_w8`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests a higher fraction (0.02) with lower weight (8) to see if a broader but less penalized hard-negative set improves L25 recall.
+- **`hard_neg_0015_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests high fraction (0.015) with high weight (16) to explore the upper bound of hard-negative influence on L25 recall.
+- **`hard_neg_0005_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests low fraction (0.005) with maximum weight (20) to check if extreme penalty on a tiny hard-negative set improves L25 recall.
+- **`hard_neg_002_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests high fraction (0.02) with medium weight (12) to see if a larger hard-negative pool with moderate penalty improves L25 recall.
+- **`hard_neg_001_w18`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests weight 18 with the optimal 0.01 fraction to fine-tune the penalty strength for L25 recall improvement.
+- **`hard_neg_0015_w20`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests the maximum fraction (0.015) and weight (20) combination to determine if aggressive hard-negative handling improves L25 recall.
+
+</details>
+
+## Cycle `20261115T171403-filegroups-archive` — 2026-11-15T17:14:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9be5668af233d746` | inherit_from_filetypes_rar_6e0f7b5c | ok | 0.9591 | 0.9467 | 0.8807 | 605 | [log](out/autocollie/runs/2026-11-15T17-19-18_20261115T171403-filegroups-archive_inherit_from_filetypes_rar_6e0f7b5c.log) |
+| `647ab9a1e1c49121` | hard_neg_0015_w18 | ok | 0.9632 | 0.9512 | 0.8847 | 664 | [log](out/autocollie/runs/2026-11-15T17-38-13_20261115T171403-filegroups-archive_hard_neg_0015_w18.log) |
+| `e641b496d4953f40` | hard_neg_002_w16 | ok | 0.9687 | 0.9583 | 0.9060 | 53 | [log](out/autocollie/runs/2026-11-15T17-40-08_20261115T171403-filegroups-archive_hard_neg_002_w16.log) |
+| `7de9c6a6ea533342` | hard_neg_0005_w18 | ok | 0.9582 | 0.9439 | 0.8781 | 58 | [log](out/autocollie/runs/2026-11-15T17-41-04_20261115T171403-filegroups-archive_hard_neg_0005_w18.log) |
+| `bca2dc8a7322fea5` | hard_neg_001_w12_confirm_seed2 | ok | 0.9588 | 0.9458 | 0.8861 | 589 | [log](out/autocollie/runs/2026-11-15T17-42-04_20261115T171403-filegroups-archive_hard_neg_001_w12_confirm_seed2.log) |
+| `a2e9f7790ae4a315` | min_malware_score_2 | ok | 0.9821 | 0.9772 | 0.9338 | 537 | [log](out/autocollie/runs/2026-11-15T17-51-55_20261115T171403-filegroups-archive_min_malware_score_2.log) |
+| `ce677ddd947132b6` | min_malware_score_0 | ok | 0.9969 | 0.9965 | 0.9687 | 512 | [log](out/autocollie/runs/2026-11-15T18-00-57_20261115T171403-filegroups-archive_min_malware_score_0.log) |
+| `a94b301c95b52bd5` | trait_path_depth_4 | ok | 0.9591 | 0.9467 | 0.8807 | 104 | [log](out/autocollie/runs/2026-11-15T18-09-28_20261115T171403-filegroups-archive_trait_path_depth_4.log) |
+| `7b59efeb9611f827` | trait_path_depth_2 | ok | 0.9624 | 0.9513 | 0.8816 | 501 | [log](out/autocollie/runs/2026-11-15T18-11-20_20261115T171403-filegroups-archive_trait_path_depth_2.log) |
+| `9938b159722b6ed4` | max_delta_step_5 | ok | 0.9607 | 0.9487 | 0.8835 | 47 | [log](out/autocollie/runs/2026-11-15T18-19-50_20261115T171403-filegroups-archive_max_delta_step_5.log) |
+| `3979faa504488044` | max_delta_step_20 | ok | 0.9607 | 0.9487 | 0.8835 | 43 | [log](out/autocollie/runs/2026-11-15T18-20-35_20261115T171403-filegroups-archive_max_delta_step_20.log) |
+| `9ed3cc579fa8e5d6` | rule_keywords_true | ok | 0.9625 | 0.9515 | 0.8853 | 619 | [log](out/autocollie/runs/2026-11-15T18-21-18_20261115T171403-filegroups-archive_rule_keywords_true.log) |
+| `19efd81aaf26484b` | context_keywords_true | ok | 0.9624 | 0.9507 | 0.8806 | 485 | [log](out/autocollie/runs/2026-11-15T18-31-15_20261115T171403-filegroups-archive_context_keywords_true.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rar_6e0f7b5c`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/rar (key=6e0f7b5cf4b938e7, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`hard_neg_0015_w18`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP beyond the best 0.5891 by testing a hard-negative fraction/weight combination adjacent to the strongest recent runs, since the route shows the or_loses diagnostic shape where ranking is saturated but threshold placement leaves recall on the floor.
+- **`hard_neg_002_w16`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by exploring a higher hard-negative fraction with a moderate weight, as the recent sweep shows 0.02 fraction underperforms at lower weights but may benefit from a stronger weight to push more benigns below the threshold.
+- **`hard_neg_0005_w18`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by testing a lower hard-negative fraction with a higher weight, since the recent sweep shows 0.005 fraction with weight 16 reaches 0.5836 and weight 20 reaches 0.5504, suggesting an intermediate weight may balance precision and recall better.
+- **`hard_neg_001_w12_confirm_seed2`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to confirm the 0.5653 L25 recall@1FP from hard_neg_001_w12 across a different seed, since small-cohort recall steps are noisy and the route guidance requires confirming promising gains across seeds before deployment.
+- **`min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by lowering min_malware_score from 4 to 2, since the best historical result 0.6750 used score 2 and a high cutoff can remove most malware and inflate class weights, potentially hurting external recall.
+- **`min_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by testing min_malware_score 0 as a control, since the failure-mode guidance says a high cutoff can remove most malware and zero is a control, not a universal optimum, and the current 4 may be too aggressive for this route.
+- **`trait_path_depth_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Aim to improve L25 recall@1FP by increasing trait_path_depth from 3 to 4, since sister routes like asar and makefile benefit from depth 4 and the guidance says to compare 2/3/4/5 around the best result for C/source routes.
+- **`trait_path_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Aim to improve L25 recall@1FP by decreasing trait_path_depth from 3 to 2, since sister routes asar and csharp use depth 2 and the guidance says to compare 2/3/4/5, with depth controlling finding-prefix specificity.
+- **`max_delta_step_5`** `EXP_MAX_DELTA_STEP=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by testing max_delta_step 5, since the failure-mode guidance suggests comparing 0/1/2/5/10/20 for constant models or saturated scores, and sister routes like dockerfile use 5 with good results.
+- **`max_delta_step_20`** `EXP_MAX_DELTA_STEP=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by testing max_delta_step 20, since sister routes asar and csharp use 20 and the guidance says to compare max_delta_step values when scores are saturated or models are constant.
+- **`rule_keywords_true`** `EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by enabling rule_keywords, since the best historical result 0.6750 had rule_keywords enabled and the current config has it disabled, suggesting this feature family may provide useful signal for archive routes.
+- **`context_keywords_true`** `EXP_CONTEXT_KEYWORDS=1 EXP_CONTEXT_KEYWORD_SELECTION=balanced_mi EXP_CONTEXT_KEYWORD_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve L25 recall@1FP by enabling context_keywords, since sister routes makefile and csharp use context keywords with balanced_mi selection and the guidance says to test targeted keyword sources per route.
+
+</details>
+

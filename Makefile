@@ -230,6 +230,10 @@ AZOTH_FEATURE_CACHE_DIR ?= out/cache/azoth-route-features
 # (general -> specialists -> calibrate) matters; older generations are dead
 # weight at ~20G apparent each. Pruned by azoth-prune-feature-cache.
 AZOTH_KEEP_CACHE_DAYS ?= 2
+# Experiment-cache matrices (matrix_*_Xtrain.npz, ~36G each) are content-hashed,
+# so deleting one only costs a recompute if a later experiment hits the same
+# key. Retained this many days by azoth-prune-experiment-cache.
+AZOTH_KEEP_EXP_CACHE_DAYS ?= 14
 AZOTH_SPECIALIST_FOLDS ?= 0
 AZOTH_SPECIALIST_ESTIMATORS ?= 400
 AZOTH_SPECIALIST_MAX_DEPTH ?= 12
@@ -1440,7 +1444,7 @@ AZOTH_RUN_ID := $(shell date -u +%Y%m%dT%H%M%SZ)-$(shell openssl rand -hex 4 2>/
 endif
 AZOTH_RUN_DIR := $(AZOTH_RUNS_ROOT)/$(AZOTH_RUN_ID)
 
-.PHONY: azoth-run-new azoth-publish azoth-publish-deploy azoth-prune-runs azoth-prune-feature-cache
+.PHONY: azoth-run-new azoth-publish azoth-publish-deploy azoth-prune-runs azoth-prune-feature-cache azoth-prune-experiment-cache
 
 # Create (if needed) and print the path to the run dir for AZOTH_RUN_ID.
 # Capture it with $(shell …) or make -s.
@@ -1485,6 +1489,20 @@ azoth-prune-feature-cache:
 	echo "azoth-prune-feature-cache: $$dir is $$before; dropping $$n file(s) older than $(AZOTH_KEEP_CACHE_DAYS) day(s)"; \
 	find "$$dir" -maxdepth 1 -type f -mtime +$(AZOTH_KEEP_CACHE_DAYS) -delete; \
 	echo "azoth-prune-feature-cache: now $$(du -sh "$$dir" 2>/dev/null | cut -f1)"
+
+# Drop experiment-cache matrices older than $(AZOTH_KEEP_EXP_CACHE_DAYS) days
+# from $(EXP_CACHE_DIR). Only matrix_* files are touched; corpus/vocabulary
+# entries are small and kept. Content-hashed names make this safe anytime.
+azoth-prune-experiment-cache:
+	@set -e; \
+	dir=$(EXP_CACHE_DIR); \
+	if [ ! -d "$$dir" ]; then \
+	  echo "azoth-prune-experiment-cache: $$dir does not exist; nothing to do"; \
+	  exit 0; \
+	fi; \
+	n=$$(find "$$dir" -maxdepth 1 -type f -name 'matrix_*' -mtime +$(AZOTH_KEEP_EXP_CACHE_DAYS) | wc -l); \
+	echo "azoth-prune-experiment-cache: $$dir; dropping $$n matrix file(s) older than $(AZOTH_KEEP_EXP_CACHE_DAYS) day(s)"; \
+	find "$$dir" -maxdepth 1 -type f -name 'matrix_*' -mtime +$(AZOTH_KEEP_EXP_CACHE_DAYS) -delete
 
 # Out-of-time backtest of a route's operating point. Every number the pipeline
 # publishes is fitted and measured on the same benign pool; this fits on benign

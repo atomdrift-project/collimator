@@ -409,3 +409,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261112T155520-filetypes-deb` — 2026-11-12T15:55:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf997efc4f2d00d9` | inherit_from_filetypes_asar_c58cfc06 | ok | 0.2059 | 0.8147 | 0.2400 | 74 | [log](out/autocollie/runs/2026-11-12T15-57-22_20261112T155520-filetypes-deb_inherit_from_filetypes_asar_c58cfc06.log) |
+| `44f32d8b21859d7a` | min_malware_score_0_baseline | ok | 0.3154 | 0.9849 | 0.2727 | 59 | [log](out/autocollie/runs/2026-11-12T15-58-45_20261112T155520-filetypes-deb_min_malware_score_0_baseline.log) |
+| `ca1f67a8542da933` | min_malware_score_1 | ok | 0.0835 | 0.7394 | 0.1667 | 54 | [log](out/autocollie/runs/2026-11-12T15-59-43_20261112T155520-filetypes-deb_min_malware_score_1.log) |
+| `00f07bdaa1318749` | min_malware_score_2 | ok | 0.0834 | 0.7280 | 0.1667 | 39 | [log](out/autocollie/runs/2026-11-12T16-00-39_20261112T155520-filetypes-deb_min_malware_score_2.log) |
+| `5e44cf87db2d19bd` | min_malware_score_3 | ok | 0.0834 | 0.7280 | 0.1667 | 39 | [log](out/autocollie/runs/2026-11-12T16-01-19_20261112T155520-filetypes-deb_min_malware_score_3.log) |
+| `04027ecd3e5c4156` | seed_search_k5 | ok | 0.0834 | 0.7280 | 0.1667 | 43 | [log](out/autocollie/runs/2026-11-12T16-01-59_20261112T155520-filetypes-deb_seed_search_k5.log) |
+| `e2ee4809fbd8bb31` | save_all_seeds_k3 | ok | 0.1941 | 0.7305 | 0.2727 | 8 | [log](out/autocollie/runs/2026-11-12T16-03-50_20261112T155520-filetypes-deb_save_all_seeds_k3.log) |
+| `b21f7d7f327f5f9c` | trait_path_depth_2 | ok | 0.1902 | 0.7128 | 0.1818 | 58 | [log](out/autocollie/runs/2026-11-12T16-04-56_20261112T155520-filetypes-deb_trait_path_depth_2.log) |
+| `2efb49deaff6d562` | trait_path_depth_4 | ok | 0.2151 | 0.7818 | 0.1154 | 55 | [log](out/autocollie/runs/2026-11-12T16-06-11_20261112T155520-filetypes-deb_trait_path_depth_4.log) |
+| `c67eea41464799c1` | rule_keywords_enabled | ok | 0.1851 | 0.7885 | 0.0984 | 41 | [log](out/autocollie/runs/2026-11-12T16-07-22_20261112T155520-filetypes-deb_rule_keywords_enabled.log) |
+| `687d65cbd8a1e894` | description_keywords_enabled | ok | 0.1928 | 0.7807 | 0.2667 | 75 | [log](out/autocollie/runs/2026-11-12T16-08-23_20261112T155520-filetypes-deb_description_keywords_enabled.log) |
+| `0c24faad0a0cc954` | context_keywords_enabled | ok | 0.2034 | 0.6998 | 0.1277 | 73 | [log](out/autocollie/runs/2026-11-12T16-09-55_20261112T155520-filetypes-deb_context_keywords_enabled.log) |
+| `33a171aaac3078be` | kv_vocab_enabled | ok | 0.0834 | 0.7280 | 0.1667 | 62 | [log](out/autocollie/runs/2026-11-12T16-11-22_20261112T155520-filetypes-deb_kv_vocab_enabled.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_asar_c58cfc06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/asar (key=c58cfc069021152f, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`min_malware_score_0_baseline`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000` — Restores the historical 0.4000 L25 recall achieved with min_malware_score=0 on the previous cohort, testing if removing the severity cutoff improves recall on the current 7-malware cohort.
+- **`min_malware_score_1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=1 EXP_TRAIN_SAMPLES=30000` — Tests a lower severity cutoff than the current 4 to retain more low-severity malware in training, aiming to improve L25 recall by increasing class representation.
+- **`min_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000` — Tests severity cutoff 2 to balance noise reduction and malware retention, targeting the 0.1429 L25 recall floor by preserving more training signal.
+- **`min_malware_score_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Tests severity cutoff 3 as an intermediate step between the current 4 and the historical best 0, aiming to improve L25 recall without introducing excessive low-severity noise.
+- **`seed_search_k5`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=5 EXP_TRAIN_SAMPLES=30000` — Expands seed search to K=5 to find a more robust model configuration, aiming to stabilize and improve the 0.2857 L25 recall observed with K=3.
+- **`save_all_seeds_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests averaging the ensemble of 3 seeds instead of picking the best, aiming to reduce variance and improve L25 recall stability compared to the single-best-seed approach.
+- **`trait_path_depth_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests shallower trait path depth (2) to increase feature specificity and reduce noise, aiming to improve L25 recall by focusing on high-confidence finding prefixes.
+- **`trait_path_depth_4`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Tests deeper trait path depth (4) to capture more specific finding combinations, aiming to improve L25 recall by distinguishing subtle malware patterns.
+- **`rule_keywords_enabled`** `EXP_MAX_TEST_SAMPLES=20000 EXP_RULE_KEYWORDS=1 EXP_TRAIN_SAMPLES=30000` — Enables rule keyword features to capture specific rule ID patterns, aiming to improve L25 recall by adding discriminative signal from rule metadata.
+- **`description_keywords_enabled`** `EXP_DESCRIPTION_KEYWORDS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables description keyword features to capture textual patterns in rule descriptions, aiming to improve L25 recall by leveraging semantic content.
+- **`context_keywords_enabled`** `EXP_CONTEXT_KEYWORDS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables context keyword features to capture decoded file context patterns, aiming to improve L25 recall by adding signal from file content windows.
+- **`kv_vocab_enabled`** `EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab features to capture key-value pair patterns, aiming to improve L25 recall by adding structured metadata signal.
+
+</details>
+

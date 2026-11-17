@@ -2740,3 +2740,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261112T192304-filetypes-pe` — 2026-11-12T19:23:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0ac6755482e3d12` | inherit_from_filetypes_chm_6cb7bde5 | ok | 0.9981 | 0.9979 | 0.9807 | 279 | [log](out/autocollie/runs/2026-11-12T19-27-08_20261112T192304-filetypes-pe_inherit_from_filetypes_chm_6cb7bde5.log) |
+| `c3521c9c4e05432f` | pe_hardneg_fine_sweep_hnf001_hw12 | ok | 0.9993 | 0.9992 | 0.9880 | 375 | [log](out/autocollie/runs/2026-11-12T19-36-45_20261112T192304-filetypes-pe_pe_hardneg_fine_sweep_hnf001_hw12.log) |
+| `18d4f2af6ab06076` | pe_hardneg_fine_sweep_hnf0005_hw16 | ok | 0.9993 | 0.9992 | 0.9897 | 34 | [log](out/autocollie/runs/2026-11-12T20-25-35_20261112T192304-filetypes-pe_pe_hardneg_fine_sweep_hnf0005_hw16.log) |
+| `fc87a14cef3b7183` | pe_threshold_fpr_direct_tune_25e7 | ok | 0.9993 | 0.9993 | 0.9509 | 292 | [log](out/autocollie/runs/2026-11-12T20-30-43_20261112T192304-filetypes-pe_pe_threshold_fpr_direct_tune_25e7.log) |
+| `b8f17bc55677488d` | pe_max_delta_step_10 | ok | 0.9993 | 0.9993 | 0.9896 | 298 | [log](out/autocollie/runs/2026-11-12T20-36-17_20261112T192304-filetypes-pe_pe_max_delta_step_10.log) |
+| `fc13d3324238dc59` | pe_min_child_samples_50 | ok | 0.9993 | 0.9993 | 0.9894 | 39 | [log](out/autocollie/runs/2026-11-12T20-39-43_20261112T192304-filetypes-pe_pe_min_child_samples_50.log) |
+| `ee615765978f4806` | pe_reg_lambda_0.5 | ok | 0.9993 | 0.9993 | 0.9903 | 41 | [log](out/autocollie/runs/2026-11-12T20-40-34_20261112T192304-filetypes-pe_pe_reg_lambda_0_5.log) |
+| `9f3513d59004c78a` | pe_learning_rate_0.03 | ok | 0.9992 | 0.9992 | 0.9862 | 39 | [log](out/autocollie/runs/2026-11-12T20-41-08_20261112T192304-filetypes-pe_pe_learning_rate_0_03.log) |
+| `f026e5ec33e0a0e3` | pe_num_leaves_128 | ok | 0.9993 | 0.9993 | 0.9896 | 1553 | [log](out/autocollie/runs/2026-11-12T21-37-15_20261112T192304-filetypes-pe_pe_num_leaves_128.log) |
+| `40bd5edfe1f8e0e5` | pe_subsample_0.7 | ok | 0.9992 | 0.9992 | 0.9894 | 68 | [log](out/autocollie/runs/2026-11-12T21-38-33_20261112T192304-filetypes-pe_pe_subsample_0_7.log) |
+| `1120b173df4709e1` | pe_colsample_bytree_0.7 | ok | 0.9993 | 0.9993 | 0.9897 | 644 | [log](out/autocollie/runs/2026-11-12T21-49-16_20261112T192304-filetypes-pe_pe_colsample_bytree_0_7.log) |
+| `38b374c92dac7be8` | pe_scale_pos_weight_mult_1.5 | ok | 0.9993 | 0.9993 | 0.9891 | 71 | [log](out/autocollie/runs/2026-11-12T21-50-29_20261112T192304-filetypes-pe_pe_scale_pos_weight_mult_1_5.log) |
+| `f565bda51bdabe55` | pe_seed_search_k5 | ok | 0.9993 | 0.9992 | 0.9898 | 185 | [log](out/autocollie/runs/2026-11-12T21-51-45_20261112T192304-filetypes-pe_pe_seed_search_k5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_chm_6cb7bde5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/chm (key=6cb7bde52b52dc97, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_hardneg_fine_sweep_hnf001_hw12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Targets the 0.8308 L25 recall ceiling by testing a finer hard-negative fraction (0.01) and weight (12) to sharpen the decision boundary without the over-penalization seen at hnf=0.015.
+- **`pe_hardneg_fine_sweep_hnf0005_hw16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to improve the 0.8308 L25 recall by using a very low hard-negative fraction (0.005) with high weight (16) to focus the model on the most ambiguous benign samples near the threshold.
+- **`pe_threshold_fpr_direct_tune_25e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directly targets the L25 deployed tail by switching threshold_mode to max_recall_at_fpr with a target of 2.5e-07, aiming to capture the 0.8308 recall at the exact FP budget constraint.
+- **`pe_max_delta_step_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a higher max_delta_step (10) to allow larger leaf updates, potentially improving the 0.8308 L25 recall if the current step size is constraining the model's ability to fit complex patterns.
+- **`pe_min_child_samples_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces min_child_samples to 50 to allow more granular splits, aiming to improve the 0.8308 L25 recall by capturing smaller, more specific malware sub-populations.
+- **`pe_reg_lambda_0.5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers reg_lambda to 0.5 to reduce L2 regularization, potentially improving the 0.8308 L25 recall by allowing the model to fit the training data more closely without over-regularizing.
+- **`pe_learning_rate_0.03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Decreases learning_rate to 0.03 to slow down boosting, aiming to improve the 0.8308 L25 recall by allowing more nuanced feature interactions to be learned over the fixed 250 estimators.
+- **`pe_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves to 128 to allow more complex tree structures, targeting the 0.8308 L25 recall by providing more capacity to model non-linear relationships in the PE features.
+- **`pe_subsample_0.7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces subsample to 0.7 to increase stochasticity in row selection, aiming to improve the 0.8308 L25 recall by reducing overfitting to specific training samples and improving generalization.
+- **`pe_colsample_bytree_0.7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers colsample_bytree to 0.7 to increase feature subsampling, targeting the 0.8308 L25 recall by encouraging the model to rely on diverse feature subsets and reducing correlation between trees.
+- **`pe_scale_pos_weight_mult_1.5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases scale_pos_weight_mult to 1.5 to upweight the positive class, aiming to improve the 0.8308 L25 recall by making the model more sensitive to malware samples at the cost of potentially higher FPs.
+- **`pe_seed_search_k5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Expands seed search to K=5 to find a more robust model configuration, targeting the 0.8308 L25 recall by averaging over more diverse training runs to reduce variance and improve stability.
+
+</details>
+
