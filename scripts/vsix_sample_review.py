@@ -32,7 +32,7 @@ def main():
         archive = Path(record["local_path"]) if record.get("local_path") else dest / "archive.vsix"
         if not archive.exists():
             token = (Path.home() / ".tok/hopper").read_text().strip()
-            request = urllib.request.Request(args.url.rstrip("/") + "/api/file/" + record["sha256"],
+            request = urllib.request.Request(args.url.rstrip("/") + "/v1/files/" + record["sha256"],
                 headers={"Authorization": "Bearer " + token})
             with urllib.request.urlopen(request, timeout=180) as response, archive.open("wb") as output:
                 while block := response.read(1024 * 1024):

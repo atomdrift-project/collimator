@@ -1971,9 +1971,8 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 #       bad, the ensemble scores benign — candidates that may really be good)
 #
 # Over-fetch: the reports rank $(TRIAGE_FETCH) candidates per filetype, then
-# triage copies until $(TRIAGE_TOP) land per filetype — samples pruned from
-# /data/samples are pulled from hopper (GET /api/file/{sha}); the extra
-# candidates cover any that are gone from both.
+# triage downloads from hopper (GET /v1/files/{sha256}) until $(TRIAGE_TOP)
+# land per filetype. The extra candidates cover any hopper can't serve.
 #
 # Also creates two empty output bins for the sorter to move confirmed
 # mislabels into:
@@ -1997,13 +1996,15 @@ TRIAGE_LEVEL      ?= 50
 TRIAGE_SEVERITY   ?= hostile
 TRIAGE_FP_REPORT  ?= $(TRIAGE_DIR)/mislabeled-good.report.json
 TRIAGE_FN_REPORT  ?= $(TRIAGE_DIR)/mislabeled-bad.report.json
-# Resolve row_id -> sha256/path against the authoritative hopper DB, NOT the
-# local replica ($(DB)). The replica is built for bulk training reads and is
-# periodically torn down and rebuilt; mid-rebuild it returns no rows, which
-# silently yields empty paths and copies nothing. Triage's lookup is tiny
-# (only the selected top-N ids) so hitting the real DB is cheap. Password
-# comes from ~/.pgpass (hopper-db:5432:hopper:hopper).
-TRIAGE_DB         ?= postgres://hopper@hopper-db:5432/hopper
+# Resolve row_id -> sha256/path against the local replica ($(DB)). The primary
+# (hopper-db) is often out of connection slots, and triage's lookup is tiny
+# (only the selected top-N ids), so the replica is the default. Caveat: the
+# replica is periodically torn down and rebuilt; mid-rebuild it returns no
+# rows, which silently yields empty paths and copies nothing. If a run comes
+# back empty, check the replica (see check-db-fresh) or point at the primary:
+#   make triage TRIAGE_DB=postgres://hopper@hopper-db:5432/hopper
+# (the password comes from ~/.pgpass: hopper-db:5432:hopper:hopper).
+TRIAGE_DB         ?= $(DB)
 
 .PHONY: triage triage-good triage-bad
 # triage runs both sides sequentially (FP then FN) via sub-make so a heavy

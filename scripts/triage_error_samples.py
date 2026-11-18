@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Copy error-report samples into a clean triage directory.
 
-Samples are fetched from hopper's ``GET /api/file/{sha256}`` endpoint by
+Samples are fetched from hopper's ``GET /v1/files/{sha256}`` endpoint by
 sha256. Local-disk lookup was removed: sample paths come from the hopper
 DB and may be absolute paths from whatever host ingested them (e.g.
 ``/Users/t/...``), which don't exist on the triage host. Defaults to
@@ -79,7 +79,7 @@ def _fetch_from_hopper(
     timeout: float = 45.0,
     retry_delays: tuple[float, ...] = (3.0, 12.0),
 ) -> tuple[str, str]:
-    """GET /api/file/{sha256} → destination.
+    """GET /v1/files/{sha256} → destination.
 
     Returns ``(status, detail)`` where ``detail`` is a short human-readable
     reason (the server response for HTTP errors, the exception for network
@@ -107,7 +107,7 @@ def _fetch_from_hopper(
     """
     if not sha256:
         return "unservable", "no sha256 in row"
-    url = f"{hopper_url.rstrip('/')}/api/file/{sha256}"
+    url = f"{hopper_url.rstrip('/')}/v1/files/{sha256}"
     request = urllib.request.Request(url)
     token = _hopper_token()
     if token:

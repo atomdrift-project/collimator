@@ -81,12 +81,19 @@ def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, st
 
     out: dict[int, tuple[str, str, str, str, str]] = {}
     with data._connect(db_dsn) as conn:  # noqa: SLF001
+        # Plan the archive membership lookup separately so LIMIT 1 doesn't
+        # favor scanning contents for each sample over using its GIN index.
         rows = data._execute(conn, """
             SELECT s.id, encode(s.sha256, 'hex'),
                    (SELECT l.path FROM locations l WHERE l.sample_id = s.id
                     ORDER BY l.seen_at DESC, l.path LIMIT 1),
-                   (SELECT encode(p.sha256, 'hex') FROM contents c JOIN samples p ON p.id = c.parent_id
-                    WHERE c.child_ids @> ARRAY[s.id] LIMIT 1),
+                   (WITH archive_parents AS MATERIALIZED (
+                        SELECT c.parent_id FROM contents c
+                        WHERE c.child_ids @> ARRAY[s.id]
+                    )
+                    SELECT encode(p.sha256, 'hex')
+                    FROM archive_parents a JOIN samples p ON p.id = a.parent_id
+                    LIMIT 1),
                    s.label::text,
                    CASE WHEN s.label_source = 'conflict' THEN 'conflict' ELSE '' END
             FROM samples s WHERE s.id = ANY(%s)""", (list(row_ids),))  # noqa: SLF001
