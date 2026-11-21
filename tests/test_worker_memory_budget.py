@@ -199,3 +199,40 @@ def test_ordered_stall_reports_blocking_batch_and_completed_followers(monkeypatc
     assert "row_id=0" in caplog.text
     assert "completed_behind_head=1" in caplog.text
     assert "age=30.0s" in caplog.text
+
+
+def _no_idle_sleep(seconds):
+    raise AssertionError("admission slept with nothing in flight")
+
+
+@pytest.mark.parametrize("ordered", [True, False])
+def test_zero_budget_still_makes_progress(monkeypatch, ordered):
+    """Idle workers' memory is freed only by running work, so 0 must mean 1."""
+    monkeypatch.setattr(features.time, "sleep", _no_idle_sleep)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        if ordered:
+            results = list(features._bounded_ordered_dynamic_iter(
+                pool, abs, range(-5, 0), lambda: 0))
+        else:
+            results = list(features._bounded_unordered_iter(
+                pool, abs, range(-5, 0), max_inflight=lambda: 0))
+    assert results == [5, 4, 3, 2, 1] if ordered else sorted(results) == [1, 2, 3, 4, 5]
+
+
+def test_extraction_pool_recycles_workers(monkeypatch):
+    seen = {}
+
+    class Pool:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(features, "ProcessPoolExecutor", Pool)
+    with features._extract_pool(2, spec=object()):
+        pass
+    assert seen["max_tasks_per_child"] == features._EXTRACT_TASKS_PER_WORKER

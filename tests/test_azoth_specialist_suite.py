@@ -115,6 +115,15 @@ def test_initial_hessian_block_is_real_even_with_a_perfect_feature():
     assert not suite.export.is_constant_predictor(model)
 
 
+def _fake_extract(matrix, labels):
+    def extract(*_args, identity=None, **_kwargs):
+        if identity is not None:
+            identity["train_row_ids"] = np.arange(len(labels), dtype=np.int64)
+            identity["test_row_ids"] = np.array([], dtype=np.int64)
+        return matrix, labels, matrix[:0], labels[:0]
+    return extract
+
+
 def test_rar_preflight_skips_seed_training_and_records_fallback(tmp_path, monkeypatch):
     from collimator import experiment
     monkeypatch.setenv('COLLIMATOR_ATTACK_FEATURES','1')
@@ -130,10 +139,9 @@ def test_rar_preflight_skips_seed_training_and_records_fallback(tmp_path, monkey
     monkeypatch.setattr(suite.cache_identity, "database_revision", lambda _: "test")
     monkeypatch.setattr(suite, "_fetch_rows", lambda *a, **k: [])
     monkeypatch.setattr(suite, "_ids_labels", lambda *a, **k: list(enumerate(labels)))
-    monkeypatch.setattr(suite, "_file_types", lambda *a, **k: ["rar"] * len(labels))
+    monkeypatch.setattr(suite, "_align_train_file_types", lambda *a, **k: ["rar"] * len(labels))
     monkeypatch.setattr(suite.features, "build_vocab_from_db", lambda *a, **k: spec)
-    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", lambda *a, **k:
-                        (matrix, labels, matrix[:0], labels[:0]))
+    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", _fake_extract(matrix, labels))
     monkeypatch.setattr(suite.train, "train", lambda *a, **k: pytest.fail("must not fit any seeds"))
     result = suite._train_one(
         db_path="unused", name="rar", kind="filetype", file_types=("rar",),
@@ -159,10 +167,9 @@ def test_route_keyword_selection_environment_reaches_every_seed(tmp_path, monkey
     monkeypatch.setattr(suite.cache_identity, "database_revision", lambda _: "test")
     monkeypatch.setattr(suite, "_fetch_rows", lambda *a, **k: [])
     monkeypatch.setattr(suite, "_ids_labels", lambda *a, **k: list(enumerate(labels)))
-    monkeypatch.setattr(suite, "_file_types", lambda *a, **k: ["pe"] * len(labels))
+    monkeypatch.setattr(suite, "_align_train_file_types", lambda *a, **k: ["pe"] * len(labels))
     monkeypatch.setattr(suite.features, "build_vocab_from_db", lambda *a, **k: spec)
-    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", lambda *a, **k:
-                        (matrix, labels, matrix[:0], labels[:0]))
+    monkeypatch.setattr(suite.features, "extract_partitioned_from_db", _fake_extract(matrix, labels))
     seen = []
 
     def fit(x, y, config, **kwargs):
@@ -672,3 +679,58 @@ def test_allowlist_family_entry_admits_discovered_tiered_quadgrams():
     assert features._allowed_with_pair("tierquad:n:a + n:b + n:c + n:d", allowed)
     assert not features._allowed_with_pair("tiertri:n:a + n:b + n:c", allowed)
     assert not features._allowed_with_pair("tierquad:n:a + n:b + n:c + n:d", frozenset({"tierbi:a + b"}))
+
+
+def _rows(ids, *, test_ids=()):
+    return [(i, i % 2, i in test_ids, f"ft{i}") for i in ids]
+
+
+def test_align_train_file_types_follows_extracted_rows_not_selection_order():
+    rows = _rows([30, 10, 20, 99], test_ids={99})
+    got = suite._align_train_file_types(rows, np.array([10, 20, 30]), name="js")
+    assert list(got) == ["ft10", "ft20", "ft30"]
+
+
+def test_align_train_file_types_tolerates_a_few_dropped_rows(caplog):
+    rows = _rows(range(1, 201))
+    extracted = np.array([i for i in range(1, 201) if i not in (7, 150)])
+    with caplog.at_level("WARNING", logger="azoth_specialist_suite"):
+        got = suite._align_train_file_types(rows, extracted, name="js")
+    assert list(got) == [f"ft{i}" for i in extracted]
+    assert "dropped 2/200 training rows (1.0000%)" in caplog.text
+    assert "[7, 150]" in caplog.text
+
+
+def test_align_train_file_types_rejects_more_than_the_limit():
+    rows = _rows(range(1, 201))
+    extracted = np.array(range(4, 201))  # 3/200 = 1.5%
+    with pytest.raises(ValueError, match=r"dropped 3/200 .*over the 1.00% limit"):
+        suite._align_train_file_types(rows, extracted, name="js")
+
+
+def test_align_train_file_types_rejects_ids_that_were_never_selected():
+    with pytest.raises(ValueError, match="not selected"):
+        suite._align_train_file_types(_rows([1, 2, 3]), np.array([1, 4]), name="js")
+
+
+def test_align_train_file_types_describes_dropped_rows(tmp_path, caplog):
+    from collimator import data
+
+    db = tmp_path / "samples.db"
+    with sqlite3.connect(db) as conn:
+        create_schema(conn)
+        add_sample(conn, sample_id=1, sha256=f"{1:064x}", label="good", report={}, file_type="javascript")
+        add_sample(conn, sample_id=2, sha256=f"{2:064x}", label="good", report=None, file_type="javascript")
+        add_sample(conn, sample_id=3, sha256=f"{3:064x}", label="bad", file_type="javascript", outcome=None)
+    state = data.describe_rows(db, [1, 2, 3, 404])
+    assert state[1]["detail_null"] is False
+    assert state[2]["detail_null"] is True
+    assert state[3]["outcome"] is None and state[3]["detail_null"] is None
+    assert 404 not in state
+
+    rows = _rows(range(1, 1_001))
+    extracted = np.array([i for i in range(1, 1_001) if i != 2])
+    with caplog.at_level("WARNING", logger="azoth_specialist_suite"):
+        suite._align_train_file_types(rows, extracted, name="js", db_path=db)
+    assert "dropped row 2 now:" in caplog.text
+    assert "'detail_null': True" in caplog.text

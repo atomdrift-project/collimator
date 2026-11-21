@@ -486,3 +486,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261118T164251-filetypes-lua` — 2026-11-18T16:42:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5a29733902b21408` | inherit_from_filetypes_jsp_b466ff46 | ok | 0.8075 | 0.9941 | 0.8235 | 251 | [log](out/autocollie/runs/2026-11-18T16-57-28_20261118T164251-filetypes-lua_inherit_from_filetypes_jsp_b466ff46.log) |
+| `68bfb5df27ab71c3` | depth2_mcs200_combo | ok | 0.7470 | 0.9907 | 0.7500 | 150 | [log](out/autocollie/runs/2026-11-18T17-01-39_20261118T164251-filetypes-lua_depth2_mcs200_combo.log) |
+| `de909d0f5d29f4f1` | depth2_mcs50_combo | ok | 0.7493 | 0.9925 | 0.7500 | 167 | [log](out/autocollie/runs/2026-11-18T17-04-09_20261118T164251-filetypes-lua_depth2_mcs50_combo.log) |
+| `f55336ea5d22f02b` | depth2_reg_lambda_2 | ok | 0.8299 | 0.9981 | 0.7500 | 196 | [log](out/autocollie/runs/2026-11-18T17-06-56_20261118T164251-filetypes-lua_depth2_reg_lambda_2.log) |
+| `b83a1c91485032d8` | depth2_lr003 | ok | 0.6934 | 0.9919 | 0.3077 | 154 | [log](out/autocollie/runs/2026-11-18T17-10-13_20261118T164251-filetypes-lua_depth2_lr003.log) |
+| `7f7dbd267d3f2db2` | depth2_mds2 | ok | 0.5783 | 0.9684 | 0.6667 | 152 | [log](out/autocollie/runs/2026-11-18T17-12-46_20261118T164251-filetypes-lua_depth2_mds2.log) |
+| `2f9a59bb2e7f2877` | depth2_seed_search | ok | 0.8075 | 0.9941 | 0.8235 | 168 | [log](out/autocollie/runs/2026-11-18T17-15-18_20261118T164251-filetypes-lua_depth2_seed_search.log) |
+| `88e9c7a7bd9d0418` | depth2_malware_score_2 | ok | 0.8075 | 0.9941 | 0.8235 | 308 | [log](out/autocollie/runs/2026-11-18T17-18-05_20261118T164251-filetypes-lua_depth2_malware_score_2.log) |
+| `3389c91b70446dfa` | depth2_malware_score_0 | ok | 0.8075 | 0.9941 | 0.8235 | 307 | [log](out/autocollie/runs/2026-11-18T17-23-14_20261118T164251-filetypes-lua_depth2_malware_score_0.log) |
+| `d99a8447d59228fc` | depth2_num_leaves_64 | ok | 0.8075 | 0.9941 | 0.8235 | 167 | [log](out/autocollie/runs/2026-11-18T17-28-20_20261118T164251-filetypes-lua_depth2_num_leaves_64.log) |
+| `65739571cb79d9c3` | depth2_subsample_08 | ok | 0.8075 | 0.9941 | 0.8235 | 170 | [log](out/autocollie/runs/2026-11-18T17-31-08_20261118T164251-filetypes-lua_depth2_subsample_08.log) |
+| `65739571cb79d9c3` | depth2_col_sample_08 | dup | 0.8075 | 0.9941 | 0.8235 | 190 | [log](out/autocollie/runs/2026-11-18T17-33-57_20261118T164251-filetypes-lua_depth2_col_sample_08.log) |
+| `33fba862fd917aa0` | depth2_hard_neg_w15 | ok | 0.8075 | 0.9941 | 0.8235 | 217 | [log](out/autocollie/runs/2026-11-18T17-37-08_20261118T164251-filetypes-lua_depth2_hard_neg_w15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_b466ff46`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=b466ff46ef44335a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`depth2_mcs200_combo`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Combines the best trait_path_depth=2 (0.7778 recall, 0.8628 PR_AUC) with the best min_child_samples=200 (0.7778 recall, 0.8448 PR_AUC) to test if deeper regularization and shallower feature prefixes synergize to improve L25 recall beyond 0.7778.
+- **`depth2_mcs50_combo`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if the shallower trait_path_depth=2 (0.7778 recall) benefits from lower min_child_samples=50 (0.7778 recall) to allow more flexible splits on the reduced feature space, aiming to break the 0.7778 L25 recall plateau.
+- **`depth2_reg_lambda_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Applies the reg_lambda=2 setting (0.6667 recall) to the superior trait_path_depth=2 base (0.7778 recall) to check if stronger L2 regularization stabilizes the shallower feature representation and improves L25 recall.
+- **`depth2_lr003`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Tests if a lower learning_rate=0.03 (0.6667 recall) with the best trait_path_depth=2 (0.7778 recall) allows more nuanced gradient updates that improve L25 recall by reducing overfitting on the small malware cohort.
+- **`depth2_mds2`** `EXP_MAX_DELTA_STEP=2 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Combines trait_path_depth=2 (0.7778 recall) with max_delta_step=2 (0.6667 recall) to see if capping leaf output magnitude improves stability and L25 recall on the shallow feature hierarchy.
+- **`depth2_seed_search`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Uses seed_search_k=3 with trait_path_depth=2 (0.7778 recall) to mitigate seed variance and potentially find a better local optimum for L25 recall than the single-seed baseline.
+- **`depth2_malware_score_2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=2 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Lowers min_malware_score from 4 to 2 with trait_path_depth=2 to include more low-severity malware in training, testing if additional samples improve L25 recall without increasing FPs.
+- **`depth2_malware_score_0`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=0 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Sets min_malware_score to 0 with trait_path_depth=2 to use all available malware for training, checking if the full cohort improves L25 recall despite potential noise from low-severity samples.
+- **`depth2_num_leaves_64`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Reduces num_leaves from 96 to 64 with trait_path_depth=2 to constrain model complexity and test if simpler trees improve L25 recall by reducing overfitting on the small dataset.
+- **`depth2_subsample_08`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Applies subsample=0.8 with trait_path_depth=2 to introduce row-level stochasticity, testing if bagging improves L25 recall by reducing variance in the gradient boosting process.
+- **`depth2_col_sample_08`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Applies colsample_bytree=0.8 with trait_path_depth=2 to introduce feature-level stochasticity, testing if column subsampling improves L25 recall by decorrelating trees.
+- **`depth2_hard_neg_w15`** `EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=2` — Increases hard_negative_weight from 12 to 15 with trait_path_depth=2 to further penalize false positives on hard negatives, aiming to improve L25 recall by sharpening the decision boundary.
+
+</details>
+

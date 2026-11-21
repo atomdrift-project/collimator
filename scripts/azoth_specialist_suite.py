@@ -514,15 +514,66 @@ def _ids_labels(
     ]
 
 
-def _file_types(rows: list[tuple[int, int, bool, str]], *, test: bool | None = None) -> np.ndarray:
-    return np.asarray(
-        [
-            ft
-            for _row_id, _label, is_test, ft in rows
-            if test is None or is_test == test
-        ],
-        dtype=object,
-    )
+# hopper rewrites verdicts while a run is in flight, so a row streamed into the
+# corpus can be unreadable by the time extraction fetches it, and extraction
+# drops it. A handful is normal churn; this much means the DB is wrong or a
+# rescan wave hit the group, and the model would train on a different slice
+# than was selected.
+_MAX_DROPPED_TRAIN_FRACTION = 0.01
+_DROPPED_ROWS_LOGGED = 50
+
+
+def _align_train_file_types(
+    train_rows: list[tuple[int, int, bool, str]],
+    extracted_ids: np.ndarray,
+    *,
+    name: str,
+    db_path: Path | str | None = None,
+    max_dropped_fraction: float = _MAX_DROPPED_TRAIN_FRACTION,
+) -> np.ndarray:
+    """Per-row file types for the training rows extraction actually read.
+
+    ``extracted_ids`` are the row ids in the order of the extracted matrix
+    (``identity["train_row_ids"]``). Rows selected but not extracted are
+    logged with their ids and, given *db_path*, their current verdict state;
+    more than *max_dropped_fraction* of the selection raises.
+    """
+    selected = [(row_id, ft) for row_id, _label, is_test, ft in train_rows if not is_test]
+    selected_ids = np.fromiter((row_id for row_id, _ft in selected), dtype=np.int64, count=len(selected))
+    file_types = np.asarray([ft for _row_id, ft in selected], dtype=object)
+    order = np.argsort(selected_ids, kind="stable")
+    selected_ids, file_types = selected_ids[order], file_types[order]
+
+    extracted = np.asarray(extracted_ids, dtype=np.int64)
+    pos = np.searchsorted(selected_ids, extracted)
+    if len(extracted) and (
+        pos.max() >= len(selected_ids) or not np.array_equal(selected_ids[pos], extracted)
+    ):
+        raise ValueError(f"{name}: extraction returned row ids that were not selected for training")
+
+    dropped = np.setdiff1d(selected_ids, extracted)
+    if len(dropped):
+        fraction = len(dropped) / len(selected_ids)
+        shown = dropped[:_DROPPED_ROWS_LOGGED].tolist()
+        LOG.warning(
+            "%s: extraction dropped %d/%d training rows (%.4f%%) that were unreadable when fetched; ids%s: %s",
+            name, len(dropped), len(selected_ids), 100.0 * fraction,
+            "" if len(dropped) <= _DROPPED_ROWS_LOGGED else f" (first {_DROPPED_ROWS_LOGGED})", shown,
+        )
+        if db_path is not None:
+            try:
+                state = data.describe_rows(db_path, dropped.tolist())
+            except Exception:  # diagnostics must never fail the fit
+                LOG.warning("%s: could not describe dropped rows", name, exc_info=True)
+                state = {}
+            for row_id in shown:
+                LOG.warning("%s: dropped row %d now: %s", name, row_id, state.get(row_id, "no sample row"))
+        if fraction > max_dropped_fraction:
+            raise ValueError(
+                f"{name}: extraction dropped {len(dropped)}/{len(selected_ids)} training rows "
+                f"({100.0 * fraction:.2f}%), over the {100.0 * max_dropped_fraction:.2f}% limit",
+            )
+    return file_types[pos]
 
 
 def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, float]:
@@ -1230,6 +1281,9 @@ def _train_one(
             y_train = np.asarray(
                 [label for _row_id, label in sorted_train], dtype=np.float32,
             )
+            extracted_train_ids = np.fromiter(
+                (row_id for row_id, _label in sorted_train), dtype=np.int64, count=len(sorted_train),
+            )
             # Benchmark still needs extraction (or stays empty under
             # skip_benchmark). Keep the existing call shape but with an
             # empty train side — extract_partitioned_from_db handles the
@@ -1246,14 +1300,20 @@ def _train_one(
                 x_bench = sp.csr_matrix((0, spec.total_features), dtype=np.float32)
                 y_bench = np.array([], dtype=np.float32)
         else:
+            extracted_identity: dict[str, Any] = {}
             x_train, y_train, x_bench, y_bench = features.extract_partitioned_from_db(
                 db_path,
                 train_ids_labels,
                 benchmark_ids_labels,
                 spec,
                 n_workers=workers,
+                identity=extracted_identity,
             )
+            extracted_train_ids = extracted_identity["train_row_ids"]
+            # The cache key hashes the full selection, so a matrix missing rows
+            # would only ever be rejected on read; don't write it.
             if (feature_cache_dir is not None and cache_key is not None and x_train.shape[0] > 0
+                    and len(extracted_train_ids) == len(train_ids_labels)
                     and cache_identity.database_revision(db_path) == db_revision):
                 _, _, _, _save_cache = _feature_cache_helpers()
                 _save_cache(feature_cache_dir, matrix=x_train, **cache_key)
@@ -1269,7 +1329,9 @@ def _train_one(
         )
         x_train = _mask_sparse_columns(x_train, allowed_mask)
         x_bench = _mask_sparse_columns(x_bench, allowed_mask)
-    sample_file_types = _file_types(train_rows, test=False)
+    sample_file_types = _align_train_file_types(
+        train_rows, extracted_train_ids, name=name, db_path=db_path,
+    )
 
     # A slice with zero malware samples can't teach a specialist anything —
     # there are no positives to learn from, so any model it produces is

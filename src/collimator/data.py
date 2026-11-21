@@ -1175,6 +1175,44 @@ def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, s
         }
 
 
+def describe_rows(
+    db_path: Path | str, row_ids: Iterable[int], *, limit: int = 200,
+) -> dict[int, dict[str, Any]]:
+    """Current label and atomscan-verdict state of rows, for diagnosis.
+
+    For asking why a row selected into the corpus earlier is no longer
+    readable: hopper rewrites verdicts while a run is in flight. A row with no
+    verdict at all comes back with ``outcome`` None. At most *limit* rows
+    (lowest ids first) are described; this is a diagnostic, not a bulk read.
+    """
+    wanted = sorted({int(row_id) for row_id in row_ids})[:limit]
+    if not wanted:
+        return {}
+    out: dict[int, dict[str, Any]] = {}
+    with _connect(db_path) as conn:
+        clause, params = _in(conn, "s.id", wanted)
+        query = (
+            "SELECT s.id, s.label, s.label_source, s.file_type, v.outcome,"
+            " v.detail IS NULL, v.formed_at, v.summary"
+            " FROM samples s"
+            f" LEFT JOIN verdicts v ON v.sample_id = s.id AND v.scanner_id = {ATOMSCAN}"
+            f" WHERE {clause}"
+        )
+        for row_id, label, source, file_type, outcome, no_detail, formed_at, summary in _execute(
+            conn, query, params,
+        ):
+            out[int(row_id)] = {
+                "label": str(label),
+                "label_source": source,
+                "file_type": file_type,
+                "outcome": None if outcome is None else str(outcome),
+                "detail_null": None if outcome is None else bool(no_detail),
+                "formed_at": None if formed_at is None else str(formed_at),
+                "summary": summary,
+            }
+    return out
+
+
 def split_keys(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
     """Return the split key (canonical_sha256) of each requested usable labeled row.
 

@@ -5258,9 +5258,17 @@ def _init_extract_worker(spec: FeatureSpec) -> None:
     _worker_ctx = _ExtractContext(spec)
 
 
+# Extraction parses reports into millions of small objects. pymalloc returns an
+# arena only once every block in it is free, and a few survivors pin most of
+# them, so an idle worker keeps its all-time peak resident (seen: 86 MB live,
+# 13 GB RSS). Recycling bounds that to the peak of its last N tasks. A task is
+# ~1s and a respawn ~1s, so 500 costs well under 1% of throughput.
+_EXTRACT_TASKS_PER_WORKER = 500
+
+
 @contextmanager
 def _extract_pool(nw: int, spec: FeatureSpec) -> Iterator[ProcessPoolExecutor]:
-    with _feature_worker_pool(nw, spec) as pool:
+    with _feature_worker_pool(nw, spec, max_tasks_per_child=_EXTRACT_TASKS_PER_WORKER) as pool:
         yield pool
 
 
@@ -5316,6 +5324,7 @@ def _extract_batch_worker(
 def _feature_worker_pool(
     n_workers: int, spec: FeatureSpec | None = None,
     *, initializer: Callable | None = None, initargs: tuple = (),
+    max_tasks_per_child: int | None = None,
 ) -> Iterator[ProcessPoolExecutor]:
     """Spawn feature workers without a nested numerical thread pool each.
 
@@ -5343,6 +5352,7 @@ def _feature_worker_pool(
         with ProcessPoolExecutor(
             max_workers=n_workers, mp_context=mp.get_context("spawn"),
             initializer=initializer, initargs=initargs,
+            max_tasks_per_child=max_tasks_per_child,
         ) as pool:
             yield pool
     finally:
@@ -5730,7 +5740,12 @@ _WORKER_BUDGET_REFRESH_SECONDS = 30.0
 
 
 def _bounded_ordered_dynamic_iter(pool, fn, it, budget, *, describe=None):
-    """Drain under pressure, expand after recovery, and preserve row ordering."""
+    """Drain under pressure, expand after recovery, and preserve row ordering.
+
+    A zero budget drains to one task in flight, never to none: memory our own
+    idle workers hold is only released by running work through them, so
+    waiting with nothing in flight can wait forever.
+    """
     pending = collections.deque()
     source = iter(it)
     sentinel = object()
@@ -5747,7 +5762,7 @@ def _bounded_ordered_dynamic_iter(pool, fn, it, budget, *, describe=None):
         if buffered is sentinel and not exhausted:
             buffered = next(source, sentinel)
             exhausted = buffered is sentinel
-        while len(pending) < limit and not exhausted:
+        while (len(pending) < limit or not pending) and not exhausted:
             pending.append((pool.submit(fn, buffered), buffered, time.monotonic()))
             buffered = next(source, sentinel)
             exhausted = buffered is sentinel
@@ -5758,8 +5773,6 @@ def _bounded_ordered_dynamic_iter(pool, fn, it, budget, *, describe=None):
                 yield pending.popleft()[0].result()
             elif describe is not None:
                 _log_extraction_wait(pending, limit, describe)
-        elif not exhausted:
-            time.sleep(max(0, refresh_at - time.monotonic()))
 
 
 def _log_extraction_wait(pending, limit, describe):
@@ -5803,39 +5816,26 @@ def _bounded_unordered_iter(
     """Yield completed tasks, optionally refreshing their admission budget.
 
     Timed waits allow a growing budget to admit work even while the first
-    batch is still running. A shrinking budget drains existing work before
-    submitting replacements; running batches are never cancelled.
+    batch is still running. A shrinking budget drains existing work down to
+    one task before submitting replacements, never to none (see
+    _bounded_ordered_dynamic_iter); running batches are never cancelled.
     """
     pending = set()
     source = iter(it)
     exhausted = False
     refresh_at = 0.0
     limit = max_inflight if isinstance(max_inflight, int) else 1
-    sentinel = object()
-    buffered = sentinel
     while pending or not exhausted:
         if callable(max_inflight) and time.monotonic() >= refresh_at:
             limit = max(0, max_inflight())
             refresh_at = time.monotonic() + _WORKER_BUDGET_REFRESH_SECONDS
-        while not exhausted and len(pending) < limit:
+        while not exhausted and (len(pending) < limit or not pending):
             try:
-                item = next(source) if buffered is sentinel else buffered
-                buffered = sentinel
-                pending.add(pool.submit(fn, item))
+                pending.add(pool.submit(fn, next(source)))
             except StopIteration:
                 exhausted = True
         if not pending:
-            if exhausted:
-                return
-            # Keep one input buffered to distinguish an empty source from a
-            # paused pool; a zero budget must not silently discard queued work.
-            if buffered is sentinel:
-                try:
-                    buffered = next(source)
-                except StopIteration:
-                    return
-            time.sleep(max(0.0, refresh_at - time.monotonic()))
-            continue
+            return
         timeout = max(0.0, refresh_at - time.monotonic()) if callable(max_inflight) else None
         done, _ = wait(pending, timeout=timeout, return_when=FIRST_COMPLETED)
         if done:

@@ -1318,3 +1318,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261118T175235-filetypes-jar` — 2026-11-18T17:52:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `073041d1276c98db` | inherit_from_filetypes_jsp_b466ff46 | ok | 0.9590 | 0.9916 | 0.9241 | 850 | [log](out/autocollie/runs/2026-11-18T18-03-46_20261118T175235-filetypes-jar_inherit_from_filetypes_jsp_b466ff46.log) |
+| `c36fe88e5460d9ab` | combine_depth5_mcs50 | ok | 0.9952 | 0.9993 | 0.9641 | 455 | [log](out/autocollie/runs/2026-11-18T18-17-56_20261118T175235-filetypes-jar_combine_depth5_mcs50.log) |
+| `88b4c386adeb1aa7` | depth5_mcs50_mds2 | ok | 0.9951 | 0.9993 | 0.9607 | 160 | [log](out/autocollie/runs/2026-11-18T18-25-30_20261118T175235-filetypes-jar_depth5_mcs50_mds2.log) |
+| `14dccc902d61957c` | depth5_mcs50_reg_lambda_2 | ok | 0.9951 | 0.9993 | 0.9579 | 161 | [log](out/autocollie/runs/2026-11-18T18-28-10_20261118T175235-filetypes-jar_depth5_mcs50_reg_lambda_2.log) |
+| `80ab466331580dea` | depth5_mcs50_spw_0_5 | ok | 0.9955 | 0.9993 | 0.9526 | 158 | [log](out/autocollie/runs/2026-11-18T18-30-51_20261118T175235-filetypes-jar_depth5_mcs50_spw_0_5.log) |
+| `a129bc27431ba139` | depth5_mcs50_seed_search_3 | ok | 0.9951 | 0.9993 | 0.9693 | 177 | [log](out/autocollie/runs/2026-11-18T18-33-29_20261118T175235-filetypes-jar_depth5_mcs50_seed_search_3.log) |
+| `983d5f12cc80eb5c` | depth5_mcs50_num_leaves_128 | ok | 0.9952 | 0.9993 | 0.9641 | 160 | [log](out/autocollie/runs/2026-11-18T18-36-26_20261118T175235-filetypes-jar_depth5_mcs50_num_leaves_128.log) |
+| `b0c4825a2d4c3216` | depth5_mcs50_lr_0_025 | ok | 0.9950 | 0.9993 | 0.9591 | 153 | [log](out/autocollie/runs/2026-11-18T18-39-06_20261118T175235-filetypes-jar_depth5_mcs50_lr_0_025.log) |
+| `3cb982c5c5724a48` | depth5_mcs50_col_sample_0_6 | ok | 0.9951 | 0.9993 | 0.9514 | 166 | [log](out/autocollie/runs/2026-11-18T18-41-39_20261118T175235-filetypes-jar_depth5_mcs50_col_sample_0_6.log) |
+| `3794ec28e4094ed9` | depth5_mcs50_subsample_0_7 | ok | 0.9947 | 0.9992 | 0.9580 | 163 | [log](out/autocollie/runs/2026-11-18T18-44-25_20261118T175235-filetypes-jar_depth5_mcs50_subsample_0_7.log) |
+| `5c8170835cf4cfe7` | depth5_mcs50_gamma_0_1 | ok | 0.9944 | 0.9992 | 0.9578 | 162 | [log](out/autocollie/runs/2026-11-18T18-47-08_20261118T175235-filetypes-jar_depth5_mcs50_gamma_0_1.log) |
+| `d1c8d8df5d9142c1` | depth5_mcs50_reg_alpha_0_1 | ok | 0.9949 | 0.9993 | 0.9640 | 156 | [log](out/autocollie/runs/2026-11-18T18-49-50_20261118T175235-filetypes-jar_depth5_mcs50_reg_alpha_0_1.log) |
+| `42aa10200816cd72` | depth5_mcs50_min_child_weight_10 | ok | 0.9953 | 0.9993 | 0.9633 | 177 | [log](out/autocollie/runs/2026-11-18T18-52-26_20261118T175235-filetypes-jar_depth5_mcs50_min_child_weight_10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_jsp_b466ff46`** `EXP_AIR_GAP_SIGNAL=1 EXP_ARCHIVE_MEMBER_CONTEXT=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=5 …` — Sister-route inheritance from filetypes/jsp (key=b466ff46ef44335a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`combine_depth5_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Combines the top two independent training/feature gains (depth 5 and min_child_samples 50) to test if their recall improvements are additive on the 0.9062 baseline.
+- **`depth5_mcs50_mds2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if the max_delta_step=2 gain (0.9006) is additive to the depth 5 and min_child_samples 50 configuration, targeting the 0.9062 recall ceiling.
+- **`depth5_mcs50_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Evaluates if reg_lambda=2 (0.8499) provides regularization benefits that complement the depth 5 and min_child_samples 50 setup without hurting recall.
+- **`depth5_mcs50_spw_0_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests if scale_pos_weight_mult=0.5 (0.8462) interacts positively with the depth 5 and min_child_samples 50 configuration to improve class balance handling.
+- **`depth5_mcs50_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Uses seed_search_k=3 to average models and reduce variance, aiming to stabilize the 0.9062 recall gain from depth 5 and min_child_samples 50.
+- **`depth5_mcs50_num_leaves_128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases num_leaves to 128 to allow more complex splits, testing if the depth 5 and min_child_samples 50 configuration benefits from higher model capacity.
+- **`depth5_mcs50_lr_0_025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Lowers learning_rate to 0.025 to refine convergence, testing if the depth 5 and min_child_samples 50 setup benefits from slower, more stable boosting.
+- **`depth5_mcs50_col_sample_0_6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces colsample_bytree to 0.6 to increase feature diversity, testing if the depth 5 and min_child_samples 50 configuration improves with more regularization via subsampling.
+- **`depth5_mcs50_subsample_0_7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Reduces subsample to 0.7 to increase row diversity, testing if the depth 5 and min_child_samples 50 configuration improves with more regularization via row subsampling.
+- **`depth5_mcs50_gamma_0_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds gamma=0.1 to prune weak splits, testing if the depth 5 and min_child_samples 50 configuration benefits from stricter split gain requirements.
+- **`depth5_mcs50_reg_alpha_0_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds reg_alpha=0.1 for L1 regularization, testing if the depth 5 and min_child_samples 50 configuration benefits from sparser feature usage.
+- **`depth5_mcs50_min_child_weight_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Increases min_child_weight to 10 to further regularize leaf weights, testing if the depth 5 and min_child_samples 50 configuration improves with stronger weight constraints.
+
+</details>
+
